@@ -267,17 +267,17 @@ export default function HomePage() {
               }`}
             >
               {/* Ảnh nền có hiệu ứng Ken Burns (Zoom-in từ từ từ scale-100 lên scale-110 trong 6s) */}
-              <div
-                key={isActive ? `img-active-${slide.id}` : `img-inactive-${slide.id}`}
-                className={`w-full h-full bg-cover bg-center bg-no-repeat ${
-                  isActive ? 'animate-kenburns' : 'scale-100'
-                }`}
-                style={{
-                  backgroundImage: `url('${slide.image}')`,
-                }}
-              >
-                {/* Lớp phủ chuyển màu tinh tế để làm nổi bật câu từ tiêu đề */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/35" />
+              <div className="absolute inset-0 overflow-hidden">
+                <img
+                  key={isActive ? `img-active-${slide.id}` : `img-inactive-${slide.id}`}
+                  src={slide.image}
+                  alt={slide.title}
+                  className={`w-full h-full object-cover object-center ${
+                    isActive ? 'animate-kenburns' : 'scale-100'
+                  }`}
+                />
+                {/* Lớp phủ chuyển màu nhẹ nhàng, giữ ảnh sáng sủa, ấm cúng và tôn chữ */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-black/25" />
               </div>
 
               {/* Nội dung Banner từng slide */}
