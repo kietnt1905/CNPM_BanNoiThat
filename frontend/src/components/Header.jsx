@@ -24,20 +24,24 @@ export default function Header() {
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [mobileExpandedSection, setMobileExpandedSection] = useState(null);
 
-    // Cuộn mượt mà đến phần tương ứng khi click vào Thiết kế nội thất hoặc Câu chuyện
+    // Cuộn mượt mà đến phần tương ứng mà không làm dính hash vào URL
     const handleScrollToSection = (e, targetId) => {
         if (!targetId) return;
+        if (e && e.preventDefault) e.preventDefault();
         setMobileMenuOpen(false);
         if (location.pathname === '/') {
-            e.preventDefault();
             const elem = document.getElementById(targetId);
             if (elem) {
                 elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                window.history.pushState(null, '', `/#${targetId}`);
             }
         } else {
-            e.preventDefault();
-            navigate(`/#${targetId}`);
+            navigate('/');
+            setTimeout(() => {
+                const elem = document.getElementById(targetId);
+                if (elem) {
+                    elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 200);
         }
     };
 
@@ -78,86 +82,66 @@ export default function Header() {
             hasDropdown: true,
             subcategories: [
                 {
-                    group: 'Bàn',
+                    group: 'BÀN',
                     items: [
-                        { name: 'Bàn ăn cao cấp', path: '/san-pham/ban-an' },
-                        { name: 'Bàn trà - Bàn sofa', path: '/san-pham/ban-tra' },
-                        { name: 'Bàn làm việc', path: '/san-pham/ban-lam-viec' },
-                        { name: 'Bàn trang điểm', path: '/san-pham/ban-trang-diem' },
+                        { name: 'Bàn ăn cao cấp', path: '/san-pham/ban-an', desc: 'Mặt đá Ceramic chống ố' },
+                        { name: 'Bàn trà - Sofa', path: '/san-pham/ban-tra', desc: 'Đá Marble & Gỗ sồi tự nhiên' },
+                        { name: 'Bàn làm việc', path: '/san-pham/ban-lam-viec', desc: 'Thiết kế công thái học hiện đại' },
+                        { name: 'Bàn trang điểm', path: '/san-pham/ban-trang-diem', desc: 'Đường nét uốn cong nhẹ nhàng' },
                     ],
                 },
                 {
-                    group: 'Ghế & Sofa',
+                    group: 'GHẾ & SOFA',
                     items: [
-                        { name: 'Sofa da thật', path: '/san-pham/sofa-da' },
-                        { name: 'Sofa vải cao cấp', path: '/san-pham/sofa-vai' },
-                        { name: 'Ghế thư giãn - Armchair', path: '/san-pham/ghe-thu-gian' },
-                        { name: 'Ghế ăn sang trọng', path: '/san-pham/ghe-an' },
-                    ],
-                },
-                {
-                    group: 'Tủ & Kệ',
-                    items: [
-                        { name: 'Tủ quần áo hiện đại', path: '/san-pham/tu-ao' },
-                        { name: 'Kệ tivi phòng khách', path: '/san-pham/ke-tivi' },
-                        { name: 'Tủ giày thông minh', path: '/san-pham/tu-giay' },
-                        { name: 'Tủ sách & Kệ trang trí', path: '/san-pham/tu-sach' },
-                    ],
-                },
-                {
-                    group: 'Giường & Nệm',
-                    items: [
-                        { name: 'Giường ngủ master', path: '/san-pham/giuong-ngu' },
-                        { name: 'Bàn đầu giường (Tab)', path: '/san-pham/tab-dau-giuong' },
-                        { name: 'Nệm lò xo cao cấp', path: '/san-pham/nem' },
-                        { name: 'Bộ chăn ga lụa', path: '/san-pham/chan-ga' },
+                        { name: 'Sofa da thật', path: '/san-pham/sofa-da', desc: 'Da bò thảo mộc tự nhiên 100%' },
+                        { name: 'Sofa vải nỉ', path: '/san-pham/sofa-vai', desc: 'Vải dệt cao cấp êm ái thoáng mát' },
+                        { name: 'Ghế Armchair thư giãn', path: '/san-pham/ghe-thu-gian', desc: 'Nâng niu từng phút giây an yên' },
+                        { name: 'Ghế ăn sang trọng', path: '/san-pham/ghe-an', desc: 'Đệm ngồi êm dịu, tựa cong duyên dáng' },
                     ],
                 },
             ],
-            featuredImage: {
-                title: 'Bộ sưu tập Sofa 2026',
-                desc: 'Đường nét thanh lịch, đệm lông vũ êm ái',
-                link: '/san-pham/sofa-da',
-                imgUrl: '/images/products/sofa-3-cho-victoria.jpg',
+            featuredLookbook: {
+                badge: 'LOOKBOOK 2026',
+                title: 'BST Bàn & Ghế 2026 - Thanh lịch & Êm ái',
+                desc: 'Khám phá sự giao thoa giữa nghệ thuật tạo hình kiến trúc và độ êm ái vượt thời gian.',
+                link: '/san-pham',
+                image: '/images/lookbook/lookbook-living.jpg',
             },
-        },
-        {
-            title: 'PHÒNG',
-            path: '/phong',
-            hasDropdown: true,
-            roomList: [
-                { name: 'Phòng khách', path: '/phong/phong-khach', desc: 'Không gian sum vầy tao nhã' },
-                { name: 'Phòng ăn', path: '/phong/phong-an', desc: 'Bữa tiệc ấm áp trọn vị' },
-                { name: 'Phòng ngủ', path: '/phong/phong-ngu', desc: 'Chốn riêng tư thư thái tuyệt đối' },
-                { name: 'Phòng làm việc', path: '/phong/phong-lam-viec', desc: 'Khơi nguồn sáng tạo đỉnh cao' },
-                { name: 'Ban công & Sân vườn', path: '/phong/ngoai-troi', desc: 'Giao hòa cùng thiên nhiên' },
-            ],
         },
         {
             title: 'BỘ SƯU TẬP',
             path: '/bo-suu-tap',
             hasDropdown: true,
             collections: [
-                { name: 'Victoria Collection', desc: 'Cảm hứng miền quê Pháp lãng mạn', tag: 'Nổi bật' },
-                { name: 'Elegance Series', desc: 'Đẳng cấp hoàng gia đương đại', tag: 'Mới' },
-                { name: 'Osaka Minimalist', desc: 'Tinh hoa mộc mạc phong cách Nhật Bản', tag: '' },
-                { name: 'Coastal Breeze', desc: 'Phóng khoáng, tươi mới hơi thở đại dương', tag: '' },
+                {
+                    name: 'VICTORIA',
+                    desc: 'Cảm hứng miền quê Pháp lãng mạn & da thảo mộc',
+                    tag: 'Nổi bật',
+                    image: '/images/banners/banner-hero/banner-victoria.jpg',
+                    link: '/bo-suu-tap/victoria',
+                },
+                {
+                    name: 'ELEGANCE',
+                    desc: 'Mặt đá Ceramic chống ố, vân gỗ sồi nguyên khối',
+                    tag: 'Mới',
+                    image: '/images/products/ban-an.jpg',
+                    link: '/bo-suu-tap/elegance',
+                },
+                {
+                    name: 'OSAKA',
+                    desc: 'Tinh hoa Japandi mộc mạc, tựa mây duyên dáng',
+                    tag: '',
+                    image: '/images/products/ghe-thu-gian.jpg',
+                    link: '/bo-suu-tap/osaka',
+                },
+                {
+                    name: 'COASTAL',
+                    desc: 'Phóng khoáng, tươi mới hơi thở đại dương & gỗ sáng',
+                    tag: '',
+                    image: '/images/products/ban-tra-doi.jpg',
+                    link: '/bo-suu-tap/coastal',
+                },
             ],
-        },
-        {
-            title: 'THƯƠNG HIỆU',
-            path: '/thuong-hieu',
-            hasDropdown: true,
-            brands: [
-                { name: 'TK House Collection', desc: 'Nội thất chuẩn mực Việt Nam' },
-                { name: 'Calligaris Italy', desc: 'Thiết kế biểu tượng từ nước Ý' },
-                { name: 'BoConcept Denmark', desc: 'Phong cách Scandinavian trứ danh' },
-            ],
-        },
-        {
-            title: 'THIẾT KẾ NỘI THẤT',
-            path: '/#thiet-ke-noi-that',
-            targetId: 'thiet-ke-noi-that',
         },
         {
             title: 'CÂU CHUYỆN THƯƠNG HIỆU',
@@ -249,7 +233,7 @@ export default function Header() {
                 <div className="max-w-[1720px] w-full mx-auto px-6 sm:px-10 lg:px-12">
                     <div className="flex items-center justify-between gap-4 lg:gap-8">
                         {/* Left: Hamburger Button & Logo TK House */}
-                        <div className="flex items-center space-x-3 sm:space-x-4">
+                        <div className="flex items-center space-x-3 sm:space-x-4 flex-shrink-0">
                             <button
                                 type="button"
                                 onClick={() => setMobileMenuOpen(true)}
@@ -259,23 +243,39 @@ export default function Header() {
                                 <MenuIcon className="w-6 h-6 stroke-[1.75]" />
                             </button>
 
-                            {/* Logo viền hộp chữ nhật tối giản "TK House" */}
+                            {/* Cụm Logo TK House: Biểu tượng ngôi nhà bên trái (to hơn), Chữ bên phải (căn đáy bằng ngôi nhà) */}
                             <Link
                                 to="/"
-                                className="group flex-shrink-0 inline-flex items-center justify-center border-2 border-neutral-800 px-3.5 py-1.5 transition-all duration-300 hover:border-neutral-950 hover:bg-neutral-950"
+                                onClick={() => {
+                                    if (window.location.hash) {
+                                        window.history.replaceState(null, '', window.location.pathname);
+                                    }
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                                className="group flex-shrink-0 inline-flex items-end space-x-2 sm:space-x-3 transition-opacity duration-300 hover:opacity-90 select-none pb-0.5"
                             >
-                                <span className="font-serif text-lg sm:text-xl font-bold tracking-[0.2em] text-neutral-900 group-hover:text-white uppercase select-none transition-colors whitespace-nowrap">
-                                    TK House
-                                </span>
+                                {/* Biểu tượng ngôi nhà (bên trái, to và nổi bật hơn) */}
+                                <img
+                                    src="/images/logo/logo.png"
+                                    alt="TK House Icon"
+                                    className="h-10 sm:h-11 md:h-[48px] lg:h-[50px] w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                                />
+
+                                {/* Ảnh chữ: TK HOUSE NỘI THẤT & THIẾT KẾ (bên phải, nhích xuống bằng đáy của ngôi nhà) */}
+                                <img
+                                    src="/images/logo/chu-logo.png"
+                                    alt="TK HOUSE Nội Thất & Thiết Kế"
+                                    className="h-7 sm:h-8 md:h-[35px] lg:h-[36px] w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] translate-y-[2px]"
+                                />
                             </Link>
                         </div>
 
                         {/* Center: Desktop Navigation Bar */}
-                        <nav className="hidden xl:flex items-center space-x-6 2xl:space-x-8 text-[12.5px] font-semibold tracking-wider text-neutral-800">
+                        <nav className="hidden lg:flex items-center gap-6 xl:gap-8 whitespace-nowrap flex-nowrap text-[12.5px] font-semibold tracking-wider text-neutral-800">
                             {navMenuItems.map((item, index) => (
                                 <div
                                     key={index}
-                                    className="relative group"
+                                    className="relative group whitespace-nowrap flex-shrink-0 py-2"
                                     onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.title)}
                                     onMouseLeave={() => item.hasDropdown && setActiveDropdown(null)}
                                 >
@@ -286,135 +286,212 @@ export default function Header() {
                                                 handleScrollToSection(e, item.targetId);
                                             }
                                         }}
-                                        className="inline-flex items-center py-2 space-x-1 hover:text-neutral-500 transition-colors uppercase"
+                                        className="inline-flex items-center space-x-1.5 hover:text-neutral-500 transition-colors uppercase whitespace-nowrap"
                                     >
-                                        <span>{item.title}</span>
+                                        <span className="whitespace-nowrap">{item.title}</span>
                                         {item.hasDropdown && (
-                                            <ChevronDown className="w-3.5 h-3.5 stroke-[1.75] transition-transform duration-200 group-hover:-rotate-180" />
+                                            <ChevronDown className="w-3.5 h-3.5 stroke-[1.75] transition-transform duration-200 group-hover:-rotate-180 flex-shrink-0" />
                                         )}
                                         {item.badge && (
-                                            <span className="bg-amber-100 text-amber-900 text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ml-0.5">
+                                            <span className="bg-amber-100 text-amber-900 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ml-1 flex-shrink-0">
                                                 {item.badge}
                                             </span>
                                         )}
                                     </Link>
 
-                                    {/* Mega Dropdown: SẢN PHẨM */}
+                                    {/* Mega Dropdown: SẢN PHẨM (3 Cột: BÀN | GHẾ & SOFA | FEATURED LOOKBOOK 35%) */}
                                     {item.title === 'SẢN PHẨM' && (
-                                        <div className="absolute left-1/2 -translate-x-1/2 top-full w-[820px] bg-white border border-neutral-200 shadow-2xl rounded-sm p-6 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                            <div className="grid grid-cols-4 gap-6">
-                                                {item.subcategories.map((sub, sIdx) => (
-                                                    <div key={sIdx} className="space-y-3">
-                                                        <h4 className="text-[13px] font-bold text-neutral-900 tracking-wider uppercase border-b border-neutral-100 pb-1.5">
-                                                            {sub.group}
-                                                        </h4>
-                                                        <ul className="space-y-2 text-[12px] font-normal text-neutral-600">
-                                                            {sub.items.map((subItem, siIdx) => (
-                                                                <li key={siIdx}>
-                                                                    <Link
-                                                                        to={subItem.path}
-                                                                        className="hover:text-neutral-950 hover:translate-x-1 inline-block transition-transform duration-150"
-                                                                    >
-                                                                        {subItem.name}
-                                                                    </Link>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                        <div
+                                            className="absolute left-1/2 -translate-x-[36%] top-full pt-3 z-50 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 ease-out"
+                                        >
+                                            {/* Hover bridge để rê chuột từ navbar vào menu không bị đứt quãng */}
+                                            <div className="absolute -top-3 left-0 right-0 h-4" />
 
-                                            {/* Featured banner at bottom of Mega Menu */}
-                                            {item.featuredImage && (
-                                                <div className="mt-5 pt-4 border-t border-neutral-100 flex items-center justify-between bg-neutral-50 p-3 rounded">
-                                                    <div className="flex items-center space-x-4">
-                                                        <img
-                                                            src={item.featuredImage.imgUrl}
-                                                            alt={item.featuredImage.title}
-                                                            className="w-20 h-14 object-cover rounded shadow-sm"
-                                                        />
+                                            <div className="w-[880px] bg-white/95 backdrop-blur-xl rounded-2xl border border-stone-200/70 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] p-8">
+                                                <div className="flex gap-8 items-stretch">
+                                                    {/* Cột 1: BÀN (Font Serif in hoa, line mỏng, hover #8C6A48 kèm gạch chân mượt mà) */}
+                                                    <div className="flex-1 flex flex-col justify-between">
                                                         <div>
-                                                            <p className="font-semibold text-neutral-900 text-xs">
-                                                                {item.featuredImage.title}
-                                                            </p>
-                                                            <p className="text-[11px] text-neutral-500 font-normal">
-                                                                {item.featuredImage.desc}
-                                                            </p>
+                                                            <div className="pb-3 border-b border-[#E8E2D8]">
+                                                                <h4 className="font-serif text-[15px] font-normal tracking-[0.18em] text-neutral-900 uppercase">
+                                                                    {item.subcategories[0].group}
+                                                                </h4>
+                                                            </div>
+                                                            <ul className="space-y-4 pt-4">
+                                                                    {item.subcategories[0].items.map((subItem, siIdx) => (
+                                                                        <li key={siIdx}>
+                                                                            <Link
+                                                                                to={subItem.path}
+                                                                                className="group/link block text-left"
+                                                                            >
+                                                                                <span className="text-[13.5px] font-medium text-neutral-800 group-hover/link:text-[#8C6A48] transition-colors duration-300 relative inline-block">
+                                                                                    {subItem.name}
+                                                                                    <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#8C6A48] transition-all duration-300 ease-out group-hover/link:w-full" />
+                                                                                </span>
+                                                                                <span className="block text-[11px] text-stone-500 font-light mt-0.5">
+                                                                                    {subItem.desc}
+                                                                                </span>
+                                                                            </Link>
+                                                                        </li>
+                                                                    ))}
+                                                            </ul>
+                                                        </div>
+
+                                                        <div className="pt-4 mt-4 border-t border-stone-100">
+                                                            <Link
+                                                                to="/san-pham?danh-muc=ban"
+                                                                className="inline-flex items-center space-x-1.5 text-xs text-[#8C6A48] hover:text-neutral-900 font-medium tracking-wide transition-colors"
+                                                            >
+                                                                <span>Xem tất cả mẫu Bàn</span>
+                                                                <ArrowRight className="w-3.5 h-3.5" />
+                                                            </Link>
                                                         </div>
                                                     </div>
+
+                                                    {/* Cột 2: GHẾ & SOFA (Font Serif in hoa, line mỏng, hover #8C6A48 kèm gạch chân mượt mà) */}
+                                                    <div className="flex-1 flex flex-col justify-between">
+                                                        <div>
+                                                            <div className="pb-3 border-b border-[#E8E2D8]">
+                                                                <h4 className="font-serif text-[15px] font-normal tracking-[0.18em] text-neutral-900 uppercase">
+                                                                    {item.subcategories[1].group}
+                                                                </h4>
+                                                            </div>
+                                                            <ul className="space-y-4 pt-4">
+                                                                {item.subcategories[1].items.map((subItem, siIdx) => (
+                                                                    <li key={siIdx}>
+                                                                        <Link
+                                                                            to={subItem.path}
+                                                                            className="group/link block text-left"
+                                                                        >
+                                                                            <span className="text-[13.5px] font-medium text-neutral-800 group-hover/link:text-[#8C6A48] transition-colors duration-300 relative inline-block">
+                                                                                {subItem.name}
+                                                                                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#8C6A48] transition-all duration-300 ease-out group-hover/link:w-full" />
+                                                                            </span>
+                                                                            <span className="block text-[11px] text-stone-500 font-light mt-0.5">
+                                                                                {subItem.desc}
+                                                                            </span>
+                                                                        </Link>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+
+                                                        <div className="pt-4 mt-4 border-t border-stone-100">
+                                                            <Link
+                                                                to="/san-pham?danh-muc=sofa"
+                                                                className="inline-flex items-center space-x-1.5 text-xs text-[#8C6A48] hover:text-neutral-900 font-medium tracking-wide transition-colors"
+                                                            >
+                                                                <span>Xem tất cả Ghế & Sofa</span>
+                                                                <ArrowRight className="w-3.5 h-3.5" />
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Cột 3: FEATURED LOOKBOOK - Điểm nhấn (Chiếm 35% chiều rộng menu) */}
+                                                    <div className="w-[35%] flex-shrink-0 flex flex-col h-full">
+                                                        {item.featuredLookbook && (
+                                                            <Link
+                                                                to={item.featuredLookbook.link}
+                                                                className="group/card relative rounded-xl overflow-hidden shadow-md flex-1 flex flex-col justify-end p-5 min-h-[320px] border border-stone-200/60 block"
+                                                            >
+                                                                <img
+                                                                    src={item.featuredLookbook.image}
+                                                                    alt={item.featuredLookbook.title}
+                                                                    className="absolute inset-0 w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-700 ease-out"
+                                                                />
+                                                                {/* Lớp phủ gradient nhẹ */}
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10 group-hover/card:from-black/90 transition-colors duration-500" />
+
+                                                                <div className="relative z-10 text-white space-y-2">
+                                                                    <span className="backdrop-blur-md bg-white/20 text-[#FAF7F2] text-[9.5px] font-semibold tracking-[0.25em] uppercase px-2.5 py-0.5 rounded-full inline-block border border-white/25">
+                                                                        {item.featuredLookbook.badge}
+                                                                    </span>
+                                                                    <h5 className="font-serif text-[15px] font-normal text-white drop-shadow leading-snug">
+                                                                        {item.featuredLookbook.title}
+                                                                    </h5>
+                                                                    <p className="text-[11px] text-stone-200 font-light line-clamp-2 leading-relaxed">
+                                                                        {item.featuredLookbook.desc}
+                                                                    </p>
+                                                                    <div className="pt-2">
+                                                                        <span className="backdrop-blur-md bg-white/20 group-hover/card:bg-white/30 text-white text-[11px] font-medium tracking-wider px-4 py-2 rounded-full inline-flex items-center gap-2 border border-white/40 shadow-sm transition-all duration-300">
+                                                                            <span>Khám phá ngay</span>
+                                                                            <span className="text-xs transition-transform duration-300 group-hover/card:translate-x-1">→</span>
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </Link>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Dropdown: BỘ SƯU TẬP (Lưới 2x2 kèm Thumbnail ảnh & Tag be vàng đồng) */}
+                                    {item.title === 'BỘ SƯU TẬP' && (
+                                        <div
+                                            className="absolute left-1/2 -translate-x-1/2 top-full pt-3 z-50 opacity-0 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto transition-all duration-300 ease-out"
+                                        >
+                                            {/* Hover bridge */}
+                                            <div className="absolute -top-3 left-0 right-0 h-4" />
+
+                                            <div className="w-[660px] bg-white/95 backdrop-blur-xl rounded-2xl border border-stone-200/70 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] p-6">
+                                                {/* Header */}
+                                                <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-[#E8E2D8]">
+                                                    <div>
+                                                        <span className="text-[10px] font-semibold tracking-[0.25em] text-[#8C6A48] uppercase block">
+                                                            LOOKBOOK 2026
+                                                        </span>
+                                                        <h4 className="font-serif text-base font-normal text-neutral-900 tracking-wider uppercase mt-0.5">
+                                                            BỘ SƯU TẬP CHỦ ĐẠO
+                                                        </h4>
+                                                    </div>
                                                     <Link
-                                                        to={item.featuredImage.link}
-                                                        className="inline-flex items-center text-[11px] font-semibold text-neutral-900 hover:text-amber-800 space-x-1"
+                                                        to="/bo-suu-tap"
+                                                        className="inline-flex items-center space-x-1.5 text-xs text-[#8C6A48] hover:text-neutral-950 font-medium tracking-wide transition-colors"
                                                     >
-                                                        <span>Khám phá ngay</span>
+                                                        <span>Xem tất cả bộ sưu tập</span>
                                                         <ArrowRight className="w-3.5 h-3.5" />
                                                     </Link>
                                                 </div>
-                                            )}
-                                        </div>
-                                    )}
 
-                                    {/* Dropdown: PHÒNG */}
-                                    {item.title === 'PHÒNG' && (
-                                        <div className="absolute left-0 top-full w-64 bg-white border border-neutral-200 shadow-xl rounded-sm p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                            <ul className="space-y-2.5 text-[12px] font-normal text-neutral-700">
-                                                {item.roomList.map((room, rIdx) => (
-                                                    <li key={rIdx}>
+                                                {/* Lưới 2x2 các thẻ bộ sưu tập */}
+                                                <div className="grid grid-cols-2 gap-3.5">
+                                                    {item.collections.map((col, cIdx) => (
                                                         <Link
-                                                            to={room.path}
-                                                            className="block p-1.5 rounded hover:bg-neutral-50 transition-colors"
+                                                            key={cIdx}
+                                                            to={col.link || `/bo-suu-tap/${col.name.toLowerCase().replace(/\s+/g, '-')}`}
+                                                            className="group/col flex items-center space-x-3.5 p-3 rounded-xl border border-transparent hover:border-[#E8E2D8] hover:bg-[#FAF7F2] transition-all duration-300 text-left"
                                                         >
-                                                            <span className="font-medium text-neutral-900 block">{room.name}</span>
-                                                            <span className="text-[10.5px] text-neutral-400">{room.desc}</span>
-                                                        </Link>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-
-                                    {/* Dropdown: BỘ SƯU TẬP */}
-                                    {item.title === 'BỘ SƯU TẬP' && (
-                                        <div className="absolute left-0 top-full w-72 bg-white border border-neutral-200 shadow-xl rounded-sm p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                            <ul className="space-y-2 text-[12px] font-normal text-neutral-700">
-                                                {item.collections.map((col, cIdx) => (
-                                                    <li key={cIdx}>
-                                                        <Link
-                                                            to={`/bo-suu-tap/${col.name.toLowerCase().replace(/\s+/g, '-')}`}
-                                                            className="flex items-center justify-between p-2 rounded hover:bg-neutral-50 transition-colors"
-                                                        >
-                                                            <div>
-                                                                <span className="font-semibold text-neutral-900 block">{col.name}</span>
-                                                                <span className="text-[10px] text-neutral-400">{col.desc}</span>
+                                                            {/* Thumbnail 1:1, rounded-xl */}
+                                                            <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-neutral-100 flex-shrink-0 shadow-sm border border-stone-200/50">
+                                                                <img
+                                                                    src={col.image}
+                                                                    alt={col.name}
+                                                                    className="w-full h-full object-cover group-hover/col:scale-105 transition-all duration-500 ease-out"
+                                                                />
                                                             </div>
-                                                            {col.tag && (
-                                                                <span className="text-[9px] bg-neutral-900 text-white font-bold px-1.5 py-0.5 rounded">
-                                                                    {col.tag}
-                                                                </span>
-                                                            )}
-                                                        </Link>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
 
-                                    {/* Dropdown: THƯƠNG HIỆU */}
-                                    {item.title === 'THƯƠNG HIỆU' && (
-                                        <div className="absolute left-0 top-full w-64 bg-white border border-neutral-200 shadow-xl rounded-sm p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                            <ul className="space-y-2.5 text-[12px] font-normal text-neutral-700">
-                                                {item.brands.map((br, bIdx) => (
-                                                    <li key={bIdx}>
-                                                        <Link
-                                                            to={`/thuong-hieu/${br.name.toLowerCase().replace(/\s+/g, '-')}`}
-                                                            className="block p-1.5 rounded hover:bg-neutral-50 transition-colors"
-                                                        >
-                                                            <span className="font-medium text-neutral-900 block">{br.name}</span>
-                                                            <span className="text-[10.5px] text-neutral-400">{br.desc}</span>
+                                                            {/* Thông tin bộ sưu tập */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <h5 className="font-serif text-[13px] font-normal text-neutral-900 group-hover/col:text-[#8C6A48] uppercase tracking-wider transition-colors line-clamp-1">
+                                                                        {col.name}
+                                                                    </h5>
+                                                                    {col.tag && (
+                                                                        <span className="bg-[#F3EDE2] text-[#8C6A48] text-[10px] font-semibold tracking-wider px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm">
+                                                                            {col.tag}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-[11px] text-stone-500 font-light line-clamp-2 mt-1 leading-relaxed">
+                                                                    {col.desc}
+                                                                </p>
+                                                            </div>
                                                         </Link>
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -459,7 +536,7 @@ export default function Header() {
                             >
                                 <ShoppingBag className="w-5 h-5 stroke-[1.8] group-hover:scale-105 transition-transform" />
                                 {cartCount > 0 && (
-                                    <span className="absolute 1 top-0.5 right-0.5 bg-neutral-900 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold shadow-sm">
+                                    <span className="absolute top-0.5 right-0.5 bg-neutral-900 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold shadow-sm">
                                         {cartCount}
                                     </span>
                                 )}
@@ -495,9 +572,18 @@ export default function Header() {
                                 <Link
                                     to="/"
                                     onClick={() => setMobileMenuOpen(false)}
-                                    className="border-2 border-neutral-900 px-3.5 py-1 font-serif text-lg font-bold tracking-widest text-neutral-900 uppercase whitespace-nowrap flex-shrink-0"
+                                    className="inline-flex items-end space-x-2 flex-shrink-0 hover:opacity-90 transition-opacity pb-0.5"
                                 >
-                                    TK House
+                                    <img
+                                        src="/images/logo/logo.png"
+                                        alt="TK House Icon"
+                                        className="h-9 sm:h-10 w-auto object-contain"
+                                    />
+                                    <img
+                                        src="/images/logo/chu-logo.png"
+                                        alt="TK HOUSE Nội Thất & Thiết Kế"
+                                        className="h-6 sm:h-7 w-auto object-contain translate-y-[1.5px]"
+                                    />
                                 </Link>
 
                                 <button
@@ -537,25 +623,7 @@ export default function Header() {
                                     {navMenuItems.map((item, idx) => (
                                         <div key={idx} className="border-b border-neutral-100 last:border-none">
                                             <div className="flex items-center justify-between py-3">
-                                                <Link
-                                                    to={item.path}
-                                                    onClick={(e) => {
-                                                        setMobileMenuOpen(false);
-                                                        if (item.targetId) {
-                                                            handleScrollToSection(e, item.targetId);
-                                                        }
-                                                    }}
-                                                    className="font-medium text-sm text-neutral-800 hover:text-neutral-950 uppercase tracking-wide flex items-center space-x-2"
-                                                >
-                                                    <span>{item.title}</span>
-                                                    {item.badge && (
-                                                        <span className="bg-amber-100 text-amber-900 text-[9px] font-bold px-1.5 py-0.5 rounded">
-                                                            {item.badge}
-                                                        </span>
-                                                    )}
-                                                </Link>
-
-                                                {item.hasDropdown && (
+                                                {item.hasDropdown ? (
                                                     <button
                                                         type="button"
                                                         onClick={() =>
@@ -563,13 +631,39 @@ export default function Header() {
                                                                 mobileExpandedSection === item.title ? null : item.title
                                                             )
                                                         }
-                                                        className="p-1 text-neutral-400 hover:text-neutral-800"
+                                                        className="w-full flex items-center justify-between font-medium text-sm text-neutral-800 hover:text-neutral-950 uppercase tracking-wide text-left"
                                                     >
+                                                        <span className="flex items-center space-x-2">
+                                                            <span>{item.title}</span>
+                                                            {item.badge && (
+                                                                <span className="bg-amber-100 text-amber-900 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                                                    {item.badge}
+                                                                </span>
+                                                            )}
+                                                        </span>
                                                         <ChevronDown
-                                                            className={`w-4 h-4 transition-transform duration-200 ${mobileExpandedSection === item.title ? 'rotate-180' : ''
+                                                            className={`w-4 h-4 transition-transform duration-200 text-neutral-400 ${mobileExpandedSection === item.title ? 'rotate-180 text-neutral-900' : ''
                                                                 }`}
                                                         />
                                                     </button>
+                                                ) : (
+                                                    <Link
+                                                        to={item.path}
+                                                        onClick={(e) => {
+                                                            setMobileMenuOpen(false);
+                                                            if (item.targetId) {
+                                                                handleScrollToSection(e, item.targetId);
+                                                            }
+                                                        }}
+                                                        className="font-medium text-sm text-neutral-800 hover:text-neutral-950 uppercase tracking-wide flex items-center space-x-2"
+                                                    >
+                                                        <span>{item.title}</span>
+                                                        {item.badge && (
+                                                            <span className="bg-amber-100 text-amber-900 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                                                {item.badge}
+                                                            </span>
+                                                        )}
+                                                    </Link>
                                                 )}
                                             </div>
 
@@ -597,29 +691,41 @@ export default function Header() {
                                                             </div>
                                                         ))}
 
-                                                    {item.roomList &&
-                                                        item.roomList.map((r, rIdx) => (
-                                                            <Link
-                                                                key={rIdx}
-                                                                to={r.path}
-                                                                onClick={() => setMobileMenuOpen(false)}
-                                                                className="block font-medium text-neutral-700 hover:text-neutral-950 py-1"
-                                                            >
-                                                                {r.name}
-                                                            </Link>
-                                                        ))}
-
-                                                    {item.collections &&
-                                                        item.collections.map((c, cIdx) => (
-                                                            <Link
-                                                                key={cIdx}
-                                                                to={`/bo-suu-tap/${c.name.toLowerCase().replace(/\s+/g, '-')}`}
-                                                                onClick={() => setMobileMenuOpen(false)}
-                                                                className="block font-medium text-neutral-700 hover:text-neutral-950 py-1"
-                                                            >
-                                                                {c.name}
-                                                            </Link>
-                                                        ))}
+                                                    {item.collections && (
+                                                        <div className="space-y-2 pt-1">
+                                                            {item.collections.map((c, cIdx) => (
+                                                                <Link
+                                                                    key={cIdx}
+                                                                    to={c.link || `/bo-suu-tap/${c.name.toLowerCase().replace(/\s+/g, '-')}`}
+                                                                    onClick={() => setMobileMenuOpen(false)}
+                                                                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+                                                                >
+                                                                    {c.image && (
+                                                                        <img
+                                                                            src={c.image}
+                                                                            alt={c.name}
+                                                                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-neutral-200"
+                                                                        />
+                                                                    )}
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-center space-x-2">
+                                                                            <span className="font-medium text-xs text-neutral-800">
+                                                                                {c.name}
+                                                                            </span>
+                                                                            {c.tag && (
+                                                                                <span className="bg-[#F3EDE2] text-[#8C6A48] text-[9px] font-semibold px-1.5 py-0.5 rounded-full">
+                                                                                    {c.tag}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        <span className="text-[10px] text-neutral-400 block line-clamp-1 font-light">
+                                                                            {c.desc}
+                                                                        </span>
+                                                                    </div>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
