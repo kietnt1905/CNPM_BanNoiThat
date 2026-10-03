@@ -24,7 +24,7 @@ export default function CategoryPage({ categoryId = '02' }) {
       tag: 'Phòng Ăn Đương Đại',
       title: 'Bộ Bàn Ăn Sang Trọng',
       subtitle: 'Mặt đá Ceramic chống ố, Ghế ăn bọc da cao cấp',
-      image: '/images/categories/phong-am.jpg',
+      image: '/images/banners/phong-an.jpg',
       slug: 'ban-an',
       description:
         'Tuyển tập bàn ăn mặt đá Ceramic Nano và ghế ăn chế tác từ gỗ sồi khối, da thuộc Ý cao cấp. Nơi gắn kết trọn vẹn những bữa tiệc gia đình ấm cúng.',
@@ -56,7 +56,7 @@ export default function CategoryPage({ categoryId = '02' }) {
       tag: 'Không Gian Phòng Khách',
       title: 'Sofa & Bàn Trà Tinh Tế',
       subtitle: 'Sofa da thảo mộc, Bàn trà đôi đá tự nhiên',
-      image: '/images/categories/phong-khach.jpg',
+      image: '/images/banners/phong-khach.jpg',
       slug: 'sofa-ban-tra',
       description:
         'Sự kết hợp hoàn hảo giữa da bò thảo mộc Tuscany và mặt đá Marble Calacatta sang trọng, đánh thức cảm xúc tĩnh tại và thịnh vượng cho phòng khách thượng lưu.',
@@ -147,14 +147,57 @@ export default function CategoryPage({ categoryId = '02' }) {
         },
       ],
     },
+    '05': {
+      id: '05',
+      tag: 'Không Gian Phòng Ngủ',
+      title: 'Giường Ngủ & Tủ Kệ Thư Thái',
+      subtitle: 'Gỗ sồi tự nhiên, Drap linen dệt thô nâng niu giấc ngủ sâu',
+      image: '/images/banners/phong-ngu.jpg',
+      slug: 'phong-ngu',
+      description:
+        'Chốn về riêng tư bình yên nhất. Tuyển tập giường ngủ master gỗ sồi khối, tab đầu giường và tủ quần áo tinh tế đồng điệu kiến trúc.',
+      products: [
+        {
+          id: 501,
+          name: 'Giường Ngủ Master Gỗ Sồi Victoria',
+          category: 'Giường Ngủ Cao Cấp',
+          price: '32.500.000₫',
+          oldPrice: '37.000.000₫',
+          image: '/images/products/giuong-ngu-go-tu-nhien.jpg',
+          tag: 'Tâm điểm phòng ngủ',
+          material: 'Gỗ Sồi Khối Tự Nhiên & Drap Linen Dệt Thô',
+        },
+        {
+          id: 502,
+          name: 'Tab Đầu Giường Gỗ Sồi Bắc Âu',
+          category: 'Tủ & Kệ Phòng Ngủ',
+          price: '4.600.000₫',
+          oldPrice: '5.200.000₫',
+          image: '/images/products/ke-tivi-oc-cho.jpg',
+          tag: 'Bán chạy',
+          material: 'Gỗ Sồi Trắng & Ray Hafele',
+        },
+        {
+          id: 503,
+          name: 'Tủ Quần Áo Gỗ Tự Nhiên Victoria',
+          category: 'Tủ Quần Áo Cao Cấp',
+          price: '28.500.000₫',
+          oldPrice: '33.000.000₫',
+          image: '/images/products/tu-quan-ao.jpg',
+          tag: 'Mới',
+          material: 'Gỗ Sồi Bắc Mỹ & Cánh Kính Khói Sang Trọng',
+        },
+      ],
+    },
   };
 
   // Xác định category hiển thị
   let activeCatId = categoryId;
-  if (queryCategory === 'sofa') activeCatId = '02';
-  if (queryCategory === 'ban-an') activeCatId = '01';
+  if (queryCategory === 'sofa' || queryCategory === 'phong-khach') activeCatId = '02';
+  if (queryCategory === 'ban-an' || queryCategory === 'phong-an') activeCatId = '01';
   if (queryCategory === 'ban-lam-viec') activeCatId = '03';
   if (queryCategory === 'ghe-thu-gian') activeCatId = '04';
+  if (queryCategory === 'phong-ngu' || queryCategory === 'giuong-ngu') activeCatId = '05';
 
   const category = categoryData[activeCatId] || categoryData['02'];
 

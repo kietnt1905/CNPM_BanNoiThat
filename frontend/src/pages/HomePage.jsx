@@ -179,7 +179,10 @@ export default function HomePage() {
   // Trạng thái bộ lọc sản phẩm (Tất cả / Bàn cao cấp / Ghế & Sofa)
   const [productFilter, setProductFilter] = useState('all');
 
-  // Trạng thái Hotspot tương tác không gian thực (mặc định null để ảnh phòng khách sạch thoáng, không hiện bảng giá đè lên)
+  // Trạng thái không gian phòng đang hiển thị trong Lookbook (phòng khách / phòng ăn / phòng ngủ)
+  const [activeLookbookRoom, setActiveLookbookRoom] = useState('living');
+
+  // Trạng thái Hotspot tương tác không gian thực (mặc định null để ảnh sạch thoáng, không hiện bảng giá đè lên)
   const [activeHotspot, setActiveHotspot] = useState(null);
 
   // Trạng thái Bản giao hưởng chất liệu xa xỉ
@@ -188,48 +191,161 @@ export default function HomePage() {
   // Trạng thái màu sắc / swatch đang được chọn cho từng sản phẩm
   const [selectedSwatches, setSelectedSwatches] = useState({});
 
-  // Dữ liệu các điểm Hotspot tương tác trong không gian sống thực tế (Lookbook Living)
-  const roomHotspots = [
+  // Dữ liệu các không gian sống thực tế (Lookbook Living / Dining / Bedroom)
+  const lookbookRooms = [
     {
-      id: 0,
-      name: 'Sofa 3 Chỗ Victoria Da Thật',
-      category: 'Ghế & Sofa Phòng Khách',
-      price: '38.500.000₫',
-      material: 'Da Bò Ý Thuộc Thảo Mộc Tuscany',
-      dimension: 'D240 × R100 × C82 cm',
-      image: '/images/products/sofa-3-cho-victoria.jpg',
-      link: '/san-pham/1',
-      coords: { top: '64%', left: '42%' },
-      tag: 'Tâm điểm phòng khách',
-      description: 'Chạm khắc tinh tế, da bò đanh mịn lưu hương thảo mộc tự nhiên.',
+      id: 'living',
+      name: 'Phòng Khách',
+      subtitle: 'Living Room Lookbook',
+      badge: 'LIVING ROOM LOOKBOOK',
+      image: '/images/banners/phong-khach.jpg',
+      alt: 'Phối cảnh phòng khách đương đại TK House',
+      hotspots: [
+        {
+          id: 0,
+          name: 'Sofa 3 Chỗ Victoria Da Thật',
+          category: 'Ghế & Sofa Phòng Khách',
+          price: '38.500.000₫',
+          material: 'Da Bò Ý Thuộc Thảo Mộc Tuscany',
+          dimension: 'D240 × R100 × C82 cm',
+          image: '/images/products/sofa-3-cho-victoria.jpg',
+          link: '/sofa-ban-tra',
+          coords: { top: '69%', left: '54%' },
+          tag: 'Tâm điểm phòng khách',
+          description: 'Chạm khắc tinh tế, da bò đanh mịn lưu hương thảo mộc tự nhiên.',
+        },
+        {
+          id: 1,
+          name: 'Bàn Trà Mặt Đá Calacatta Khung Gỗ',
+          category: 'Bàn Trà Sang Trọng',
+          price: '11.500.000₫',
+          material: 'Đá Marble Calacatta & Chân Gỗ Sồi Tự Nhiên',
+          dimension: 'D120 × R65 × C42 cm',
+          image: '/images/products/ban-tra-doi.jpg',
+          link: '/sofa-ban-tra',
+          coords: { top: '80%', left: '56%' },
+          tag: 'Bán chạy nhất',
+          description: 'Mặt đá vân mây sáng bóng chống ố, kết hợp khung chân gỗ sồi chắc chắn.',
+        },
+        {
+          id: 2,
+          name: 'Ghế Đơn Armchair Da Bò Ý',
+          category: 'Ghế Thư Giãn Nghệ Thuật',
+          price: '14.200.000₫',
+          material: 'Khung Gỗ Tần Bì & Da Bò Nhập Khẩu Tuscany',
+          dimension: 'D82 × R80 × C78 cm',
+          image: '/images/products/ghe-thu-gian.jpg',
+          link: '/ghe-thu-gian',
+          coords: { top: '74%', left: '17%' },
+          tag: 'Thiết kế biểu tượng',
+          description: 'Góc ngả lưng chuẩn công thái học kết hợp đệm bọc da bò êm ái đẳng cấp.',
+        },
+      ],
     },
     {
-      id: 1,
-      name: 'Bàn Trà Đôi Mặt Đá Marble Elegance',
-      category: 'Bàn Trà Sang Trọng',
-      price: '11.500.000₫',
-      material: 'Đá Marble Calacatta & Khung Titan Mạ Vàng',
-      dimension: 'Ø90 × C45 cm & Ø60 × C38 cm',
-      image: '/images/products/ban-tra-doi.jpg',
-      link: '/san-pham/4',
-      coords: { top: '75%', left: '62%' },
-      tag: 'Bán chạy nhất',
-      description: 'Cặp đôi bàn lồng nghệ thuật, mặt đá vân mây bóng mịn chống ố.',
+      id: 'dining',
+      name: 'Phòng Ăn',
+      subtitle: 'Dining Room Lookbook',
+      badge: 'DINING ROOM LOOKBOOK',
+      image: '/images/banners/phong-an.jpg',
+      alt: 'Phối cảnh phòng ăn sang trọng TK House',
+      hotspots: [
+        {
+          id: 0,
+          name: 'Bàn Ăn Oval Trụ Gỗ Khối 8 Chỗ',
+          category: 'Bàn Ăn Thiết Kế',
+          price: '28.500.000₫',
+          material: 'Gỗ Óc Chó FAS & Chân Trụ Nan Điêu Khắc',
+          dimension: 'D220 × R100 × C75 cm',
+          image: '/images/products/ban-an.jpg',
+          link: '/ban-an',
+          coords: { top: '68%', left: '52%' },
+          tag: 'Tâm điểm phòng ăn',
+          description: 'Mặt bàn oval bo cong thanh thoát, 2 khối trụ nan điêu khắc uy nghi và bề thế.',
+        },
+        {
+          id: 1,
+          name: 'Ghế Ăn Bọc Da Cognac Artisan',
+          category: 'Ghế Bàn Ăn Cao Cấp',
+          price: '5.200.000₫',
+          material: 'Khung Gỗ Tần Bì & Đệm Da Bò Thuộc Màu Cognac',
+          dimension: 'D56 × R54 × C78 cm',
+          image: '/images/products/ghe-thu-gian.jpg',
+          link: '/ghe-thu-gian',
+          coords: { top: '70%', left: '15%' },
+          tag: 'Êm ái sang trọng',
+          description: 'Tựa cong ôm trọn cơ thể, chất da đanh mịn mang lại cảm giác ngồi thư thái suốt bữa tiệc.',
+        },
+        {
+          id: 2,
+          name: 'Ghế Ăn Master Bọc Da Cognac',
+          category: 'Ghế Bàn Ăn Cao Cấp',
+          price: '5.200.000₫',
+          material: 'Khung Gỗ Tần Bì & Da Bò Thuộc Màu Cognac',
+          dimension: 'D56 × R54 × C78 cm',
+          image: '/images/products/ghe-thu-gian.jpg',
+          link: '/ghe-thu-gian',
+          coords: { top: '72%', left: '86%' },
+          tag: 'Đồng bộ không gian',
+          description: 'Vẻ đẹp đối xứng hoàn mỹ, tôn lên sự ấm cúng và đẳng cấp của gia chủ.',
+        },
+      ],
     },
     {
-      id: 2,
-      name: 'Ghế Thư Giãn Armchair Mây Osaka',
-      category: 'Ghế Thư Giãn Nghệ Thuật',
-      price: '14.200.000₫',
-      material: 'Mây Đan Mắt Cáo Thủ Công & Gỗ Sồi Khối',
-      dimension: 'D82 × R80 × C95 cm',
-      image: '/images/products/ghe-thu-gian.jpg',
-      link: '/san-pham/3',
-      coords: { top: '56%', left: '17%' },
-      tag: 'Thiết kế biểu tượng',
-      description: 'Góc ngả lưng chuẩn công thái học kết hợp đệm lông vũ siêu êm ái.',
+      id: 'bedroom',
+      name: 'Phòng Ngủ',
+      subtitle: 'Bedroom Lookbook',
+      badge: 'BEDROOM LOOKBOOK',
+      image: '/images/banners/phong-ngu.jpg',
+      alt: 'Phối cảnh phòng ngủ thư thái TK House',
+      hotspots: [
+        {
+          id: 0,
+          name: 'Giường Ngủ Gỗ Óc Chó Viền Đồng Master',
+          category: 'Giường Ngủ Cao Cấp',
+          price: '35.000.000₫',
+          material: 'Gỗ Óc Chó Tự Nhiên FAS & Chỉ Đồng Thau',
+          dimension: 'D215 × R190 × C105 cm (Nệm 1m8 × 2m)',
+          image: '/images/products/giuong-ngu-go-tu-nhien.jpg',
+          link: '/phong-ngu',
+          coords: { top: '68%', left: '55%' },
+          tag: 'Tâm điểm phòng ngủ',
+          description: 'Đầu giường gỗ óc chó nguyên tấm cuộn sóng, nẹp chỉ đồng thau cao cấp vỗ về giấc ngủ sâu.',
+        },
+        {
+          id: 1,
+          name: 'Bàn Làm Việc & Ghế Xoay Phòng Ngủ',
+          category: 'Góc Làm Việc Tiện Nghi',
+          price: '12.800.000₫',
+          material: 'Gỗ Sồi Khối Tự Nhiên & Ghế Xoay Nhôm Đúc',
+          dimension: 'D120 × R60 × C75 cm',
+          image: '/images/categories/phong-lam-viec.jpg',
+          link: '/ban-lam-viec',
+          coords: { top: '73%', left: '10%' },
+          tag: 'Góc sáng tạo thư thái',
+          description: 'Góc đọc sách, làm việc nhẹ nhàng ngập tràn ánh sáng tự nhiên bên khung cửa sổ.',
+        },
+        {
+          id: 2,
+          name: 'Tab Đầu Giường Gỗ Tự Nhiên Nordic',
+          category: 'Tủ & Kệ Phòng Ngủ',
+          price: '4.500.000₫',
+          material: 'Gỗ Tự Nhiên & Ray Giảm Chấn Hafele',
+          dimension: 'D50 × R40 × C45 cm',
+          image: '/images/products/ke-tivi-oc-cho.jpg',
+          link: '/phong-ngu',
+          coords: { top: '62%', left: '62%' },
+          tag: 'Gọn gàng trang nhã',
+          description: 'Thiết kế thanh thoát đặt vừa vặn đèn ngủ, bình hoa trang trí và sách gối đầu giường.',
+        },
+      ],
     },
   ];
+
+  // Không gian phòng hiện tại trong Lookbook
+  const currentLookbookRoom =
+    lookbookRooms.find((r) => r.id === activeLookbookRoom) || lookbookRooms[0];
+  const roomHotspots = currentLookbookRoom.hotspots;
 
   // Dữ liệu Bản giao hưởng chất liệu xa xỉ (Symphony of Noble Materials)
   const luxuryMaterials = [
@@ -647,7 +763,7 @@ export default function HomePage() {
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-neutral-500 font-light max-w-md leading-relaxed">
-            Chạm vào các điểm tròn nhỏ <span className="text-[#8C5D3E] font-medium">●</span> để chiêm ngưỡng tuyệt tác nội thất trong bối cảnh kiến trúc hoàn mỹ.
+            Chạm vào các điểm tròn nhỏ <span className="text-[#8C5D3E] font-medium">●</span> để chiêm ngưỡng tuyệt tác nội thất trong từng không gian sống.
           </p>
         </div>
 
@@ -658,23 +774,53 @@ export default function HomePage() {
             onClick={() => setActiveHotspot(null)}
             className="relative h-[480px] sm:h-[580px] lg:h-[640px] w-full overflow-hidden select-none cursor-pointer"
           >
-            <img
-              src="/images/lookbook/lookbook-living.jpg"
-              alt="Phối cảnh phòng khách tương tác TK House"
-              className="w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-102"
-            />
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentLookbookRoom.id}
+                src={currentLookbookRoom.image}
+                alt={currentLookbookRoom.alt}
+                initial={{ opacity: 0, scale: 1.02 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                className="w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-102"
+              />
+            </AnimatePresence>
             {/* Ambient luxury vignette */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-black/30 pointer-events-none" />
 
-            {/* Top architectural badge */}
-            <div className="absolute top-5 left-5 sm:top-6 sm:left-6 z-10 flex items-center space-x-2.5 pointer-events-none">
-              <span className="backdrop-blur-md bg-black/40 text-white/90 text-[11px] font-sans tracking-[0.25em] uppercase px-4 py-1.5 rounded-full border border-white/20">
-                LIVING ROOM LOOKBOOK
-              </span>
-              <span className="hidden sm:inline-flex backdrop-blur-md bg-white/20 text-white text-[11px] font-sans px-3 py-1.5 rounded-full border border-white/20 items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#E6C280]" />
-                3 Điểm Chạm Tương Tác
-              </span>
+            {/* 3 Viên thuốc chọn phòng độc lập ở góc trên bên trái (Tách riêng, không hiển thị số điểm chạm) */}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-5 left-5 sm:top-6 sm:left-6 z-20 flex items-center gap-2.5 sm:gap-3 flex-wrap cursor-auto"
+            >
+              {lookbookRooms.map((room) => {
+                const isSelected = activeLookbookRoom === room.id;
+                return (
+                  <button
+                    key={room.id}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveLookbookRoom(room.id);
+                      setActiveHotspot(null);
+                    }}
+                    className={`backdrop-blur-md px-4 sm:px-5 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-300 flex items-center gap-2 border shadow-sm ${
+                      isSelected
+                        ? 'bg-white text-neutral-900 border-white shadow-md font-semibold scale-102'
+                        : 'bg-black/45 hover:bg-black/65 text-white/85 hover:text-white border-white/20 hover:scale-102'
+                    }`}
+                    aria-label={`Xem ${room.name}`}
+                  >
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                        isSelected ? 'bg-[#8C5D3E]' : 'bg-[#C8A97E]'
+                      }`}
+                    />
+                    <span>{room.name}</span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Interactive Pins */}
@@ -684,7 +830,7 @@ export default function HomePage() {
               const leftPercent = parseFloat(spot.coords.left);
               let cardAlignClass = 'left-1/2 -translate-x-1/2';
               if (leftPercent < 30) cardAlignClass = 'left-0 sm:left-1/2 sm:-translate-x-1/2';
-              if (leftPercent > 55) cardAlignClass = 'right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2';
+              if (leftPercent > 65) cardAlignClass = 'right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2';
 
               return (
                 <div
@@ -692,10 +838,10 @@ export default function HomePage() {
                   style={{ top: spot.coords.top, left: spot.coords.left }}
                   className="absolute -translate-x-1/2 -translate-y-1/2 z-20 group/pin"
                 >
-                  {/* Subtle, gentle breathing aura (Không còn sóng chớp giật mạnh, nhỏ gọn và thanh tao) */}
+                  {/* Subtle, gentle breathing aura */}
                   <span className="absolute -inset-1 rounded-full bg-white/30 opacity-70 animate-pulse pointer-events-none" />
 
-                  {/* Hotspot Pin Button (Nhỏ gọn 24px, nhẹ nhàng tinh tế) */}
+                  {/* Hotspot Pin Button */}
                   <button
                     type="button"
                     onClick={(e) => {
@@ -716,7 +862,7 @@ export default function HomePage() {
                     />
                   </button>
 
-                  {/* Desktop Floating Card Tooltip (Đặt phía trên pin để không che thanh điều khiển bên dưới) */}
+                  {/* Desktop Floating Card Tooltip */}
                   {isSelected && (
                     <div
                       onClick={(e) => e.stopPropagation()}
@@ -789,7 +935,7 @@ export default function HomePage() {
               className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 z-20 cursor-auto"
             >
               <div className="backdrop-blur-xl bg-black/60 border border-white/20 rounded-2xl p-3 sm:p-4 text-white flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
-                {/* 3 Hotspot quick tabs */}
+                {/* Hotspot quick tabs for current room */}
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
                   {roomHotspots.map((item) => {
                     const isTabActive = activeHotspot === item.id;
@@ -818,30 +964,37 @@ export default function HomePage() {
                 </div>
 
                 {/* Active Hotspot Info & CTA (Chỉ hiện khi người dùng chủ động chọn) */}
-                {activeHotspot !== null ? (
-                  <div className="flex items-center justify-between md:justify-end gap-3 sm:gap-4 border-t md:border-t-0 border-white/15 pt-2.5 md:pt-0 animate-in fade-in duration-200">
-                    <div className="text-left md:text-right">
-                      <p className="text-[10px] text-[#E6C280] uppercase tracking-wider font-semibold">
-                        {roomHotspots[activeHotspot].tag}
-                      </p>
-                      <p className="text-xs sm:text-sm font-serif italic text-white">
-                        {roomHotspots[activeHotspot].price}
-                      </p>
+                {(() => {
+                  const activeSpotItem =
+                    activeHotspot !== null
+                      ? roomHotspots.find((s) => s.id === activeHotspot)
+                      : null;
+
+                  return activeSpotItem ? (
+                    <div className="flex items-center justify-between md:justify-end gap-3 sm:gap-4 border-t md:border-t-0 border-white/15 pt-2.5 md:pt-0 animate-in fade-in duration-200">
+                      <div className="text-left md:text-right">
+                        <p className="text-[10px] text-[#E6C280] uppercase tracking-wider font-semibold">
+                          {activeSpotItem.tag}
+                        </p>
+                        <p className="text-xs sm:text-sm font-serif italic text-white">
+                          {activeSpotItem.price}
+                        </p>
+                      </div>
+                      <Link
+                        to={activeSpotItem.link}
+                        className="px-4 py-2 sm:px-5 sm:py-2.5 backdrop-blur-md bg-[#8C5D3E] hover:bg-[#72482E] text-white text-[11px] sm:text-xs font-semibold tracking-wider uppercase rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:scale-105"
+                      >
+                        <span>Xem sản phẩm</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
                     </div>
-                    <Link
-                      to={roomHotspots[activeHotspot].link}
-                      className="px-4 py-2 sm:px-5 sm:py-2.5 backdrop-blur-md bg-[#8C5D3E] hover:bg-[#72482E] text-white text-[11px] sm:text-xs font-semibold tracking-wider uppercase rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:scale-105"
-                    >
-                      <span>Xem sản phẩm</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="hidden sm:flex items-center justify-end gap-2 text-white/70 text-xs font-light">
-                    <Sparkles className="w-3.5 h-3.5 text-[#E6C280]" />
-                    <span>Chạm vào điểm tròn trên hình để xem giá và chi tiết</span>
-                  </div>
-                )}
+                  ) : (
+                    <div className="hidden sm:flex items-center justify-end gap-2 text-white/70 text-xs font-light">
+                      <Sparkles className="w-3.5 h-3.5 text-[#E6C280]" />
+                      <span>Chạm vào điểm tròn trên hình để xem giá và chi tiết</span>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>

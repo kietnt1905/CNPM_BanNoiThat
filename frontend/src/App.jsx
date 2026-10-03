@@ -22,9 +22,13 @@ function AnimatedRoutes() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<HomePage />} />
           <Route path="sofa-ban-tra" element={<CategoryPage categoryId="02" />} />
+          <Route path="phong-khach" element={<CategoryPage categoryId="02" />} />
           <Route path="ban-an" element={<CategoryPage categoryId="01" />} />
+          <Route path="phong-an" element={<CategoryPage categoryId="01" />} />
           <Route path="ban-lam-viec" element={<CategoryPage categoryId="03" />} />
           <Route path="ghe-thu-gian" element={<CategoryPage categoryId="04" />} />
+          <Route path="phong-ngu" element={<CategoryPage categoryId="05" />} />
+          <Route path="giuong-ngu" element={<CategoryPage categoryId="05" />} />
           <Route path="san-pham" element={<CategoryPage categoryId="02" />} />
           <Route path="thiet-ke-noi-that" element={<HomePage />} />
           <Route path="cau-chuyen-thuong-hieu" element={<HomePage />} />
