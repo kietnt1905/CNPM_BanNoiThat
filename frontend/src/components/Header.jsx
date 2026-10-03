@@ -11,7 +11,6 @@ import {
     X,
     ChevronDown,
     ChevronRight,
-    Sparkles,
     ArrowRight
 } from 'lucide-react';
 
@@ -151,79 +150,7 @@ export default function Header() {
     ];
 
     return (
-        <header className="w-full bg-white z-50 sticky top-0 transition-shadow duration-300">
-            {/* 1. TOPBAR TRÊN CÙNG (Nhỏ, trang nhã, dàn rộng thoáng đãng) */}
-            <div className="bg-[#f9f8f6] border-b border-neutral-200/80 text-[11px] text-neutral-600 font-sans tracking-wide">
-                <div className="max-w-[1720px] w-full mx-auto px-6 sm:px-10 lg:px-12 h-9 flex items-center justify-between">
-                    {/* Topbar Left */}
-                    <div className="flex items-center space-x-6">
-                        <a
-                            href="tel:18007200"
-                            className="inline-flex items-center space-x-1.5 text-neutral-700 hover:text-neutral-900 font-medium transition-colors"
-                        >
-                            <Phone className="w-3.5 h-3.5 text-neutral-700" />
-                            <span>
-                                Hotline: <strong className="text-neutral-900 font-bold">1800 7200</strong>{' '}
-                                <span className="text-[10px] text-emerald-700 font-normal bg-emerald-50 px-1.5 py-0.5 rounded ml-1 border border-emerald-200">
-                                    Miễn phí
-                                </span>
-                            </span>
-                        </a>
-
-                        <span className="hidden sm:inline-block w-px h-3 bg-neutral-300"></span>
-
-                        <Link
-                            to="/#cau-chuyen-thuong-hieu"
-                            onClick={(e) => handleScrollToSection(e, 'cau-chuyen-thuong-hieu')}
-                            className="hidden sm:inline-block hover:text-neutral-900 transition-colors"
-                        >
-                            Giới thiệu
-                        </Link>
-
-                        <Link
-                            to="/khuyen-mai"
-                            className="hidden md:inline-flex items-center space-x-1 text-amber-800 hover:text-amber-900 font-medium transition-colors"
-                        >
-                            <Sparkles className="w-3 h-3 text-amber-600" />
-                            <span>Khuyến mãi đặc quyền</span>
-                        </Link>
-                    </div>
-
-                    {/* Topbar Right */}
-                    <div className="flex items-center space-x-5">
-                        <Link
-                            to="/showroom"
-                            className="inline-flex items-center space-x-1.5 hover:text-neutral-900 transition-colors"
-                        >
-                            <MapPin className="w-3.5 h-3.5 text-neutral-500" />
-                            <span className="hidden sm:inline">Tìm Showroom</span>
-                        </Link>
-
-                        <Link
-                            to="/yeu-thich"
-                            className="inline-flex items-center space-x-1.5 hover:text-neutral-900 transition-colors relative"
-                        >
-                            <Heart className="w-3.5 h-3.5 text-neutral-500" />
-                            <span className="hidden sm:inline">Yêu thích</span>
-                            {wishlistCount > 0 && (
-                                <span className="inline-flex items-center justify-center bg-neutral-800 text-white text-[9px] w-3.5 h-3.5 rounded-full font-semibold">
-                                    {wishlistCount}
-                                </span>
-                            )}
-                        </Link>
-
-                        <span className="w-px h-3 bg-neutral-300"></span>
-
-                        <Link
-                            to="/dang-nhap"
-                            className="inline-flex items-center space-x-1.5 hover:text-neutral-900 font-medium transition-colors"
-                        >
-                            <User className="w-3.5 h-3.5 text-neutral-500" />
-                            <span>Đăng nhập / Đăng ký</span>
-                        </Link>
-                    </div>
-                </div>
-            </div>
+        <header className="w-full bg-white z-50 sticky top-0">
 
             {/* 2. MAIN HEADER (DÀN RỘNG THOÁNG ĐÃNG CHUẨN LUXURY) */}
             <div
@@ -499,7 +426,7 @@ export default function Header() {
                         </nav>
 
                         {/* Right: Search Bar & Actions */}
-                        <div className="flex items-center space-x-3 sm:space-x-4 lg:space-x-5 flex-shrink-0">
+                        <div className="flex items-center space-x-2.5 sm:space-x-3.5 lg:space-x-4 flex-shrink-0">
                             {/* Thanh tìm kiếm bo tròn tinh tế kèm kính lúp */}
                             <form onSubmit={handleSearchSubmit} className="relative hidden md:block">
                                 <input
@@ -507,7 +434,7 @@ export default function Header() {
                                     placeholder="Tìm sản phẩm..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-48 lg:w-56 xl:w-64 2xl:w-72 pl-4 pr-9 py-1.5 text-xs text-neutral-800 placeholder-neutral-400 bg-neutral-100/90 rounded-full border border-transparent focus:border-neutral-800 focus:bg-white focus:outline-none transition-all duration-200"
+                                    className="w-44 lg:w-52 xl:w-60 2xl:w-64 pl-4 pr-9 py-1.5 text-xs text-neutral-800 placeholder-neutral-400 bg-neutral-100/90 rounded-full border border-transparent focus:border-neutral-800 focus:bg-white focus:outline-none transition-all duration-200"
                                 />
                                 <button
                                     type="submit"
@@ -528,11 +455,27 @@ export default function Header() {
                                 <Search className="w-5 h-5 stroke-[1.8]" />
                             </button>
 
+                            {/* Nút Yêu Thích - Đặt cạnh bên trái giỏ hàng */}
+                            <Link
+                                to="/yeu-thich"
+                                className="relative p-2 text-neutral-800 hover:text-neutral-950 transition-colors group"
+                                aria-label="Sản phẩm yêu thích"
+                                title="Danh sách yêu thích"
+                            >
+                                <Heart className="w-5 h-5 stroke-[1.8] group-hover:scale-105 transition-transform" />
+                                {wishlistCount > 0 && (
+                                    <span className="absolute top-0.5 right-0.5 bg-neutral-900 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold shadow-sm">
+                                        {wishlistCount}
+                                    </span>
+                                )}
+                            </Link>
+
                             {/* Nút Giỏ Hàng kèm Badge số lượng */}
                             <Link
                                 to="/gio-hang"
                                 className="relative p-2 text-neutral-800 hover:text-neutral-950 transition-colors group"
                                 aria-label="Giỏ hàng"
+                                title="Giỏ hàng"
                             >
                                 <ShoppingBag className="w-5 h-5 stroke-[1.8] group-hover:scale-105 transition-transform" />
                                 {cartCount > 0 && (
@@ -542,13 +485,17 @@ export default function Header() {
                                 )}
                             </Link>
 
-                            {/* Nút Tài Khoản */}
+                            {/* Nút Tài Khoản: Đăng nhập / Đăng ký */}
                             <Link
-                                to="/tai-khoan"
-                                className="p-2 text-neutral-800 hover:text-neutral-950 transition-colors hidden sm:block"
-                                aria-label="Tài khoản cá nhân"
+                                to="/auth"
+                                className="inline-flex items-center space-x-1.5 py-1.5 px-2.5 text-neutral-800 hover:text-neutral-950 hover:bg-neutral-100/80 rounded-full transition-all group"
+                                aria-label="Đăng nhập / Đăng ký"
+                                title="Đăng nhập / Đăng ký"
                             >
-                                <User className="w-5 h-5 stroke-[1.8]" />
+                                <User className="w-5 h-5 stroke-[1.8] group-hover:scale-105 transition-transform" />
+                                <span className="hidden sm:inline text-xs font-medium text-neutral-700 group-hover:text-neutral-950 whitespace-nowrap">
+                                    Đăng ký / Đăng nhập
+                                </span>
                             </Link>
                         </div>
                     </div>
@@ -753,7 +700,7 @@ export default function Header() {
                                     </Link>
 
                                     <Link
-                                        to="/tai-khoan"
+                                        to="/auth"
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="flex items-center space-x-2 py-1 hover:text-neutral-900"
                                     >

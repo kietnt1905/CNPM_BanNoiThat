@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
   Sparkles,
@@ -24,6 +25,21 @@ import {
 
 export default function HomePage() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Trạng thái thẻ đang được kích hoạt hiệu ứng GPU Hardware Acceleration
+  const [activePortalCard, setActivePortalCard] = useState(null);
+
+  const handleCategoryClick = (e, cat) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (activePortalCard) return;
+    setActivePortalCard(cat.id);
+
+    // Chuyển trang Router sau 0.42s khi card phóng nhẹ và mờ dần
+    setTimeout(() => {
+      navigate(cat.link);
+    }, 420);
+  };
 
   // Đảm bảo khi tải trang mặc định "/" luôn nằm ở đỉnh trang (Hero Banner Victoria)
   useEffect(() => {
@@ -128,7 +144,7 @@ export default function HomePage() {
       title: 'Bộ Bàn Ăn Sang Trọng',
       subtitle: 'Mặt đá Ceramic chống ố, Ghế ăn bọc da cao cấp',
       image: '/images/categories/phong-am.jpg',
-      link: '/san-pham?danh-muc=ban-an',
+      link: '/ban-an',
       isTaller: false,
     },
     {
@@ -137,7 +153,7 @@ export default function HomePage() {
       title: 'Sofa & Bàn Trà Tinh Tế',
       subtitle: 'Sofa da thảo mộc, Bàn trà đôi đá tự nhiên',
       image: '/images/categories/phong-khach.jpg',
-      link: '/san-pham?danh-muc=sofa',
+      link: '/sofa-ban-tra',
       isTaller: true,
     },
     {
@@ -146,7 +162,7 @@ export default function HomePage() {
       title: 'Góc Làm Việc Nghệ Thuật',
       subtitle: 'Bàn làm việc gỗ sồi khối, Ghế công thái học êm ái',
       image: '/images/categories/phong-lam-viec.jpg',
-      link: '/san-pham?danh-muc=ban-lam-viec',
+      link: '/ban-lam-viec',
       isTaller: true,
     },
     {
@@ -155,7 +171,7 @@ export default function HomePage() {
       title: 'Ghế Thư Giãn & Armchair',
       subtitle: 'Đệm lông vũ mềm mại, nâng niu từng phút giây thư thái',
       image: '/images/products/ghe-thu-gian.jpg',
-      link: '/san-pham?danh-muc=ghe-thu-gian',
+      link: '/ghe-thu-gian',
       isTaller: false,
     },
   ];
@@ -447,7 +463,7 @@ export default function HomePage() {
       num: '01',
       title: 'GHẾ & SOFA NGHỆ THUẬT',
       subtitle: 'Sofa băng, Armchair thư giãn và ghế bàn ăn bọc da cao cấp',
-      link: '/san-pham?danh-muc=sofa',
+      link: '/sofa-ban-tra',
       image: '/images/categories/sofa-3cho.jpg',
       tag: 'LOOKBOOK 2026',
     },
@@ -455,7 +471,7 @@ export default function HomePage() {
       num: '02',
       title: 'BÀN ĂN & BÀN TRÀ TINH TẾ',
       subtitle: 'Mặt đá Ceramic chống ố, vân gỗ tự nhiên ấm cúng trường tồn',
-      link: '/san-pham?danh-muc=ban',
+      link: '/ban-an',
       image: '/images/categories/ban-an.jpg',
       tag: 'EXCLUSIVE PIECES',
     },
@@ -499,7 +515,12 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="w-full bg-[#F9F6F0] text-[#2C241E] selection:bg-[#E8DCCB] selection:text-[#523A28]">
+    <motion.div
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+      className="w-full bg-[#F9F6F0] text-[#2C241E] selection:bg-[#E8DCCB] selection:text-[#523A28]"
+    >
       {/* 1. HERO BANNER - SLIDER TỰ ĐỘNG VỚI HIỆU ỨNG KEN BURNS (SLOW ZOOM & FADE) */}
       <section className="relative w-full h-[620px] lg:h-[740px] flex items-center justify-center overflow-hidden select-none bg-neutral-900">
         {/* Slides Container với hiệu ứng Crossfade & Ken Burns */}
@@ -923,47 +944,81 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-7 group/cards-wrap items-end">
-            {featuredCategories.map((cat) => (
-              <Link
-                key={cat.id}
-                to={cat.link}
-                className={`group/arch relative overflow-hidden bg-[#F6F2EC] rounded-t-[100px] sm:rounded-t-[120px] lg:rounded-t-[140px] rounded-b-3xl border border-[#E8E2D8] shadow-[0_8px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] transition-all duration-700 ease-out group-hover/cards-wrap:opacity-85 hover:!opacity-100 hover:-translate-y-2.5 ${
-                  cat.isTaller
-                    ? 'h-[500px] sm:h-[530px] lg:h-[560px] lg:-translate-y-3'
-                    : 'h-[460px] sm:h-[480px] lg:h-[510px]'
-                }`}
-              >
-                <img
-                  src={cat.image}
-                  alt={cat.title}
-                  className="w-full h-full object-cover group-hover/arch:scale-108 transition-transform duration-1000 ease-out"
-                />
-                {/* Tag vòm trên đỉnh */}
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10">
-                  <span className="backdrop-blur-md bg-black/30 text-white/90 text-[10px] font-sans tracking-[0.25em] px-3.5 py-1 rounded-full border border-white/20 uppercase shadow-sm">
-                    {cat.id} • {cat.tag}
-                  </span>
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-7 group/cards-wrap items-end relative">
+            {featuredCategories.map((cat) => {
+              const isSelected = activePortalCard === cat.id;
+              const isAnyActive = activePortalCard !== null;
+              const isOther = isAnyActive && !isSelected;
 
-                {/* Lớp gradient nâu ấm nghệ thuật làm nổi bật chữ */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/5 group-hover/arch:from-black/90 transition-colors duration-500" />
-
-                {/* Nội dung thẻ góc dưới */}
-                <div className="absolute bottom-7 left-6 right-6 text-white space-y-1.5 z-10">
-                  <h3 className="font-serif text-xl sm:text-2xl font-normal text-white italic group-hover/arch:translate-x-1 transition-transform duration-300 drop-shadow">
-                    {cat.title}
-                  </h3>
-                  <p className="text-xs text-neutral-200/90 font-light leading-relaxed">
-                    {cat.subtitle}
-                  </p>
-                  <div className="pt-2 flex items-center space-x-1.5 text-xs text-[#E6C280] font-medium opacity-0 group-hover/arch:opacity-100 transition-opacity duration-300">
-                    <span>Khám phá bộ sưu tập</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover/arch:translate-x-1 transition-transform" />
+              return (
+                <motion.div
+                  key={cat.id}
+                  onClick={(e) => handleCategoryClick(e, cat)}
+                  animate={
+                    isSelected
+                      ? {
+                          scale: 1.18,
+                          opacity: 0,
+                          zIndex: 30,
+                        }
+                      : isOther
+                      ? {
+                          opacity: 0.65,
+                        }
+                      : {
+                          scale: 1,
+                          opacity: 1,
+                        }
+                  }
+                  transition={{
+                    duration: 0.45,
+                    ease: [0.25, 1, 0.5, 1],
+                  }}
+                  style={{
+                    willChange: 'transform, opacity',
+                    transformOrigin: 'center center',
+                  }}
+                  className={`group/arch relative overflow-hidden bg-[#F6F2EC] rounded-t-[100px] sm:rounded-t-[120px] lg:rounded-t-[140px] rounded-b-3xl border border-[#E8E2D8] cursor-pointer shadow-[0_8px_25px_rgba(0,0,0,0.03)] transition-shadow duration-500 ease-out select-none ${
+                    isAnyActive
+                      ? 'pointer-events-none'
+                      : 'hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] hover:-translate-y-2.5 group-hover/cards-wrap:opacity-85 hover:!opacity-100'
+                  } ${
+                    cat.isTaller
+                      ? 'h-[500px] sm:h-[530px] lg:h-[560px] lg:-translate-y-3'
+                      : 'h-[460px] sm:h-[480px] lg:h-[510px]'
+                  }`}
+                >
+                  <img
+                    src={cat.image}
+                    alt={cat.title}
+                    className="w-full h-full object-cover group-hover/arch:scale-105 transition-transform duration-700 ease-out"
+                  />
+                  {/* Tag vòm trên đỉnh */}
+                  <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10">
+                    <span className="bg-black/60 text-white/90 text-[10px] font-sans tracking-[0.25em] px-3.5 py-1 rounded-full border border-white/20 uppercase shadow-sm">
+                      {cat.id} • {cat.tag}
+                    </span>
                   </div>
-                </div>
-              </Link>
-            ))}
+
+                  {/* Lớp gradient nâu ấm nghệ thuật làm nổi bật chữ */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/5 group-hover/arch:from-black/90 transition-colors duration-500" />
+
+                  {/* Nội dung thẻ góc dưới */}
+                  <div className="absolute bottom-7 left-6 right-6 text-white space-y-1.5 z-10">
+                    <h3 className="font-serif text-xl sm:text-2xl font-normal text-white italic group-hover/arch:translate-x-1 transition-transform duration-300 drop-shadow">
+                      {cat.title}
+                    </h3>
+                    <p className="text-xs text-neutral-200/90 font-light leading-relaxed">
+                      {cat.subtitle}
+                    </p>
+                    <div className="pt-2 flex items-center space-x-1.5 text-xs text-[#E6C280] font-medium opacity-0 group-hover/arch:opacity-100 transition-opacity duration-300">
+                      <span>Khám phá bộ sưu tập</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover/arch:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1622,6 +1677,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-    </div>
+    </motion.div>
   );
 }
