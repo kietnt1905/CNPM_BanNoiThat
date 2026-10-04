@@ -1,3 +1,78 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[#F9F6F0] text-[#2C241E] font-sans antialiased overflow-x-hidden;
+  }
+}
+
+/* Tinh chỉnh scrollbar phong cách sang trọng */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8e8e8e;
+}
+
+/* ==========================================================================
+   HERO BANNER KEN BURNS & PROGRESS BAR ANIMATIONS (NHÀ XINH LUXURY STYLE)
+   ========================================================================== */
+
+/* Hiệu ứng Ken Burns phóng to nhẹ nhàng, êm dịu */
+@keyframes kenburnsZoom {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.10);
+  }
+}
+
+.animate-kenburns {
+  animation: kenburnsZoom 6.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  will-change: transform;
+}
+
+/* Vạch tiến trình chạy đều 6s lấp đầy màu */
+@keyframes progressBarFill {
+  0% {
+    width: 0%;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-progress-fill {
+  animation: progressBarFill 6s linear forwards;
+  will-change: width;
+}
+
+/* Ẩn scrollbar cho Carousel lướt ngang mượt mà */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
