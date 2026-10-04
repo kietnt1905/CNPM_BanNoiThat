@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
+import AuthCallback from './pages/AuthCallback';
 import CategoryPage from './pages/CategoryPage';
 
 function AnimatedRoutes() {
@@ -14,6 +15,7 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         {/* Dedicated Auth Routes (Full split screen) */}
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/dang-nhap" element={<AuthPage defaultMode="login" />} />
         <Route path="/dang-ky" element={<AuthPage defaultMode="register" />} />
         <Route path="/login" element={<AuthPage defaultMode="login" />} />

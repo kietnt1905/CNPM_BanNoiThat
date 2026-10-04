@@ -212,38 +212,38 @@ export default function AuthPage({ defaultMode = 'login' }) {
     };
 
     return (
-        <div className="min-h-screen bg-[#F7F5F0] text-[#222222] font-sans selection:bg-[#8C6A48] selection:text-white flex flex-col justify-between p-4 sm:p-6 lg:p-8 relative">
+        <div className="h-screen overflow-hidden bg-[#F7F5F0] text-[#222222] font-sans selection:bg-[#8C6A48] selection:text-white flex flex-col justify-between p-2.5 sm:p-3.5 lg:px-6 lg:py-2 relative">
             {/* Architectural Sub-grid Background Accent */}
             <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(#cfc6b8_1px,transparent_1px)] [background-size:24px_24px]" />
 
             {/* =========================================================================
                 1. TOP COMPACT HEADER
             ========================================================================= */}
-            <header className="relative z-10 w-full max-w-[1040px] mx-auto flex items-center justify-between py-2 border-b border-[#E5DFD5] mb-4 sm:mb-6">
+            <header className="relative z-10 w-full max-w-[1020px] mx-auto flex items-center justify-between py-1 border-b border-[#E5DFD5] mb-1 sm:mb-2 flex-shrink-0">
                 <Link to="/" className="inline-flex items-center space-x-2.5 group">
                     <img
                         src="/images/logo/logo.png"
                         alt="TK House Icon"
-                        className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105"
+                        className="h-7 sm:h-8 w-auto object-contain transition-transform group-hover:scale-105"
                     />
                     <div className="flex flex-col">
-                        <span className="font-serif text-sm sm:text-base font-semibold tracking-wide text-stone-900 uppercase leading-none">
+                        <span className="font-serif text-xs sm:text-sm font-semibold tracking-wide text-stone-900 uppercase leading-none">
                             TK HOUSE
                         </span>
-                        <span className="text-[8.5px] tracking-[0.2em] text-[#8C6A48] uppercase font-semibold mt-0.5">
+                        <span className="text-[8px] tracking-[0.2em] text-[#8C6A48] uppercase font-semibold mt-0.5">
                             KIẾN TRÚC & NỘI THẤT CAO CẤP
                         </span>
                     </div>
                 </Link>
 
                 <div className="flex items-center space-x-4 sm:space-x-6 text-xs text-stone-600 font-medium">
-                    <span className="hidden sm:inline text-stone-500">
+                    <span className="hidden sm:inline text-stone-500 text-[11.5px]">
                         Hotline KTS: <strong className="text-stone-800 font-semibold">1800 7200</strong>
                     </span>
 
                     <Link
                         to="/"
-                        className="inline-flex items-center space-x-1.5 bg-white hover:bg-stone-900 hover:text-white transition-all border border-[#E5DFD5] px-3.5 py-1.5 rounded-full text-xs font-semibold text-stone-800 shadow-sm"
+                        className="inline-flex items-center space-x-1.5 bg-white hover:bg-stone-900 hover:text-white transition-all border border-[#E5DFD5] px-3 py-1 rounded-full text-xs font-semibold text-stone-800 shadow-sm"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" />
                         <span>Về trang chủ</span>
@@ -254,7 +254,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
             {/* =========================================================================
                 2. MAIN COMPACT SPLIT CARD (KHUNG CARD TRẮNG CỐ ĐỊNH KÍCH THƯỚC CHUẨN)
             ========================================================================= */}
-            <div className="relative z-10 w-full max-w-[1040px] mx-auto bg-white rounded-2xl border border-[#E5DFD5] shadow-[0_15px_40px_-10px_rgba(40,32,25,0.07)] overflow-hidden my-auto grid grid-cols-1 lg:grid-cols-12 lg:h-[610px]">
+            <div className="relative z-10 w-full max-w-[1020px] mx-auto bg-white rounded-2xl border border-[#E5DFD5] shadow-[0_15px_40px_-10px_rgba(40,32,25,0.07)] overflow-hidden my-auto grid grid-cols-1 lg:grid-cols-12 h-auto lg:h-[675px] max-h-[calc(100vh-100px)] min-h-[520px] flex-shrink-0">
                 {/* -------------------------------------------------------------
                     CỘT TRÁI (5 Cột): Khung Ảnh Fade Nhẹ Nhàng Bằng AnimatePresence
                 ------------------------------------------------------------- */}
@@ -278,10 +278,10 @@ export default function AuthPage({ defaultMode = 'login' }) {
                     {/* Architectural Top Stamp */}
                     <div className="absolute top-6 left-6 right-6 flex items-center justify-between text-white/90 z-10">
                         <span className="inline-flex items-center space-x-1.5 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded text-[9.5px] font-mono tracking-widest text-[#E6C687] uppercase border border-white/15">
-                            <Sparkles className="w-3 h-3 text-[#E6C687]" />
+                            <Sparkles className="w-3.5 h-3.5 text-[#E6C687]" />
                             <span>TK HOUSE ATELIER</span>
                         </span>
-                        <span className="text-[10px] font-mono text-stone-400">EST. 2026</span>
+                        <span className="text-[10.5px] font-mono text-stone-400">EST. 2026</span>
                     </div>
 
                     {/* Architectural Bottom Quote */}
@@ -297,7 +297,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                 <span className="text-[9.5px] uppercase tracking-[0.25em] text-[#E6C687] font-semibold block mb-1.5">
                                     {isLogin ? 'CONTEMPORARY LIVING' : 'SIGNATURE BANQUET'}
                                 </span>
-                                <h3 className="font-serif text-lg font-light text-white leading-snug drop-shadow-sm mb-3">
+                                <h3 className="font-serif text-base sm:text-lg font-light text-white leading-relaxed drop-shadow-sm mb-3">
                                     {isLogin
                                         ? '“Kiến tạo sự cân bằng hoàn mỹ giữa ánh sáng tự nhiên và chất liệu mộc mạc.”'
                                         : '“Nơi mỗi đường nét kiến trúc đều tôn vinh cảm xúc an yên của gia đình.”'}
@@ -306,55 +306,45 @@ export default function AuthPage({ defaultMode = 'login' }) {
                         </AnimatePresence>
 
                         {/* Điểm nhấn tối giản */}
-                        <div className="pt-3 border-t border-white/15 flex items-center justify-between text-[11px] text-stone-300">
+                        <div className="pt-3 border-t border-white/20 flex items-center justify-between text-[11px] text-stone-300">
                             <span>Thiết kế may đo độc bản</span>
-                            <span className="text-[#E6C687] font-mono">Bảo hành 10 năm</span>
+                            <span className="text-[#E6C687] font-mono font-medium">Bảo hành 10 năm</span>
                         </div>
                     </div>
                 </div>
 
                 {/* -------------------------------------------------------------
-                    CỘT PHẢI (7 Cột): Form Giữ Ổn Định Chiều Cao, Không Co Giật
+                    CỘT PHẢI (7 Cột): Form Giữ Ổn Định Tuyệt Đối, Không Scroll
                 ------------------------------------------------------------- */}
-                <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 flex flex-col justify-between bg-white h-full overflow-y-auto">
+                <div className="lg:col-span-7 px-6 py-5 sm:px-8 sm:py-6 lg:px-9 lg:py-6 flex flex-col justify-between bg-white h-full overflow-hidden">
                     <div>
                         {/* Title Header */}
-                        <div className="mb-5">
+                        <div className="mb-3">
                             <div className="flex items-center space-x-1.5 text-[10px] font-bold tracking-[0.2em] text-[#8C6A48] uppercase mb-1">
-                                <Lock className="w-3 h-3 text-[#8C6A48]" />
+                                <Lock className="w-3.5 h-3.5 text-[#8C6A48]" />
                                 <span>CỔNG THÀNH VIÊN TK HOUSE</span>
                             </div>
-                            <AnimatePresence mode="wait" initial={false}>
-                                <motion.div
-                                    key={isLogin ? 'header-login' : 'header-register'}
-                                    initial={{ opacity: 0, y: 6 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -6 }}
-                                    transition={{ duration: 0.25, ease: "easeOut" }}
-                                >
-                                    <h2 className="font-serif text-2xl sm:text-[26px] font-normal text-stone-900 tracking-tight">
-                                        {isLogin ? 'Đăng nhập tài khoản' : 'Đăng ký hồ sơ mới'}
-                                    </h2>
-                                    <p className="text-stone-500 text-xs font-light mt-1">
-                                        {isLogin
-                                            ? 'Chào mừng Quý khách quay trở lại với không gian sống TK House.'
-                                            : 'Trở thành thành viên để lưu giữ thiết kế yêu thích và nhận tư vấn KTS.'}
-                                    </p>
-                                </motion.div>
-                            </AnimatePresence>
+                            <h2 className="font-serif text-2xl sm:text-[25px] font-normal text-stone-900 tracking-tight leading-tight">
+                                {isLogin ? 'Đăng nhập tài khoản' : 'Đăng ký hồ sơ mới'}
+                            </h2>
+                            <p className="text-stone-500 text-xs font-light mt-1 truncate">
+                                {isLogin
+                                    ? 'Chào mừng Quý khách quay trở lại với không gian sống TK House.'
+                                    : 'Trở thành thành viên để lưu giữ thiết kế yêu thích và nhận tư vấn KTS.'}
+                            </p>
                         </div>
 
                         {/* =====================================================
                             4. THANH GẠCH CHÂN CỦA TAB VỚI layoutId="auth-tab-indicator"
                         ===================================================== */}
-                        <div className="grid grid-cols-2 border-b border-stone-200 mb-5 relative">
+                        <div className="grid grid-cols-2 border-b border-stone-200 mb-3.5 relative">
                             <button
                                 type="button"
                                 onClick={() => {
                                     setIsLogin(true);
                                     setFeedbackMessage(null);
                                 }}
-                                className={`pb-3 text-xs sm:text-sm font-semibold tracking-wider transition-colors duration-200 relative text-center uppercase cursor-pointer select-none ${isLogin
+                                className={`pb-2.5 text-xs font-semibold tracking-wider transition-colors duration-200 relative text-center uppercase cursor-pointer select-none ${isLogin
                                         ? 'text-stone-900'
                                         : 'text-stone-400 hover:text-stone-700'
                                     }`}
@@ -363,7 +353,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                 {isLogin && (
                                     <motion.div
                                         layoutId="auth-tab-indicator"
-                                        className="absolute bottom-[-1px] left-0 right-0 h-[2.5px] bg-[#8C6A48]"
+                                        className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-[#8C6A48]"
                                         transition={{
                                             type: 'spring',
                                             stiffness: 320,
@@ -379,7 +369,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                     setIsLogin(false);
                                     setFeedbackMessage(null);
                                 }}
-                                className={`pb-3 text-xs sm:text-sm font-semibold tracking-wider transition-colors duration-200 relative text-center uppercase cursor-pointer select-none ${!isLogin
+                                className={`pb-2.5 text-xs font-semibold tracking-wider transition-colors duration-200 relative text-center uppercase cursor-pointer select-none ${!isLogin
                                         ? 'text-stone-900'
                                         : 'text-stone-400 hover:text-stone-700'
                                     }`}
@@ -388,7 +378,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                 {!isLogin && (
                                     <motion.div
                                         layoutId="auth-tab-indicator"
-                                        className="absolute bottom-[-1px] left-0 right-0 h-[2.5px] bg-[#8C6A48]"
+                                        className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-[#8C6A48]"
                                         transition={{
                                             type: 'spring',
                                             stiffness: 320,
@@ -401,11 +391,8 @@ export default function AuthPage({ defaultMode = 'login' }) {
 
                         {/* Feedback Alert */}
                         {feedbackMessage && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                className={`mb-4 p-3 rounded-lg text-xs flex items-center space-x-2 ${
+                            <div
+                                className={`mb-2.5 p-2.5 rounded-lg text-xs flex items-center space-x-2 ${
                                     feedbackMessage.type === 'error'
                                         ? 'bg-rose-50 text-rose-800 border border-rose-200'
                                         : feedbackMessage.type === 'info'
@@ -413,16 +400,16 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                         : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                                 }`}
                             >
-                                {feedbackMessage.type === 'success' && <Check className="w-4 h-4 flex-shrink-0" />}
-                                {feedbackMessage.type === 'info' && <Info className="w-4 h-4 flex-shrink-0 text-amber-700" />}
+                                {feedbackMessage.type === 'success' && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+                                {feedbackMessage.type === 'info' && <Info className="w-3.5 h-3.5 flex-shrink-0 text-amber-700" />}
                                 <span>{feedbackMessage.text}</span>
-                            </motion.div>
+                            </div>
                         )}
 
                         {/* =====================================================
                             3. HIỆU ỨNG NỘI DUNG FORM (FADE MƯỢT KHÔNG CO GIẬT)
                         ===================================================== */}
-                        <div className="min-h-[360px]">
+                        <div>
                             <AnimatePresence mode="wait" initial={false}>
                                 {isLogin ? (
                                     /* ================= FORM ĐĂNG NHẬP ================= */
@@ -431,259 +418,259 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                         initial={{ opacity: 0, x: -6 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: 6 }}
-                                        transition={{ duration: 0.18, ease: "easeOut" }}
+                                        transition={{ duration: 0.16, ease: "easeOut" }}
                                     >
-                                    <form onSubmit={handleSubmit} className="space-y-4">
-                                        <div>
-                                            <label className="block text-[10.5px] font-semibold text-stone-700 mb-1.5 uppercase tracking-wider">
-                                                Email tài khoản <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="email"
-                                                    name="email"
-                                                    required
-                                                    value={formData.email}
-                                                    onChange={handleChange}
-                                                    placeholder="name@example.com"
-                                                    className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] focus:ring-1 focus:ring-[#8C6A48] rounded-lg py-2.5 pl-3.5 pr-10 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
-                                                />
-                                                <Mail className="w-4 h-4 text-stone-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <div className="flex items-center justify-between mb-1.5">
-                                                <label className="text-[10.5px] font-semibold text-stone-700 uppercase tracking-wider">
-                                                    Mật khẩu truy cập <span className="text-red-500">*</span>
+                                        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
+                                            <div>
+                                                <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
+                                                    Email tài khoản <span className="text-red-500">*</span>
                                                 </label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => alert('Vui lòng kiểm tra email để thiết lập lại mật khẩu.')}
-                                                    className="text-[11px] text-[#8C6A48] hover:text-stone-950 transition-colors font-medium hover:underline cursor-pointer"
-                                                >
-                                                    Quên mật khẩu?
-                                                </button>
+                                                <div className="relative">
+                                                    <input
+                                                        type="email"
+                                                        name="email"
+                                                        required
+                                                        value={formData.email}
+                                                        onChange={handleChange}
+                                                        placeholder="name@example.com"
+                                                        className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] focus:ring-1 focus:ring-[#8C6A48] rounded-lg py-2.5 pl-3.5 pr-9 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
+                                                    />
+                                                    <Mail className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                                </div>
                                             </div>
-                                            <div className="relative">
-                                                <input
-                                                    type={showPassword ? 'text' : 'password'}
-                                                    name="password"
-                                                    required
-                                                    value={formData.password}
-                                                    onChange={handleChange}
-                                                    placeholder="••••••••"
-                                                    className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] focus:ring-1 focus:ring-[#8C6A48] rounded-lg py-2.5 pl-3.5 pr-10 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
-                                                >
-                                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                </button>
+
+                                            <div>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <label className="text-[10.5px] font-semibold text-stone-700 uppercase tracking-wider">
+                                                        Mật khẩu truy cập <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => alert('Vui lòng kiểm tra email để thiết lập lại mật khẩu.')}
+                                                        className="text-[11px] text-[#8C6A48] hover:text-stone-950 transition-colors font-medium hover:underline cursor-pointer"
+                                                    >
+                                                        Quên mật khẩu?
+                                                    </button>
+                                                </div>
+                                                <div className="relative">
+                                                    <input
+                                                        type={showPassword ? 'text' : 'password'}
+                                                        name="password"
+                                                        required
+                                                        value={formData.password}
+                                                        onChange={handleChange}
+                                                        placeholder="••••••••"
+                                                        className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] focus:ring-1 focus:ring-[#8C6A48] rounded-lg py-2.5 pl-3.5 pr-9 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
+                                                    >
+                                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div className="flex items-center pt-0.5">
-                                            <label className="inline-flex items-center space-x-2 text-xs text-stone-600 cursor-pointer select-none">
-                                                <input
-                                                    type="checkbox"
-                                                    name="rememberMe"
-                                                    checked={formData.rememberMe}
-                                                    onChange={handleChange}
-                                                    className="w-4 h-4 rounded border-stone-300 text-stone-900 focus:ring-[#8C6A48] accent-stone-900 cursor-pointer"
-                                                />
-                                                <span>Ghi nhớ phiên đăng nhập trên thiết bị này</span>
-                                            </label>
-                                        </div>
+                                            <div className="flex items-center">
+                                                <label className="inline-flex items-center space-x-2 text-xs text-stone-600 cursor-pointer select-none">
+                                                    <input
+                                                        type="checkbox"
+                                                        name="rememberMe"
+                                                        checked={formData.rememberMe}
+                                                        onChange={handleChange}
+                                                        className="w-3.5 h-3.5 rounded border-stone-300 text-stone-900 focus:ring-[#8C6A48] accent-stone-900 cursor-pointer"
+                                                    />
+                                                    <span>Ghi nhớ phiên đăng nhập trên thiết bị này</span>
+                                                </label>
+                                            </div>
 
-                                        <button
-                                            type="submit"
-                                            disabled={isLoading}
-                                            className="w-full bg-[#1C1917] hover:bg-[#8C6A48] text-white font-medium py-3 rounded-lg transition-colors duration-200 text-xs sm:text-sm tracking-wider uppercase disabled:opacity-75 disabled:cursor-not-allowed mt-2 shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
-                                        >
-                                            {isLoading ? (
-                                                <span>Đang xác thực...</span>
-                                            ) : (
-                                                <span className="inline-flex items-center space-x-2">
-                                                    <span>Đăng nhập tài khoản</span>
-                                                    <ArrowRight className="w-4 h-4" />
-                                                </span>
-                                            )}
-                                        </button>
-                                    </form>
-                                </motion.div>
-                            ) : (
+                                            <button
+                                                type="submit"
+                                                disabled={isLoading}
+                                                className="w-full bg-[#1C1917] hover:bg-[#8C6A48] text-white font-medium py-2.5 sm:py-3 rounded-lg transition-colors duration-200 text-xs sm:text-sm tracking-wider uppercase disabled:opacity-75 disabled:cursor-not-allowed mt-1 shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
+                                            >
+                                                {isLoading ? (
+                                                    <span>Đang xác thực...</span>
+                                                ) : (
+                                                    <span className="inline-flex items-center space-x-2">
+                                                        <span>Đăng nhập tài khoản</span>
+                                                        <ArrowRight className="w-3.5 h-3.5" />
+                                                    </span>
+                                                )}
+                                            </button>
+                                        </form>
+                                    </motion.div>
+                                ) : (
                                     /* ================= FORM ĐĂNG KÝ ================= */
                                     <motion.div
                                         key="register"
                                         initial={{ opacity: 0, x: 6 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={{ opacity: 0, x: -6 }}
-                                        transition={{ duration: 0.18, ease: "easeOut" }}
+                                        transition={{ duration: 0.16, ease: "easeOut" }}
                                     >
-                                    <form onSubmit={handleSubmit} className="space-y-3">
-                                        <div>
-                                            <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
-                                                Họ và tên Quý khách <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    name="fullName"
-                                                    required
-                                                    value={formData.fullName}
-                                                    onChange={handleChange}
-                                                    placeholder="Nguyễn Văn A"
-                                                    className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 pl-3.5 pr-10 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
-                                                />
-                                                <UserIcon className="w-4 h-4 text-stone-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                        <form onSubmit={handleSubmit} className="space-y-2.5">
                                             <div>
                                                 <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
-                                                    Email <span className="text-red-500">*</span>
-                                                </label>
-                                                <input
-                                                    type="email"
-                                                    name="email"
-                                                    required
-                                                    value={formData.email}
-                                                    onChange={handleChange}
-                                                    placeholder="name@example.com"
-                                                    className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 px-3 text-xs text-stone-900 placeholder:text-stone-400 outline-none transition-all"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
-                                                    Số điện thoại <span className="text-red-500">*</span>
-                                                </label>
-                                                <input
-                                                    type="tel"
-                                                    name="phone"
-                                                    required
-                                                    value={formData.phone}
-                                                    onChange={handleChange}
-                                                    placeholder="0901 234 567"
-                                                    className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 px-3 text-xs text-stone-900 placeholder:text-stone-400 outline-none transition-all"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                            <div>
-                                                <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
-                                                    Mật khẩu <span className="text-red-500">*</span>
+                                                    Họ và tên Quý khách <span className="text-red-500">*</span>
                                                 </label>
                                                 <div className="relative">
                                                     <input
-                                                        type={showPassword ? 'text' : 'password'}
-                                                        name="password"
+                                                        type="text"
+                                                        name="fullName"
                                                         required
-                                                        minLength={6}
-                                                        value={formData.password}
+                                                        value={formData.fullName}
                                                         onChange={handleChange}
-                                                        placeholder="Tối thiểu 6 ký tự"
+                                                        placeholder="Nguyễn Văn A"
                                                         className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 pl-3 pr-8 text-xs text-stone-900 placeholder:text-stone-400 outline-none transition-all"
                                                     />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
-                                                    >
-                                                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                                    </button>
+                                                    <UserIcon className="w-3.5 h-3.5 text-stone-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                                                 </div>
                                             </div>
 
-                                            <div>
-                                                <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
-                                                    Xác nhận mật khẩu <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="relative">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                <div>
+                                                    <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
+                                                        Email <span className="text-red-500">*</span>
+                                                    </label>
                                                     <input
-                                                        type={showConfirmPassword ? 'text' : 'password'}
-                                                        name="confirmPassword"
+                                                        type="email"
+                                                        name="email"
                                                         required
-                                                        minLength={6}
-                                                        value={formData.confirmPassword}
+                                                        value={formData.email}
                                                         onChange={handleChange}
-                                                        placeholder="Nhập lại mật khẩu"
-                                                        className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 pl-3 pr-8 text-xs text-stone-900 placeholder:text-stone-400 outline-none transition-all"
+                                                        placeholder="name@example.com"
+                                                        className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 px-3 text-xs text-stone-900 placeholder:text-stone-400 outline-none transition-all"
                                                     />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
-                                                    >
-                                                        {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                                    </button>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
+                                                        Số điện thoại <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="tel"
+                                                        name="phone"
+                                                        required
+                                                        value={formData.phone}
+                                                        onChange={handleChange}
+                                                        placeholder="0901 234 567"
+                                                        className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 px-3 text-xs text-stone-900 placeholder:text-stone-400 outline-none transition-all"
+                                                    />
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        {formData.password && (
-                                            <div className="flex items-center space-x-1.5">
-                                                <div className="flex-1 grid grid-cols-3 gap-1 h-1">
-                                                    <div className={`rounded-full transition-all ${passwordScore >= 1 ? (passwordScore === 1 ? 'bg-rose-500' : 'bg-amber-500') : 'bg-stone-200'}`} />
-                                                    <div className={`rounded-full transition-all ${passwordScore >= 2 ? (passwordScore === 2 ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-stone-200'}`} />
-                                                    <div className={`rounded-full transition-all ${passwordScore >= 3 ? 'bg-emerald-500' : 'bg-stone-200'}`} />
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                <div>
+                                                    <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
+                                                        Mật khẩu <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type={showPassword ? 'text' : 'password'}
+                                                            name="password"
+                                                            required
+                                                            minLength={6}
+                                                            value={formData.password}
+                                                            onChange={handleChange}
+                                                            placeholder="Tối thiểu 6 ký tự"
+                                                            className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 pl-3 pr-7 text-xs text-stone-900 placeholder:text-stone-400 outline-none transition-all"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowPassword(!showPassword)}
+                                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
+                                                        >
+                                                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <span className="text-[10px] text-stone-500">
-                                                    Độ mạnh: {passwordScore === 1 ? 'Yếu' : passwordScore === 2 ? 'Khá' : 'Tốt'}
-                                                </span>
+
+                                                <div>
+                                                    <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
+                                                        Xác nhận mật khẩu <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type={showConfirmPassword ? 'text' : 'password'}
+                                                            name="confirmPassword"
+                                                            required
+                                                            minLength={6}
+                                                            value={formData.confirmPassword}
+                                                            onChange={handleChange}
+                                                            placeholder="Nhập lại mật khẩu"
+                                                            className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 pl-3 pr-7 text-xs text-stone-900 placeholder:text-stone-400 outline-none transition-all"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
+                                                        >
+                                                            {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        )}
 
-                                        <div className="pt-0.5">
-                                            <label className="inline-flex items-start space-x-2 text-[11px] text-stone-600 cursor-pointer select-none leading-relaxed">
-                                                <input
-                                                    type="checkbox"
-                                                    name="agreeTerms"
-                                                    required
-                                                    checked={formData.agreeTerms}
-                                                    onChange={handleChange}
-                                                    className="w-3.5 h-3.5 rounded border-stone-300 text-stone-900 focus:ring-[#8C6A48] accent-stone-900 cursor-pointer mt-0.5"
-                                                />
-                                                <span>
-                                                    Tôi đồng ý với{' '}
-                                                    <a href="#dieu-khoan" className="text-stone-900 underline hover:text-[#8C6A48]">
-                                                        Điều khoản dịch vụ
-                                                    </a>{' '}
-                                                    và{' '}
-                                                    <a href="#bao-mat" className="text-stone-900 underline hover:text-[#8C6A48]">
-                                                        Chính sách bảo mật
-                                                    </a>
-                                                </span>
-                                            </label>
-                                        </div>
-
-                                        <button
-                                            type="submit"
-                                            disabled={isLoading}
-                                            className="w-full bg-[#1C1917] hover:bg-[#8C6A48] text-white font-medium py-2.5 rounded-lg transition-colors duration-200 text-xs sm:text-sm tracking-wider uppercase disabled:opacity-75 disabled:cursor-not-allowed mt-1 shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
-                                        >
-                                            {isLoading ? (
-                                                <span>Đang đăng ký...</span>
-                                            ) : (
-                                                <span className="inline-flex items-center space-x-2">
-                                                    <span>Đăng ký tài khoản</span>
-                                                    <ArrowRight className="w-4 h-4" />
-                                                </span>
+                                            {formData.password && (
+                                                <div className="flex items-center space-x-1.5 pt-0.5">
+                                                    <div className="flex-1 grid grid-cols-3 gap-1 h-1.5">
+                                                        <div className={`rounded-full transition-all ${passwordScore >= 1 ? (passwordScore === 1 ? 'bg-rose-500' : 'bg-amber-500') : 'bg-stone-200'}`} />
+                                                        <div className={`rounded-full transition-all ${passwordScore >= 2 ? (passwordScore === 2 ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-stone-200'}`} />
+                                                        <div className={`rounded-full transition-all ${passwordScore >= 3 ? 'bg-emerald-500' : 'bg-stone-200'}`} />
+                                                    </div>
+                                                    <span className="text-[10px] text-stone-500">
+                                                        Độ mạnh: {passwordScore === 1 ? 'Yếu' : passwordScore === 2 ? 'Khá' : 'Tốt'}
+                                                    </span>
+                                                </div>
                                             )}
-                                        </button>
-                                    </form>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+
+                                            <div>
+                                                <label className="inline-flex items-start space-x-2 text-[11px] text-stone-600 cursor-pointer select-none leading-snug">
+                                                    <input
+                                                        type="checkbox"
+                                                        name="agreeTerms"
+                                                        required
+                                                        checked={formData.agreeTerms}
+                                                        onChange={handleChange}
+                                                        className="w-3.5 h-3.5 rounded border-stone-300 text-stone-900 focus:ring-[#8C6A48] accent-stone-900 cursor-pointer mt-0.5"
+                                                    />
+                                                    <span>
+                                                        Tôi đồng ý với{' '}
+                                                        <a href="#dieu-khoan" className="text-stone-900 underline hover:text-[#8C6A48]">
+                                                            Điều khoản
+                                                        </a>{' '}
+                                                        &{' '}
+                                                        <a href="#bao-mat" className="text-stone-900 underline hover:text-[#8C6A48]">
+                                                            Bảo mật
+                                                        </a>
+                                                    </span>
+                                                </label>
+                                            </div>
+
+                                            <button
+                                                type="submit"
+                                                disabled={isLoading}
+                                                className="w-full bg-[#1C1917] hover:bg-[#8C6A48] text-white font-medium py-2.5 sm:py-3 rounded-lg transition-colors duration-200 text-xs sm:text-sm tracking-wider uppercase disabled:opacity-75 disabled:cursor-not-allowed mt-1 shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
+                                            >
+                                                {isLoading ? (
+                                                    <span>Đang đăng ký...</span>
+                                                ) : (
+                                                    <span className="inline-flex items-center space-x-2">
+                                                        <span>Đăng ký tài khoản</span>
+                                                        <ArrowRight className="w-3.5 h-3.5" />
+                                                    </span>
+                                                )}
+                                            </button>
+                                        </form>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         {/* Divider */}
-                        <div className="relative my-4">
+                        <div className="relative my-3 sm:my-3.5">
                             <div className="absolute inset-0 flex items-center">
                                 <div className="w-full border-t border-[#E8E2D7]" />
                             </div>
@@ -694,12 +681,12 @@ export default function AuthPage({ defaultMode = 'login' }) {
                             </div>
                         </div>
 
-                        {/* Social Buttons (Google & Facebook bên dưới) */}
-                        <div className="grid grid-cols-2 gap-3 mb-2">
+                        {/* Social Buttons */}
+                        <div className="grid grid-cols-2 gap-3 mb-1.5">
                             <button
                                 type="button"
                                 onClick={handleGoogleLogin}
-                                className="border border-[#E2DDD5] hover:border-stone-400 bg-[#FAF8F5] hover:bg-white transition-colors rounded-lg py-2 px-3 flex items-center justify-center gap-2 text-xs font-medium text-stone-700 shadow-sm cursor-pointer"
+                                className="border border-[#E2DDD5] hover:border-stone-400 bg-[#FAF8F5] hover:bg-white transition-colors rounded-lg py-2.5 px-3.5 flex items-center justify-center gap-2 text-xs font-medium text-stone-700 shadow-sm cursor-pointer"
                             >
                                 <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -716,7 +703,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                     type: 'info',
                                     text: 'Tính năng đăng nhập qua Facebook đang trong quá trình phát triển & hoàn thiện. Quý khách vui lòng sử dụng Google hoặc Email/Mật khẩu!',
                                 })}
-                                className="border border-[#E2DDD5] hover:border-stone-400 bg-[#FAF8F5] hover:bg-white transition-colors rounded-lg py-2 px-3 flex items-center justify-center gap-2 text-xs font-medium text-stone-700 shadow-sm cursor-pointer relative"
+                                className="border border-[#E2DDD5] hover:border-stone-400 bg-[#FAF8F5] hover:bg-white transition-colors rounded-lg py-2.5 px-3.5 flex items-center justify-center gap-2 text-xs font-medium text-stone-700 shadow-sm cursor-pointer relative"
                             >
                                 <svg className="w-4 h-4 flex-shrink-0 fill-[#1877F2]" viewBox="0 0 24 24">
                                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -751,7 +738,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
             {/* =========================================================================
                 3. BOTTOM FOOTER
             ========================================================================= */}
-            <footer className="relative z-10 w-full max-w-[1040px] mx-auto flex flex-col sm:flex-row items-center justify-between py-2 text-[11px] text-stone-500 border-t border-[#E5DFD5] gap-2 mt-4">
+            <footer className="relative z-10 w-full max-w-[1020px] mx-auto flex flex-col sm:flex-row items-center justify-between py-1 text-[10.5px] text-stone-500 border-t border-[#E5DFD5] gap-1 mt-1 flex-shrink-0">
                 <div className="flex items-center space-x-2">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Bảo mật dữ liệu chuẩn mã hóa SSL 256-bit</span>

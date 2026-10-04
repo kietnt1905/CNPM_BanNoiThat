@@ -274,9 +274,16 @@ class AuthController extends Controller
             // Tạo Token đăng nhập
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            // Chuyển hướng về Frontend kèm theo Token trên URL
+            // Chuyển hướng về Frontend kèm theo Token và thông tin User trên URL
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
-            return redirect()->away("{$frontendUrl}/auth/callback?token={$token}");
+            $userParam = urlencode(json_encode([
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'avatar' => $user->avatar,
+                'role' => $user->role,
+            ]));
+            return redirect()->away("{$frontendUrl}/auth/callback?token={$token}&user={$userParam}");
         } catch (\Exception $e) {
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
             return redirect()->away("{$frontendUrl}/login?error=google_auth_failed");

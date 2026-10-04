@@ -27,12 +27,27 @@ export default function Header() {
     // User authentication state
     const [user, setUser] = useState(null);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [avatarError, setAvatarError] = useState(false);
     const userMenuRef = useRef(null);
 
     useEffect(() => {
         const checkAuth = () => {
+            // Kiểm tra token fallback trên URL nếu có
+            const params = new URLSearchParams(window.location.search);
+            const urlToken = params.get('token');
+            const urlUser = params.get('user');
+            if (urlToken) {
+                localStorage.setItem('token', urlToken);
+                if (urlUser) {
+                    try {
+                        localStorage.setItem('user', decodeURIComponent(urlUser));
+                    } catch {}
+                }
+            }
+
             const token = localStorage.getItem('token');
             const storedUser = localStorage.getItem('user');
+            setAvatarError(false);
             if (token && storedUser) {
                 try {
                     setUser(JSON.parse(storedUser));
@@ -546,9 +561,15 @@ export default function Header() {
                                         aria-label="Tài khoản cá nhân"
                                     >
                                         {/* Avatar mặc định chuẩn thương hiệu TK House */}
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#8C6A48] to-[#C9A982] text-white flex items-center justify-center font-serif text-xs font-semibold shadow-sm ring-2 ring-[#E5DFD5] group-hover:ring-[#8C6A48] transition-all">
-                                            {user.avatar ? (
-                                                <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#8C6A48] to-[#C9A982] text-white flex items-center justify-center font-serif text-xs font-semibold shadow-sm ring-2 ring-[#E5DFD5] group-hover:ring-[#8C6A48] transition-all overflow-hidden flex-shrink-0">
+                                            {user.avatar && !avatarError ? (
+                                                <img
+                                                    src={user.avatar}
+                                                    alt={user.name || 'User'}
+                                                    referrerPolicy="no-referrer"
+                                                    onError={() => setAvatarError(true)}
+                                                    className="w-full h-full rounded-full object-cover"
+                                                />
                                             ) : (
                                                 <span>{user.name ? user.name.trim().charAt(0).toUpperCase() : 'TK'}</span>
                                             )}
@@ -834,8 +855,18 @@ export default function Header() {
                                     {user ? (
                                         <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 flex items-center justify-between">
                                             <div className="flex items-center space-x-3">
-                                                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#8C6A48] to-[#C9A982] text-white flex items-center justify-center font-serif text-sm font-semibold shadow-sm">
-                                                    <span>{user.name ? user.name.trim().charAt(0).toUpperCase() : 'TK'}</span>
+                                                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#8C6A48] to-[#C9A982] text-white flex items-center justify-center font-serif text-sm font-semibold shadow-sm overflow-hidden flex-shrink-0">
+                                                    {user.avatar && !avatarError ? (
+                                                        <img
+                                                            src={user.avatar}
+                                                            alt={user.name || 'User'}
+                                                            referrerPolicy="no-referrer"
+                                                            onError={() => setAvatarError(true)}
+                                                            className="w-full h-full rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <span>{user.name ? user.name.trim().charAt(0).toUpperCase() : 'TK'}</span>
+                                                    )}
                                                 </div>
                                                 <div className="min-w-0">
                                                     <p className="text-xs font-semibold text-stone-900 truncate">{user.name}</p>
