@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
     Phone,
@@ -11,7 +11,8 @@ import {
     X,
     ChevronDown,
     ChevronRight,
-    ArrowRight
+    ArrowRight,
+    LogOut
 } from 'lucide-react';
 
 export default function Header() {
@@ -22,6 +23,56 @@ export default function Header() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [mobileExpandedSection, setMobileExpandedSection] = useState(null);
+
+    // User authentication state
+    const [user, setUser] = useState(null);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const userMenuRef = useRef(null);
+
+    useEffect(() => {
+        const checkAuth = () => {
+            const token = localStorage.getItem('token');
+            const storedUser = localStorage.getItem('user');
+            if (token && storedUser) {
+                try {
+                    setUser(JSON.parse(storedUser));
+                } catch {
+                    setUser({ name: 'Quý khách' });
+                }
+            } else if (token) {
+                setUser({ name: 'Quý khách' });
+            } else {
+                setUser(null);
+            }
+        };
+
+        checkAuth();
+
+        window.addEventListener('storage', checkAuth);
+        window.addEventListener('auth-change', checkAuth);
+
+        const handleClickOutside = (e) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+                setUserMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+
+        return () => {
+            window.removeEventListener('storage', checkAuth);
+            window.removeEventListener('auth-change', checkAuth);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+        setUserMenuOpen(false);
+        window.dispatchEvent(new Event('auth-change'));
+        navigate('/');
+    };
 
     // Cuộn mượt mà đến phần tương ứng mà không làm dính hash vào URL
     const handleScrollToSection = (e, targetId) => {
@@ -485,18 +536,99 @@ export default function Header() {
                                 )}
                             </Link>
 
-                            {/* Nút Tài Khoản: Đăng nhập / Đăng ký */}
-                            <Link
-                                to="/auth"
-                                className="inline-flex items-center space-x-1.5 py-1.5 px-2.5 text-neutral-800 hover:text-neutral-950 hover:bg-neutral-100/80 rounded-full transition-all group"
-                                aria-label="Đăng nhập / Đăng ký"
-                                title="Đăng nhập / Đăng ký"
-                            >
-                                <User className="w-5 h-5 stroke-[1.8] group-hover:scale-105 transition-transform" />
-                                <span className="hidden sm:inline text-xs font-medium text-neutral-700 group-hover:text-neutral-950 whitespace-nowrap">
-                                    Đăng ký / Đăng nhập
-                                </span>
-                            </Link>
+                            {/* Nút Tài Khoản: Hiển thị Avatar khi đã đăng nhập hoặc Nút Đăng ký/Đăng nhập */}
+                            {user ? (
+                                <div className="relative" ref={userMenuRef}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                        className="inline-flex items-center space-x-2 py-1 px-2 text-neutral-800 hover:text-neutral-950 rounded-full transition-all group cursor-pointer focus:outline-none"
+                                        aria-label="Tài khoản cá nhân"
+                                    >
+                                        {/* Avatar mặc định chuẩn thương hiệu TK House */}
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#8C6A48] to-[#C9A982] text-white flex items-center justify-center font-serif text-xs font-semibold shadow-sm ring-2 ring-[#E5DFD5] group-hover:ring-[#8C6A48] transition-all">
+                                            {user.avatar ? (
+                                                <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                                            ) : (
+                                                <span>{user.name ? user.name.trim().charAt(0).toUpperCase() : 'TK'}</span>
+                                            )}
+                                        </div>
+                                        <div className="hidden sm:flex flex-col text-left">
+                                            <span className="text-xs font-semibold text-neutral-900 group-hover:text-[#8C6A48] transition-colors leading-tight max-w-[110px] truncate">
+                                                {user.name || 'Thành viên'}
+                                            </span>
+                                            <span className="text-[10px] text-stone-500 font-light leading-none">
+                                                TK Atelier Member
+                                            </span>
+                                        </div>
+                                        <ChevronDown className={`w-3.5 h-3.5 text-stone-400 group-hover:text-stone-700 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {/* Dropdown Menu tài khoản */}
+                                    {userMenuOpen && (
+                                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-stone-200 shadow-xl py-2 z-50 animate-in fade-in duration-150">
+                                            <div className="px-4 py-2.5 border-b border-stone-100">
+                                                <p className="text-xs font-semibold text-stone-900 truncate">
+                                                    {user.name || 'Quý khách'}
+                                                </p>
+                                                <p className="text-[11px] text-stone-500 truncate">
+                                                    {user.email || 'Thành viên TK House'}
+                                                </p>
+                                            </div>
+
+                                            <div className="py-1 text-xs text-stone-700">
+                                                <Link
+                                                    to="/auth"
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                    className="flex items-center space-x-2.5 px-4 py-2 hover:bg-stone-50 hover:text-stone-900 transition-colors"
+                                                >
+                                                    <User className="w-4 h-4 text-stone-500" />
+                                                    <span>Hồ sơ tài khoản</span>
+                                                </Link>
+                                                <Link
+                                                    to="/gio-hang"
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                    className="flex items-center space-x-2.5 px-4 py-2 hover:bg-stone-50 hover:text-stone-900 transition-colors"
+                                                >
+                                                    <ShoppingBag className="w-4 h-4 text-stone-500" />
+                                                    <span>Đơn hàng của tôi</span>
+                                                </Link>
+                                                <Link
+                                                    to="/yeu-thich"
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                    className="flex items-center space-x-2.5 px-4 py-2 hover:bg-stone-50 hover:text-stone-900 transition-colors"
+                                                >
+                                                    <Heart className="w-4 h-4 text-stone-500" />
+                                                    <span>Danh sách yêu thích</span>
+                                                </Link>
+                                            </div>
+
+                                            <div className="pt-1 border-t border-stone-100">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleLogout}
+                                                    className="w-full flex items-center space-x-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors cursor-pointer text-left"
+                                                >
+                                                    <LogOut className="w-4 h-4 text-rose-500" />
+                                                    <span>Đăng xuất</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <Link
+                                    to="/auth"
+                                    className="inline-flex items-center space-x-1.5 py-1.5 px-2.5 text-neutral-800 hover:text-neutral-950 hover:bg-neutral-100/80 rounded-full transition-all group"
+                                    aria-label="Đăng nhập / Đăng ký"
+                                    title="Đăng nhập / Đăng ký"
+                                >
+                                    <User className="w-5 h-5 stroke-[1.8] group-hover:scale-105 transition-transform" />
+                                    <span className="hidden sm:inline text-xs font-medium text-neutral-700 group-hover:text-neutral-950 whitespace-nowrap">
+                                        Đăng ký / Đăng nhập
+                                    </span>
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -699,14 +831,39 @@ export default function Header() {
                                         <span>Sản phẩm yêu thích ({wishlistCount})</span>
                                     </Link>
 
-                                    <Link
-                                        to="/auth"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center space-x-2 py-1 hover:text-neutral-900"
-                                    >
-                                        <User className="w-4 h-4 text-neutral-500" />
-                                        <span>Tài khoản của tôi / Đăng nhập</span>
-                                    </Link>
+                                    {user ? (
+                                        <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 flex items-center justify-between">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#8C6A48] to-[#C9A982] text-white flex items-center justify-center font-serif text-sm font-semibold shadow-sm">
+                                                    <span>{user.name ? user.name.trim().charAt(0).toUpperCase() : 'TK'}</span>
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-semibold text-stone-900 truncate">{user.name}</p>
+                                                    <p className="text-[10.5px] text-stone-500 truncate">{user.email || 'Thành viên TK House'}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setMobileMenuOpen(false);
+                                                    handleLogout();
+                                                }}
+                                                className="p-1.5 text-rose-600 hover:bg-rose-100 rounded-lg text-xs transition-colors cursor-pointer"
+                                                title="Đăng xuất"
+                                            >
+                                                <LogOut className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <Link
+                                            to="/auth"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="flex items-center space-x-2 py-1 hover:text-neutral-900"
+                                        >
+                                            <User className="w-4 h-4 text-neutral-500" />
+                                            <span>Tài khoản của tôi / Đăng nhập</span>
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
 

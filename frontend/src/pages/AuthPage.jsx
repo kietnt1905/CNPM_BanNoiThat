@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import authApi from '../api/authApi';
 import {
     Eye,
     EyeOff,
@@ -12,7 +13,8 @@ import {
     ShieldCheck,
     ArrowRight,
     Lock,
-    Sparkles
+    Sparkles,
+    Info
 } from 'lucide-react';
 
 export default function AuthPage({ defaultMode = 'login' }) {
@@ -25,14 +27,28 @@ export default function AuthPage({ defaultMode = 'login' }) {
         modeParam === 'register' ? false : defaultMode === 'register' ? false : true
     );
 
-    // Sync query param
+    // Sync query param & handle Google token callback
     useEffect(() => {
         if (modeParam === 'register') {
             setIsLogin(false);
         } else if (modeParam === 'login') {
             setIsLogin(true);
         }
-    }, [modeParam]);
+
+        const token = searchParams.get('token');
+        if (token) {
+            localStorage.setItem('token', token);
+            authApi.getProfile()
+                .then((res) => {
+                    if (res.data?.status) {
+                        localStorage.setItem('user', JSON.stringify(res.data.data));
+                        window.dispatchEvent(new Event('auth-change'));
+                    }
+                    navigate('/');
+                })
+                .catch(() => navigate('/'));
+        }
+    }, [modeParam, searchParams, navigate]);
 
     // Password visibility
     const [showPassword, setShowPassword] = useState(false);
@@ -41,6 +57,13 @@ export default function AuthPage({ defaultMode = 'login' }) {
     // Feedback & loading
     const [isLoading, setIsLoading] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState(null);
+
+    // OTP Modal states
+    const [showOtpModal, setShowOtpModal] = useState(false);
+    const [otpEmail, setOtpEmail] = useState('');
+    const [otpCode, setOtpCode] = useState('');
+    const [otpLoading, setOtpLoading] = useState(false);
+    const [otpFeedback, setOtpFeedback] = useState(null);
 
     // Form inputs state
     const [formData, setFormData] = useState({
@@ -74,33 +97,118 @@ export default function AuthPage({ defaultMode = 'login' }) {
 
     const passwordScore = getPasswordStrength();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         setFeedbackMessage(null);
 
-        if (!isLogin && formData.password !== formData.confirmPassword) {
-            setIsLoading(false);
-            setFeedbackMessage({
-                type: 'error',
-                text: 'Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.',
-            });
-            return;
+        if (!isLogin) {
+            if (formData.password !== formData.confirmPassword) {
+                setIsLoading(false);
+                setFeedbackMessage({
+                    type: 'error',
+                    text: 'Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.',
+                });
+                return;
+            }
+
+            try {
+                const response = await authApi.register(formData);
+                setIsLoading(false);
+                setOtpEmail(formData.email);
+                setShowOtpModal(true);
+                setFeedbackMessage({
+                    type: 'success',
+                    text: response.data.message || 'Đăng ký thành công! Vui lòng nhập mã OTP.',
+                });
+            } catch (err) {
+                setIsLoading(false);
+                const msg = err.response?.data?.message || 'Đăng ký thất bại.';
+                const fieldErrors = err.response?.data?.errors;
+                const detail = fieldErrors ? Object.values(fieldErrors).flat().join(' ') : '';
+                setFeedbackMessage({
+                    type: 'error',
+                    text: `${msg} ${detail}`,
+                });
+            }
+        } else {
+            try {
+                const response = await authApi.login({
+                    email: formData.email,
+                    password: formData.password,
+                });
+                setIsLoading(false);
+                if (response.data.status) {
+                    const { access_token, user } = response.data.data;
+                    localStorage.setItem('token', access_token);
+                    localStorage.setItem('user', JSON.stringify(user));
+                    window.dispatchEvent(new Event('auth-change'));
+                    setFeedbackMessage({
+                        type: 'success',
+                        text: 'Đăng nhập thành công! Đang chuyển hướng...',
+                    });
+                    setTimeout(() => navigate('/'), 800);
+                }
+            } catch (err) {
+                setIsLoading(false);
+                if (err.response?.status === 403 && err.response?.data?.need_verification) {
+                    setOtpEmail(formData.email);
+                    setShowOtpModal(true);
+                    setFeedbackMessage({
+                        type: 'error',
+                        text: 'Tài khoản chưa xác thực. Vui lòng nhập mã OTP!',
+                    });
+                } else {
+                    setFeedbackMessage({
+                        type: 'error',
+                        text: err.response?.data?.message || 'Email hoặc mật khẩu không chính xác.',
+                    });
+                }
+            }
         }
+    };
 
-        setTimeout(() => {
-            setIsLoading(false);
-            setFeedbackMessage({
-                type: 'success',
-                text: isLogin
-                    ? 'Đăng nhập thành công! Đang chuyển hướng...'
-                    : 'Đăng ký hồ sơ thành công! Đang chuyển hướng...',
+    const handleVerifyOtp = async (e) => {
+        e.preventDefault();
+        setOtpLoading(true);
+        setOtpFeedback(null);
+        try {
+            const response = await authApi.verifyOtp({ email: otpEmail, otp: otpCode });
+            setOtpLoading(false);
+            if (response.data.status) {
+                const { access_token, user } = response.data.data;
+                localStorage.setItem('token', access_token);
+                localStorage.setItem('user', JSON.stringify(user));
+                window.dispatchEvent(new Event('auth-change'));
+                setOtpFeedback({ type: 'success', text: 'Xác thực OTP thành công! Đang chuyển hướng...' });
+                setTimeout(() => {
+                    setShowOtpModal(false);
+                    navigate('/');
+                }, 1000);
+            }
+        } catch (err) {
+            setOtpLoading(false);
+            setOtpFeedback({
+                type: 'error',
+                text: err.response?.data?.message || 'Mã OTP không chính xác hoặc đã hết hạn.',
             });
+        }
+    };
 
-            setTimeout(() => {
-                navigate('/');
-            }, 800);
-        }, 600);
+    const handleResendOtp = async () => {
+        setOtpLoading(true);
+        try {
+            const response = await authApi.resendOtp({ email: otpEmail });
+            setOtpLoading(false);
+            setOtpFeedback({ type: 'success', text: response.data.message || 'Đã gửi lại mã OTP!' });
+        } catch (err) {
+            setOtpLoading(false);
+            setOtpFeedback({ type: 'error', text: err.response?.data?.message || 'Không thể gửi lại mã OTP.' });
+        }
+    };
+
+    const handleGoogleLogin = () => {
+        window.location.href = 'http://127.0.0.1:8000/api/auth/google';
     };
 
     return (
@@ -144,19 +252,13 @@ export default function AuthPage({ defaultMode = 'login' }) {
             </header>
 
             {/* =========================================================================
-                2. MAIN COMPACT SPLIT CARD (KHUNG CARD TRẮNG BỌC NGOÀI VỚI MOTION.DIV LAYOUT)
+                2. MAIN COMPACT SPLIT CARD (KHUNG CARD TRẮNG CỐ ĐỊNH KÍCH THƯỚC CHUẨN)
             ========================================================================= */}
-            <motion.div
-                layout
-                transition={{
-                    layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
-                }}
-                className="relative z-10 w-full max-w-[1040px] mx-auto bg-white rounded-2xl border border-[#E5DFD5] shadow-[0_15px_40px_-10px_rgba(40,32,25,0.07)] overflow-hidden my-auto grid grid-cols-1 lg:grid-cols-12"
-            >
+            <div className="relative z-10 w-full max-w-[1040px] mx-auto bg-white rounded-2xl border border-[#E5DFD5] shadow-[0_15px_40px_-10px_rgba(40,32,25,0.07)] overflow-hidden my-auto grid grid-cols-1 lg:grid-cols-12 lg:h-[610px]">
                 {/* -------------------------------------------------------------
                     CỘT TRÁI (5 Cột): Khung Ảnh Fade Nhẹ Nhàng Bằng AnimatePresence
                 ------------------------------------------------------------- */}
-                <div className="hidden lg:block lg:col-span-5 relative bg-stone-900 overflow-hidden min-h-[540px]">
+                <div className="hidden lg:block lg:col-span-5 relative bg-stone-900 overflow-hidden h-full">
                     <AnimatePresence mode="wait">
                         <motion.img
                             key={isLogin ? 'living' : 'dining'}
@@ -212,15 +314,9 @@ export default function AuthPage({ defaultMode = 'login' }) {
                 </div>
 
                 {/* -------------------------------------------------------------
-                    CỘT PHẢI (7 Cột): Form Giãn Nở Mềm Mại & Thanh Gạch Chân Tab
+                    CỘT PHẢI (7 Cột): Form Giữ Ổn Định Chiều Cao, Không Co Giật
                 ------------------------------------------------------------- */}
-                <motion.div
-                    layout
-                    transition={{
-                        layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
-                    }}
-                    className="lg:col-span-7 p-6 sm:p-8 lg:p-10 flex flex-col justify-between bg-white"
-                >
+                <div className="lg:col-span-7 p-6 sm:p-8 lg:p-10 flex flex-col justify-between bg-white h-full overflow-y-auto">
                     <div>
                         {/* Title Header */}
                         <div className="mb-5">
@@ -309,29 +405,34 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                 initial={{ opacity: 0, y: -6 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0 }}
-                                className={`mb-4 p-3 rounded-lg text-xs flex items-center space-x-2 ${feedbackMessage.type === 'error'
+                                className={`mb-4 p-3 rounded-lg text-xs flex items-center space-x-2 ${
+                                    feedbackMessage.type === 'error'
                                         ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                                        : feedbackMessage.type === 'info'
+                                        ? 'bg-amber-50 text-amber-900 border border-amber-200'
                                         : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                    }`}
+                                }`}
                             >
                                 {feedbackMessage.type === 'success' && <Check className="w-4 h-4 flex-shrink-0" />}
+                                {feedbackMessage.type === 'info' && <Info className="w-4 h-4 flex-shrink-0 text-amber-700" />}
                                 <span>{feedbackMessage.text}</span>
                             </motion.div>
                         )}
 
                         {/* =====================================================
-                            3. HIỆU ỨNG NỘI DUNG FORM BÊN PHẢI (ANIMATEPRESENCE MODE="WAIT")
+                            3. HIỆU ỨNG NỘI DUNG FORM (FADE MƯỢT KHÔNG CO GIẬT)
                         ===================================================== */}
-                        <AnimatePresence mode="wait" initial={false}>
-                            {isLogin ? (
-                                /* ================= FORM ĐĂNG NHẬP ================= */
-                                <motion.div
-                                    key="login"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.35, ease: "easeOut" }}
-                                >
+                        <div className="min-h-[360px]">
+                            <AnimatePresence mode="wait" initial={false}>
+                                {isLogin ? (
+                                    /* ================= FORM ĐĂNG NHẬP ================= */
+                                    <motion.div
+                                        key="login"
+                                        initial={{ opacity: 0, x: -6 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 6 }}
+                                        transition={{ duration: 0.18, ease: "easeOut" }}
+                                    >
                                     <form onSubmit={handleSubmit} className="space-y-4">
                                         <div>
                                             <label className="block text-[10.5px] font-semibold text-stone-700 mb-1.5 uppercase tracking-wider">
@@ -414,14 +515,14 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                     </form>
                                 </motion.div>
                             ) : (
-                                /* ================= FORM ĐĂNG KÝ ================= */
-                                <motion.div
-                                    key="register"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.35, ease: "easeOut" }}
-                                >
+                                    /* ================= FORM ĐĂNG KÝ ================= */
+                                    <motion.div
+                                        key="register"
+                                        initial={{ opacity: 0, x: 6 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -6 }}
+                                        transition={{ duration: 0.18, ease: "easeOut" }}
+                                    >
                                     <form onSubmit={handleSubmit} className="space-y-3">
                                         <div>
                                             <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
@@ -473,68 +574,70 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
-                                                Mật khẩu <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type={showPassword ? 'text' : 'password'}
-                                                    name="password"
-                                                    required
-                                                    minLength={6}
-                                                    value={formData.password}
-                                                    onChange={handleChange}
-                                                    placeholder="Tối thiểu 6 ký tự"
-                                                    className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 pl-3.5 pr-10 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
-                                                >
-                                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                </button>
-                                            </div>
-
-                                            {formData.password && (
-                                                <div className="mt-1 flex items-center space-x-1.5">
-                                                    <div className="flex-1 grid grid-cols-3 gap-1 h-1">
-                                                        <div className={`rounded-full transition-all ${passwordScore >= 1 ? (passwordScore === 1 ? 'bg-rose-500' : 'bg-amber-500') : 'bg-stone-200'}`} />
-                                                        <div className={`rounded-full transition-all ${passwordScore >= 2 ? (passwordScore === 2 ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-stone-200'}`} />
-                                                        <div className={`rounded-full transition-all ${passwordScore >= 3 ? 'bg-emerald-500' : 'bg-stone-200'}`} />
-                                                    </div>
-                                                    <span className="text-[10px] text-stone-500">
-                                                        Độ mạnh: {passwordScore === 1 ? 'Yếu' : passwordScore === 2 ? 'Khá' : 'Tốt'}
-                                                    </span>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                            <div>
+                                                <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
+                                                    Mật khẩu <span className="text-red-500">*</span>
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type={showPassword ? 'text' : 'password'}
+                                                        name="password"
+                                                        required
+                                                        minLength={6}
+                                                        value={formData.password}
+                                                        onChange={handleChange}
+                                                        placeholder="Tối thiểu 6 ký tự"
+                                                        className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 pl-3 pr-8 text-xs text-stone-900 placeholder:text-stone-400 outline-none transition-all"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
+                                                    >
+                                                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                    </button>
                                                 </div>
-                                            )}
-                                        </div>
+                                            </div>
 
-                                        <div>
-                                            <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
-                                                Xác nhận mật khẩu <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type={showConfirmPassword ? 'text' : 'password'}
-                                                    name="confirmPassword"
-                                                    required
-                                                    minLength={6}
-                                                    value={formData.confirmPassword}
-                                                    onChange={handleChange}
-                                                    placeholder="Nhập lại mật khẩu"
-                                                    className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 pl-3.5 pr-10 text-xs sm:text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-all"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
-                                                >
-                                                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                </button>
+                                            <div>
+                                                <label className="block text-[10.5px] font-semibold text-stone-700 mb-1 uppercase tracking-wider">
+                                                    Xác nhận mật khẩu <span className="text-red-500">*</span>
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type={showConfirmPassword ? 'text' : 'password'}
+                                                        name="confirmPassword"
+                                                        required
+                                                        minLength={6}
+                                                        value={formData.confirmPassword}
+                                                        onChange={handleChange}
+                                                        placeholder="Nhập lại mật khẩu"
+                                                        className="w-full bg-[#FAF8F5] focus:bg-white border border-[#E2DDD5] focus:border-[#8C6A48] rounded-lg py-2 pl-3 pr-8 text-xs text-stone-900 placeholder:text-stone-400 outline-none transition-all"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
+                                                    >
+                                                        {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {formData.password && (
+                                            <div className="flex items-center space-x-1.5">
+                                                <div className="flex-1 grid grid-cols-3 gap-1 h-1">
+                                                    <div className={`rounded-full transition-all ${passwordScore >= 1 ? (passwordScore === 1 ? 'bg-rose-500' : 'bg-amber-500') : 'bg-stone-200'}`} />
+                                                    <div className={`rounded-full transition-all ${passwordScore >= 2 ? (passwordScore === 2 ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-stone-200'}`} />
+                                                    <div className={`rounded-full transition-all ${passwordScore >= 3 ? 'bg-emerald-500' : 'bg-stone-200'}`} />
+                                                </div>
+                                                <span className="text-[10px] text-stone-500">
+                                                    Độ mạnh: {passwordScore === 1 ? 'Yếu' : passwordScore === 2 ? 'Khá' : 'Tốt'}
+                                                </span>
+                                            </div>
+                                        )}
 
                                         <div className="pt-0.5">
                                             <label className="inline-flex items-start space-x-2 text-[11px] text-stone-600 cursor-pointer select-none leading-relaxed">
@@ -577,6 +680,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                        </div>
 
                         {/* Divider */}
                         <div className="relative my-4">
@@ -594,7 +698,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                         <div className="grid grid-cols-2 gap-3 mb-2">
                             <button
                                 type="button"
-                                onClick={() => setFeedbackMessage({ type: 'success', text: 'Đang kết nối tài khoản Google...' })}
+                                onClick={handleGoogleLogin}
                                 className="border border-[#E2DDD5] hover:border-stone-400 bg-[#FAF8F5] hover:bg-white transition-colors rounded-lg py-2 px-3 flex items-center justify-center gap-2 text-xs font-medium text-stone-700 shadow-sm cursor-pointer"
                             >
                                 <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
@@ -608,13 +712,19 @@ export default function AuthPage({ defaultMode = 'login' }) {
 
                             <button
                                 type="button"
-                                onClick={() => setFeedbackMessage({ type: 'success', text: 'Đang kết nối tài khoản Facebook...' })}
-                                className="border border-[#E2DDD5] hover:border-stone-400 bg-[#FAF8F5] hover:bg-white transition-colors rounded-lg py-2 px-3 flex items-center justify-center gap-2 text-xs font-medium text-stone-700 shadow-sm cursor-pointer"
+                                onClick={() => setFeedbackMessage({
+                                    type: 'info',
+                                    text: 'Tính năng đăng nhập qua Facebook đang trong quá trình phát triển & hoàn thiện. Quý khách vui lòng sử dụng Google hoặc Email/Mật khẩu!',
+                                })}
+                                className="border border-[#E2DDD5] hover:border-stone-400 bg-[#FAF8F5] hover:bg-white transition-colors rounded-lg py-2 px-3 flex items-center justify-center gap-2 text-xs font-medium text-stone-700 shadow-sm cursor-pointer relative"
                             >
                                 <svg className="w-4 h-4 flex-shrink-0 fill-[#1877F2]" viewBox="0 0 24 24">
                                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                                 </svg>
                                 <span>Facebook</span>
+                                <span className="text-[9px] bg-stone-200 text-stone-600 px-1.5 py-0.5 rounded font-normal leading-none">
+                                    Sắp có
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -635,8 +745,8 @@ export default function AuthPage({ defaultMode = 'login' }) {
                             </button>
                         </p>
                     </div>
-                </motion.div>
-            </motion.div>
+                </div>
+            </div>
 
             {/* =========================================================================
                 3. BOTTOM FOOTER
@@ -648,6 +758,78 @@ export default function AuthPage({ defaultMode = 'login' }) {
                 </div>
                 <span>© 2026 TK HOUSE — NỘI THẤT & THIẾT KẾ KIẾN TRÚC CAO CẤP</span>
             </footer>
+
+            {/* =========================================================================
+                4. POPUP XÁC THỰC MÃ OTP
+            ========================================================================= */}
+            <AnimatePresence>
+                {showOtpModal && (
+                    <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-2xl border border-[#E5DFD5] shadow-2xl p-6 sm:p-8 max-w-md w-full relative"
+                        >
+                            <h3 className="font-serif text-xl font-semibold text-stone-900 mb-1">
+                                Xác thực mã OTP
+                            </h3>
+                            <p className="text-xs text-stone-600 mb-4">
+                                Mã OTP 6 chữ số đã được gửi tới email <strong className="text-stone-900">{otpEmail}</strong>. (Trường hợp dev local, xem mã tại <code className="bg-stone-100 px-1 py-0.5 rounded text-stone-800">backend/storage/logs/laravel.log</code>).
+                            </p>
+
+                            {otpFeedback && (
+                                <div className={`mb-4 p-3 rounded-lg text-xs ${otpFeedback.type === 'error' ? 'bg-rose-50 text-rose-800 border border-rose-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
+                                    {otpFeedback.text}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleVerifyOtp} className="space-y-4">
+                                <div>
+                                    <label className="block text-[10.5px] font-semibold text-stone-700 uppercase mb-1.5 tracking-wider">
+                                        Nhập mã OTP (6 chữ số)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        maxLength={6}
+                                        required
+                                        value={otpCode}
+                                        onChange={(e) => setOtpCode(e.target.value)}
+                                        placeholder="123456"
+                                        className="w-full text-center tracking-[0.5em] font-mono text-xl font-bold bg-[#FAF8F5] border border-[#E2DDD5] focus:border-[#8C6A48] focus:ring-1 focus:ring-[#8C6A48] rounded-lg py-3 outline-none"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={otpLoading}
+                                    className="w-full bg-[#1C1917] hover:bg-[#8C6A48] text-white py-3 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-75 cursor-pointer shadow-sm"
+                                >
+                                    {otpLoading ? 'Đang xác thực...' : 'Xác thực tài khoản'}
+                                </button>
+                            </form>
+
+                            <div className="mt-4 flex items-center justify-between text-xs text-stone-500 pt-3 border-t border-stone-100">
+                                <button
+                                    type="button"
+                                    onClick={handleResendOtp}
+                                    disabled={otpLoading}
+                                    className="text-[#8C6A48] hover:underline font-medium cursor-pointer"
+                                >
+                                    Gửi lại mã OTP
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowOtpModal(false)}
+                                    className="hover:underline text-stone-600 cursor-pointer"
+                                >
+                                    Đóng
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
