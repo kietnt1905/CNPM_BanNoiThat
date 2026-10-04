@@ -1,36 +1,53 @@
-import { useState } from 'react';
-import { ShoppingBag, CheckCircle } from 'lucide-react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import MainLayout from './layouts/MainLayout';
+import HomePage from './pages/HomePage';
+import AuthPage from './pages/AuthPage';
+import AuthCallback from './pages/AuthCallback';
+import CategoryPage from './pages/CategoryPage';
 
-function App() {
-  const [count, setCount] = useState(0);
+function AnimatedRoutes() {
+  const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6 text-gray-800">
-      <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
-        <div className="flex justify-center mb-4">
-          <ShoppingBag className="w-16 h-16 text-indigo-600" />
-        </div>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Dedicated Auth Routes (Full split screen) */}
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/dang-nhap" element={<AuthPage defaultMode="login" />} />
+        <Route path="/dang-ky" element={<AuthPage defaultMode="register" />} />
+        <Route path="/login" element={<AuthPage defaultMode="login" />} />
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Dự án CNPM Bán Nội Thất
-        </h1>
-        <p className="text-sm text-gray-500 mb-6">
-          Khởi tạo Frontend React + Tailwind CSS thành công!
-        </p>
+        {/* Main Store Layout Routes */}
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="sofa-ban-tra" element={<CategoryPage categoryId="02" />} />
+          <Route path="phong-khach" element={<CategoryPage categoryId="02" />} />
+          <Route path="ban-an" element={<CategoryPage categoryId="01" />} />
+          <Route path="phong-an" element={<CategoryPage categoryId="01" />} />
+          <Route path="ban-lam-viec" element={<CategoryPage categoryId="03" />} />
+          <Route path="ghe-thu-gian" element={<CategoryPage categoryId="04" />} />
+          <Route path="phong-ngu" element={<CategoryPage categoryId="05" />} />
+          <Route path="giuong-ngu" element={<CategoryPage categoryId="05" />} />
+          <Route path="san-pham" element={<CategoryPage categoryId="02" />} />
+          <Route path="thiet-ke-noi-that" element={<HomePage />} />
+          <Route path="cau-chuyen-thuong-hieu" element={<HomePage />} />
+          <Route path="cau-chuyen" element={<HomePage />} />
+          {/* Fallback routes chuyển về HomePage */}
+          <Route path="*" element={<HomePage />} />
+        </Route>
+      </Routes>
+    </AnimatePresence>
+  );
+}
 
-        <div className="flex items-center justify-center gap-2 text-emerald-600 font-medium mb-6">
-          <CheckCircle className="w-5 h-5" />
-          <span>Hệ thống sẵn sàng cho Ngày 2</span>
-        </div>
-
-        <button
-          onClick={() => setCount((prev) => prev + 1)}
-          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition duration-200 shadow-md hover:shadow-indigo-200"
-        >
-          Số lần click: {count}
-        </button>
-      </div>
-    </div>
+function App() {
+  return (
+    <BrowserRouter>
+      <AnimatedRoutes />
+    </BrowserRouter>
   );
 }
 
