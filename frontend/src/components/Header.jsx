@@ -149,19 +149,19 @@ export default function Header() {
                 {
                     group: 'BÀN',
                     items: [
-                        { name: 'Bàn ăn cao cấp', path: '/san-pham/ban-an', desc: 'Mặt đá Ceramic chống ố' },
-                        { name: 'Bàn trà - Sofa', path: '/san-pham/ban-tra', desc: 'Đá Marble & Gỗ sồi tự nhiên' },
-                        { name: 'Bàn làm việc', path: '/san-pham/ban-lam-viec', desc: 'Thiết kế công thái học hiện đại' },
-                        { name: 'Bàn trang điểm', path: '/san-pham/ban-trang-diem', desc: 'Đường nét uốn cong nhẹ nhàng' },
+                        { name: 'Bàn ăn cao cấp', path: '/san-pham?category=ban-an', desc: 'Mặt đá Ceramic chống ố' },
+                        { name: 'Bàn trà - Sofa', path: '/san-pham?category=ban-tra', desc: 'Đá Marble & Gỗ sồi tự nhiên' },
+                        { name: 'Bàn làm việc', path: '/san-pham?category=ban-lam-viec', desc: 'Thiết kế công thái học hiện đại' },
+                        { name: 'Bàn trang điểm', path: '/san-pham?category=ban-trang-diem', desc: 'Đường nét uốn cong nhẹ nhàng' },
                     ],
                 },
                 {
                     group: 'GHẾ & SOFA',
                     items: [
-                        { name: 'Sofa da thật', path: '/san-pham/sofa-da', desc: 'Da bò thảo mộc tự nhiên 100%' },
-                        { name: 'Sofa vải nỉ', path: '/san-pham/sofa-vai', desc: 'Vải dệt cao cấp êm ái thoáng mát' },
-                        { name: 'Ghế Armchair thư giãn', path: '/san-pham/ghe-thu-gian', desc: 'Nâng niu từng phút giây an yên' },
-                        { name: 'Ghế ăn sang trọng', path: '/san-pham/ghe-an', desc: 'Đệm ngồi êm dịu, tựa cong duyên dáng' },
+                        { name: 'Sofa da thật', path: '/san-pham?category=sofa-da', desc: 'Da bò thảo mộc tự nhiên 100%' },
+                        { name: 'Sofa vải nỉ', path: '/san-pham?category=sofa-vai', desc: 'Vải dệt cao cấp êm ái thoáng mát' },
+                        { name: 'Ghế Armchair thư giãn', path: '/san-pham?category=ghe-thu-gian', desc: 'Nâng niu từng phút giây an yên' },
+                        { name: 'Ghế ăn sang trọng', path: '/san-pham?category=ghe-an', desc: 'Đệm ngồi êm dịu, tựa cong duyên dáng' },
                     ],
                 },
             ],
@@ -186,18 +186,32 @@ export default function Header() {
                     link: '/bo-suu-tap/victoria',
                 },
                 {
-                    name: 'ELEGANCE',
-                    desc: 'Mặt đá Ceramic chống ố, vân gỗ sồi nguyên khối',
+                    name: 'VALENCIA',
+                    desc: 'Đá Marble Calacatta & đường bo cong hữu cơ',
                     tag: 'Mới',
-                    image: '/images/products/ban-an.jpg',
-                    link: '/bo-suu-tap/elegance',
+                    image: '/images/banners/banner-hero/banner-cotenoire.jpg',
+                    link: '/bo-suu-tap/valencia',
+                },
+                {
+                    name: 'MORETTI',
+                    desc: 'Chủ nghĩa tối giản vị lai & da Nappa Milanese',
+                    tag: 'Haute Couture',
+                    image: '/images/banners/banner-hero/banner-modern.jpg',
+                    link: '/bo-suu-tap/moretti',
                 },
                 {
                     name: 'OSAKA',
                     desc: 'Tinh hoa Japandi mộc mạc, tựa mây duyên dáng',
-                    tag: '',
+                    tag: 'Zen',
                     image: '/images/products/ghe-thu-gian.jpg',
                     link: '/bo-suu-tap/osaka',
+                },
+                {
+                    name: 'ELEGANCE',
+                    desc: 'Mặt đá Ceramic chống ố, vân gỗ sồi nguyên khối',
+                    tag: '',
+                    image: '/images/products/ban-an.jpg',
+                    link: '/bo-suu-tap/elegance',
                 },
                 {
                     name: 'COASTAL',
@@ -230,7 +244,7 @@ export default function Header() {
                             <button
                                 type="button"
                                 onClick={() => setMobileMenuOpen(true)}
-                                className="p-1.5 -ml-1.5 text-neutral-800 hover:text-neutral-950 hover:bg-neutral-100 rounded-lg transition-colors focus:outline-none"
+                                className="lg:hidden p-1.5 -ml-1.5 text-neutral-800 hover:text-neutral-950 hover:bg-neutral-100 rounded-lg transition-colors focus:outline-none"
                                 aria-label="Mở danh mục menu"
                             >
                                 <MenuIcon className="w-6 h-6 stroke-[1.75]" />
@@ -332,7 +346,7 @@ export default function Header() {
 
                                                         <div className="pt-4 mt-4 border-t border-stone-100">
                                                             <Link
-                                                                to="/san-pham?danh-muc=ban"
+                                                                to="/san-pham?category=ban"
                                                                 className="inline-flex items-center space-x-1.5 text-xs text-[#8C6A48] hover:text-neutral-900 font-medium tracking-wide transition-colors"
                                                             >
                                                                 <span>Xem tất cả mẫu Bàn</span>
@@ -371,7 +385,7 @@ export default function Header() {
 
                                                         <div className="pt-4 mt-4 border-t border-stone-100">
                                                             <Link
-                                                                to="/san-pham?danh-muc=sofa"
+                                                                to="/san-pham?category=sofa"
                                                                 className="inline-flex items-center space-x-1.5 text-xs text-[#8C6A48] hover:text-neutral-900 font-medium tracking-wide transition-colors"
                                                             >
                                                                 <span>Xem tất cả Ghế & Sofa</span>
@@ -770,6 +784,18 @@ export default function Header() {
                                             {/* Expandable sub-items */}
                                             {item.hasDropdown && mobileExpandedSection === item.title && (
                                                 <div className="pb-3 pl-4 space-y-2 text-xs text-neutral-600 bg-neutral-50 p-3 rounded">
+                                                    {item.title === 'SẢN PHẨM' && (
+                                                        <div className="pb-2 mb-2 border-b border-neutral-200">
+                                                            <Link
+                                                                to="/san-pham"
+                                                                onClick={() => setMobileMenuOpen(false)}
+                                                                className="inline-flex items-center space-x-1.5 font-semibold text-xs text-[#8C6A48] hover:text-neutral-900"
+                                                            >
+                                                                <span>✦ Xem tất cả sản phẩm</span>
+                                                                <ArrowRight className="w-3.5 h-3.5" />
+                                                            </Link>
+                                                        </div>
+                                                    )}
                                                     {item.subcategories &&
                                                         item.subcategories.map((sub, sIdx) => (
                                                             <div key={sIdx} className="mb-2">

@@ -646,8 +646,8 @@ export default function HomePage() {
             <div
               key={slide.id}
               className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${isActive
-                  ? 'opacity-100 z-10 pointer-events-auto'
-                  : 'opacity-0 z-0 pointer-events-none'
+                ? 'opacity-100 z-10 pointer-events-auto'
+                : 'opacity-0 z-0 pointer-events-none'
                 }`}
             >
               {/* Ảnh nền có hiệu ứng Ken Burns */}
@@ -805,17 +805,15 @@ export default function HomePage() {
                       setActiveLookbookRoom(room.id);
                       setActiveHotspot(null);
                     }}
-                    className={`backdrop-blur-md px-4 sm:px-5 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-300 flex items-center gap-2 border shadow-sm ${
-                      isSelected
+                    className={`backdrop-blur-md px-4 sm:px-5 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-300 flex items-center gap-2 border shadow-sm ${isSelected
                         ? 'bg-white text-neutral-900 border-white shadow-md font-semibold scale-102'
                         : 'bg-black/45 hover:bg-black/65 text-white/85 hover:text-white border-white/20 hover:scale-102'
-                    }`}
+                      }`}
                     aria-label={`Xem ${room.name}`}
                   >
                     <span
-                      className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                        isSelected ? 'bg-[#8C5D3E]' : 'bg-[#C8A97E]'
-                      }`}
+                      className={`w-1.5 h-1.5 rounded-full transition-colors ${isSelected ? 'bg-[#8C5D3E]' : 'bg-[#C8A97E]'
+                        }`}
                     />
                     <span>{room.name}</span>
                   </button>
@@ -848,17 +846,15 @@ export default function HomePage() {
                       e.stopPropagation();
                       setActiveHotspot((prev) => (prev === spot.id ? null : spot.id));
                     }}
-                    className={`relative w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all duration-300 shadow-md backdrop-blur-sm ${
-                      isSelected
+                    className={`relative w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all duration-300 shadow-md backdrop-blur-sm ${isSelected
                         ? 'bg-[#8C5D3E] text-white scale-110 shadow-lg ring-2 ring-white/80 border border-white'
                         : 'bg-white/85 text-[#8C5D3E] border border-white/95 hover:bg-white hover:scale-110'
-                    }`}
+                      }`}
                     aria-label={`Chi tiết ${spot.name}`}
                   >
                     <span
-                      className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-transform duration-300 ${
-                        isSelected ? 'bg-white' : 'bg-[#8C5D3E]'
-                      }`}
+                      className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-transform duration-300 ${isSelected ? 'bg-white' : 'bg-[#8C5D3E]'
+                        }`}
                     />
                   </button>
 
@@ -946,16 +942,14 @@ export default function HomePage() {
                         onClick={() =>
                           setActiveHotspot((prev) => (prev === item.id ? null : item.id))
                         }
-                        className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-300 flex items-center gap-2 border ${
-                          isTabActive
+                        className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-300 flex items-center gap-2 border ${isTabActive
                             ? 'bg-white text-neutral-900 border-white shadow-md font-semibold'
                             : 'bg-white/10 hover:bg-white/20 text-white/90 border-white/10'
-                        }`}
+                          }`}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            isTabActive ? 'bg-[#8C5D3E]' : 'bg-[#E6C280]'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${isTabActive ? 'bg-[#8C5D3E]' : 'bg-[#E6C280]'
+                            }`}
                         />
                         <span>{item.name}</span>
                       </button>
@@ -1110,15 +1104,15 @@ export default function HomePage() {
                   animate={
                     isSelected
                       ? {
-                          scale: 1.18,
-                          opacity: 0,
-                          zIndex: 30,
-                        }
+                        scale: 1.18,
+                        opacity: 0,
+                        zIndex: 30,
+                      }
                       : isOther
-                      ? {
+                        ? {
                           opacity: 0.65,
                         }
-                      : {
+                        : {
                           scale: 1,
                           opacity: 1,
                         }
@@ -1131,15 +1125,13 @@ export default function HomePage() {
                     willChange: 'transform, opacity',
                     transformOrigin: 'center center',
                   }}
-                  className={`group/arch relative overflow-hidden bg-[#F6F2EC] rounded-t-[100px] sm:rounded-t-[120px] lg:rounded-t-[140px] rounded-b-3xl border border-[#E8E2D8] cursor-pointer shadow-[0_8px_25px_rgba(0,0,0,0.03)] transition-shadow duration-500 ease-out select-none ${
-                    isAnyActive
+                  className={`group/arch relative overflow-hidden bg-[#F6F2EC] rounded-t-[100px] sm:rounded-t-[120px] lg:rounded-t-[140px] rounded-b-3xl border border-[#E8E2D8] cursor-pointer shadow-[0_8px_25px_rgba(0,0,0,0.03)] transition-shadow duration-500 ease-out select-none ${isAnyActive
                       ? 'pointer-events-none'
                       : 'hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] hover:-translate-y-2.5 group-hover/cards-wrap:opacity-85 hover:!opacity-100'
-                  } ${
-                    cat.isTaller
+                    } ${cat.isTaller
                       ? 'h-[500px] sm:h-[530px] lg:h-[560px] lg:-translate-y-3'
                       : 'h-[460px] sm:h-[480px] lg:h-[510px]'
-                  }`}
+                    }`}
                 >
                   <img
                     src={cat.image}
@@ -1194,33 +1186,30 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setProductFilter('all')}
-                className={`px-5 py-2 text-xs font-medium rounded-full transition-all duration-300 ${
-                  productFilter === 'all'
+                className={`px-5 py-2 text-xs font-medium rounded-full transition-all duration-300 ${productFilter === 'all'
                     ? 'bg-[#8C5D3E] text-white shadow-sm'
                     : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/80'
-                }`}
+                  }`}
               >
                 Tất cả
               </button>
               <button
                 type="button"
                 onClick={() => setProductFilter('ban')}
-                className={`px-5 py-2 text-xs font-medium rounded-full transition-all duration-300 ${
-                  productFilter === 'ban'
+                className={`px-5 py-2 text-xs font-medium rounded-full transition-all duration-300 ${productFilter === 'ban'
                     ? 'bg-[#8C5D3E] text-white shadow-sm'
                     : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/80'
-                }`}
+                  }`}
               >
                 Bàn cao cấp
               </button>
               <button
                 type="button"
                 onClick={() => setProductFilter('ghe')}
-                className={`px-5 py-2 text-xs font-medium rounded-full transition-all duration-300 ${
-                  productFilter === 'ghe'
+                className={`px-5 py-2 text-xs font-medium rounded-full transition-all duration-300 ${productFilter === 'ghe'
                     ? 'bg-[#8C5D3E] text-white shadow-sm'
                     : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/80'
-                }`}
+                  }`}
               >
                 Ghế & Sofa
               </button>
@@ -1329,11 +1318,10 @@ export default function HomePage() {
                                       [p.id]: sIdx,
                                     }))
                                   }
-                                  className={`w-4 h-4 rounded-full transition-all duration-200 border ${
-                                    isSwatchActive
+                                  className={`w-4 h-4 rounded-full transition-all duration-200 border ${isSwatchActive
                                       ? 'ring-2 ring-[#8C5D3E] ring-offset-2 scale-110 border-white'
                                       : 'border-black/15 hover:scale-110'
-                                  }`}
+                                    }`}
                                   style={{ backgroundColor: swatch.hex }}
                                   title={swatch.name}
                                   aria-label={`Chọn màu ${swatch.name}`}
@@ -1445,11 +1433,10 @@ export default function HomePage() {
                   key={mat.id}
                   type="button"
                   onClick={() => setActiveMaterial(mat.id)}
-                  className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-300 flex items-center gap-3.5 shadow-sm ${
-                    isMatActive
+                  className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-300 flex items-center gap-3.5 shadow-sm ${isMatActive
                       ? 'bg-white border-[#8C5D3E] shadow-[0_8px_25px_rgba(140,93,62,0.12)] -translate-y-1'
                       : 'bg-white/70 hover:bg-white border-[#E8E2D8] hover:border-[#C8A97E]'
-                  }`}
+                    }`}
                 >
                   <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden flex-shrink-0 border border-[#E8E2D8]">
                     <img
@@ -1551,7 +1538,7 @@ export default function HomePage() {
 
                   <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                     <Link
-                      to={`/san-pham?danh-muc=${currentMat.productType}`}
+                      to={`/san-pham?category=${currentMat.productType}`}
                       className="px-7 py-3.5 bg-[#8C5D3E] hover:bg-[#72482E] text-white rounded-full text-xs font-semibold tracking-widest uppercase transition-all duration-300 shadow-md inline-flex items-center justify-center gap-2"
                     >
                       <span>Khám phá sản phẩm {currentMat.name}</span>
