@@ -196,38 +196,38 @@ export default function Footer() {
                         </h4>
                         <ul className="space-y-2.5 text-xs text-[#D8CFBE]">
                             <li>
-                                <Link to="/san-pham?danh-muc=ban-an" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
+                                <Link to="/san-pham?category=ban-an" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
                                     Bàn ăn mặt đá Ceramic & Bàn ăn gỗ sồi
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/san-pham?danh-muc=sofa" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
+                                <Link to="/san-pham?category=sofa" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
                                     Sofa da tự nhiên & Sofa vải dệt cao cấp
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/san-pham?danh-muc=ban-tra" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
+                                <Link to="/san-pham?category=ban-tra" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
                                     Bàn trà đôi phòng khách & Bàn tròn mặt đá
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/san-pham?danh-muc=ghe-thu-gian" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
+                                <Link to="/san-pham?category=ghe-thu-gian" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
                                     Ghế thư giãn - Bành Armchair đọc sách
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/san-pham?danh-muc=ban-lam-viec" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
+                                <Link to="/san-pham?category=ban-lam-viec" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
                                     Bàn làm việc thông minh & Ghế công thái học
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/san-pham?danh-muc=ghe-an" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
+                                <Link to="/san-pham?category=ghe-an" className="hover:text-[#FAF8F5] hover:translate-x-1 inline-block transition-all duration-150">
                                     Ghế ăn bọc đệm êm ái & Ghế tựa mây duyên dáng
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/san-pham" className="text-[#E6C280] hover:text-[#f3d9a8] font-semibold inline-block transition-colors">
-                                    Bộ sưu tập Bàn & Ghế 2026 →
+                                <Link to="/bo-suu-tap" className="text-[#E6C280] hover:text-[#f3d9a8] font-semibold inline-block transition-colors">
+                                    Khám phá 6 Bộ sưu tập độc bản 2026 →
                                 </Link>
                             </li>
                         </ul>

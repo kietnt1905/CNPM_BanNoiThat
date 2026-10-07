@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
 import AuthCallback from './pages/AuthCallback';
 import CategoryPage from './pages/CategoryPage';
+import CollectionsPage from './pages/CollectionsPage';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -31,7 +32,10 @@ function AnimatedRoutes() {
           <Route path="ghe-thu-gian" element={<CategoryPage categoryId="04" />} />
           <Route path="phong-ngu" element={<CategoryPage categoryId="05" />} />
           <Route path="giuong-ngu" element={<CategoryPage categoryId="05" />} />
-          <Route path="san-pham" element={<CategoryPage categoryId="02" />} />
+          <Route path="san-pham" element={<CategoryPage />} />
+          <Route path="san-pham/:categorySlug" element={<CategoryPage />} />
+          <Route path="bo-suu-tap" element={<CollectionsPage />} />
+          <Route path="bo-suu-tap/:collectionSlug" element={<CollectionsPage />} />
           <Route path="thiet-ke-noi-that" element={<HomePage />} />
           <Route path="cau-chuyen-thuong-hieu" element={<HomePage />} />
           <Route path="cau-chuyen" element={<HomePage />} />
