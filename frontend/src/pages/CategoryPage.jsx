@@ -20,8 +20,11 @@ import {
   ArrowRight,
   Search,
   Star,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
+import productApi from '../api/productApi';
+
 
 // ==========================================
 // 1. DATA ĐỊNH NGHĨA DANH MỤC SẢN PHẨM
@@ -250,407 +253,7 @@ export const COLLECTIONS_META = {
 // ==========================================
 // 2. DANH SÁCH SẢN PHẨM HOÀN CHỈNH (MOCK DATA LUXURY)
 // ==========================================
-export const PRODUCTS_CATALOG = [
-  // --- BÀN ĂN ---
-  {
-    id: 101,
-    name: 'Bộ Bàn Ăn Hoàng Gia Elegance 8 Chỗ Mặt Đá',
-    categorySlug: 'ban-an',
-    categoryName: 'Bàn Ăn Cao Cấp',
-    group: 'ban',
-    collection: 'elegance',
-    price: 46500000,
-    priceDisplay: '46.500.000₫',
-    oldPriceDisplay: '52.000.000₫',
-    image: '/images/products/ban-an.jpg',
-    secondaryImage: '/images/categories/phong-am.jpg',
-    tag: 'Best Seller',
-    material: 'Mặt đá Ceramic Nano & Gỗ Óc Chó FAS',
-    materialType: 'stone',
-    dimensions: 'D220 × R95 × C75 cm',
-    rating: 5.0,
-    inStock: true,
-  },
-  {
-    id: 102,
-    name: 'Bàn Ăn Mở Rộng Thông Minh Calacatta Gold',
-    categorySlug: 'ban-an',
-    categoryName: 'Bàn Ăn Cao Cấp',
-    group: 'ban',
-    collection: 'valencia',
-    price: 24900000,
-    priceDisplay: '24.900.000₫',
-    oldPriceDisplay: '28.500.000₫',
-    image: '/images/lookbook/lookbook-dining.jpg',
-    secondaryImage: '/images/products/ban-an.jpg',
-    tag: 'Mới Ra Mắt',
-    material: 'Đá Thiêu Kết Calacatta & Khung Titan Mạ PVD',
-    materialType: 'stone',
-    dimensions: 'D180-240 × R90 × C75 cm',
-    rating: 4.9,
-    inStock: true,
-  },
-
-  // --- BÀN TRÀ ---
-  {
-    id: 201,
-    name: 'Bàn Trà Đôi Mặt Đá Marble Calacatta Elegance',
-    categorySlug: 'ban-tra',
-    categoryName: 'Bàn Trà - Sofa',
-    group: 'ban',
-    collection: 'valencia',
-    price: 11500000,
-    priceDisplay: '11.500.000₫',
-    oldPriceDisplay: '13.200.000₫',
-    image: '/images/products/ban-tra-doi.jpg',
-    secondaryImage: '/images/lookbook/lookbook-living.jpg',
-    tag: 'Bán Chạy Nhất',
-    material: 'Đá Marble Calacatta & Khung Titan Mạ Vàng',
-    materialType: 'stone',
-    dimensions: 'Ø90 × C45 cm & Ø60 × C38 cm',
-    rating: 4.9,
-    inStock: true,
-  },
-  {
-    id: 202,
-    name: 'Bàn Tròn Cà Phê Gỗ Óc Chó Nghệ Thuật',
-    categorySlug: 'ban-tra',
-    categoryName: 'Bàn Trà - Sofa',
-    group: 'ban',
-    collection: 'moretti',
-    price: 8600000,
-    priceDisplay: '8.600.000₫',
-    oldPriceDisplay: '9.800.000₫',
-    image: '/images/lookbook/lookbook-armchair.jpg',
-    secondaryImage: '/images/products/ban-tra-doi.jpg',
-    tag: 'Thiết Kế Tinh Xảo',
-    material: 'Gỗ Óc Chó FAS Tự Nhiên & Dầu Lau Hữu Cơ',
-    materialType: 'wood',
-    dimensions: 'Ø75 × C42 cm',
-    rating: 4.8,
-    inStock: true,
-  },
-  {
-    id: 203,
-    name: 'Bàn Trà Đôi Gỗ Sồi Coastal Trắng Mây',
-    categorySlug: 'ban-tra',
-    categoryName: 'Bàn Trà - Sofa',
-    group: 'ban',
-    collection: 'coastal',
-    price: 9800000,
-    priceDisplay: '9.800.000₫',
-    oldPriceDisplay: '11.500.000₫',
-    image: '/images/products/ban-tra-doi.jpg',
-    secondaryImage: '/images/banners/phong-khach.jpg',
-    tag: 'Resort Living',
-    material: 'Gỗ Sồi Trắng Sáng & Mặt Đá Mài Mờ',
-    materialType: 'wood',
-    dimensions: 'Ø80 × C40 cm',
-    rating: 4.8,
-    inStock: true,
-  },
-
-  // --- BÀN LÀM VIỆC ---
-  {
-    id: 301,
-    name: 'Bàn Làm Việc Giám Đốc Atelier Master Óc Chó',
-    categorySlug: 'ban-lam-viec',
-    categoryName: 'Bàn Làm Việc',
-    group: 'ban',
-    collection: 'moretti',
-    price: 32000000,
-    priceDisplay: '32.000.000₫',
-    oldPriceDisplay: '36.500.000₫',
-    image: '/images/categories/phong-lam-viec.jpg',
-    secondaryImage: '/images/products/ke-tivi-oc-cho.jpg',
-    tag: 'Độc Bản KTS',
-    material: 'Gỗ Óc Chó Bắc Mỹ & Hộc Kéo Da Nappa',
-    materialType: 'wood',
-    dimensions: 'D180 × R85 × C76 cm',
-    rating: 5.0,
-    inStock: true,
-  },
-  {
-    id: 302,
-    name: 'Bàn Làm Việc Gỗ Sồi Japandi Modern',
-    categorySlug: 'ban-lam-viec',
-    categoryName: 'Bàn Làm Việc',
-    group: 'ban',
-    collection: 'osaka',
-    price: 15900000,
-    priceDisplay: '15.900.000₫',
-    oldPriceDisplay: '18.000.000₫',
-    image: '/images/categories/phong-lam-viec.jpg',
-    secondaryImage: '/images/lookbook/lookbook-dining.jpg',
-    tag: 'Tối Giản',
-    material: 'Gỗ Sồi Trắng Bắc Mỹ & Ray Trượt Hafele',
-    materialType: 'wood',
-    dimensions: 'D160 × R75 × C75 cm',
-    rating: 4.8,
-    inStock: true,
-  },
-
-  // --- BÀN TRANG ĐIỂM ---
-  {
-    id: 303,
-    name: 'Bàn Trang Điểm Voile Gương Tròn Đèn LED Cảm Ứng',
-    categorySlug: 'ban-trang-diem',
-    categoryName: 'Bàn Trang Điểm',
-    group: 'ban',
-    collection: 'elegance',
-    price: 13800000,
-    priceDisplay: '13.800.000₫',
-    oldPriceDisplay: '15.500.000₫',
-    image: '/images/products/ke-tivi-oc-cho.jpg',
-    secondaryImage: '/images/products/tu-quan-ao.jpg',
-    tag: 'Nữ Tính Tinh Tế',
-    material: 'Gỗ Sồi Trắng Sơn Satin & Gương Bỉ Tráng Bạc',
-    materialType: 'wood',
-    dimensions: 'D110 × R48 × C76 cm',
-    rating: 4.9,
-    inStock: true,
-  },
-
-  // --- SOFA DA THẬT ---
-  {
-    id: 401,
-    name: 'Sofa 3 Chỗ Victoria Da Thật Ý Thảo Mộc',
-    categorySlug: 'sofa-da',
-    categoryName: 'Sofa Da Thật',
-    group: 'sofa',
-    collection: 'victoria',
-    price: 38500000,
-    priceDisplay: '38.500.000₫',
-    oldPriceDisplay: '44.000.000₫',
-    image: '/images/products/sofa-3-cho-victoria.jpg',
-    secondaryImage: '/images/categories/sofa-3cho.jpg',
-    tag: 'Tâm Điểm Phòng Khách',
-    material: 'Da Bò Ý Thuộc Thảo Mộc Tuscany & Khung Gỗ Sồi',
-    materialType: 'leather',
-    dimensions: 'D240 × R100 × C82 cm',
-    rating: 5.0,
-    inStock: true,
-  },
-  {
-    id: 402,
-    name: 'Sofa Góc L Florence Da Nappa Thượng Hạng',
-    categorySlug: 'sofa-da',
-    categoryName: 'Sofa Da Thật',
-    group: 'sofa',
-    collection: 'moretti',
-    price: 56000000,
-    priceDisplay: '56.000.000₫',
-    oldPriceDisplay: '62.000.000₫',
-    image: '/images/categories/sofa-3cho.jpg',
-    secondaryImage: '/images/products/sofa-3-cho-victoria.jpg',
-    tag: 'Đẳng Cấp',
-    material: 'Da Bò Nappa Full Grain & Khung Thép Sơn PVD',
-    materialType: 'leather',
-    dimensions: 'D280 × R170 × C80 cm',
-    rating: 4.9,
-    inStock: true,
-  },
-
-  // --- SOFA VẢI NỈ ---
-  {
-    id: 403,
-    name: 'Sofa Băng Scandinavia Vải Dệt Bouclé Êm Ái',
-    categorySlug: 'sofa-vai',
-    categoryName: 'Sofa Vải Nỉ',
-    group: 'sofa',
-    collection: 'coastal',
-    price: 22800000,
-    priceDisplay: '22.800.000₫',
-    oldPriceDisplay: '26.000.000₫',
-    image: '/images/categories/sofa-3cho.jpg',
-    secondaryImage: '/images/lookbook/lookbook-living.jpg',
-    tag: 'Xu Hướng 2026',
-    material: 'Vải Len Bouclé Nhập Pháp & Đệm Lông Vũ 3 Lớp',
-    materialType: 'fabric',
-    dimensions: 'D210 × R92 × C80 cm',
-    rating: 4.8,
-    inStock: true,
-  },
-
-  // --- GHẾ ARMCHAIR THƯ GIÃN ---
-  {
-    id: 501,
-    name: 'Ghế Bành Thư Giãn Armchair Mây Osaka',
-    categorySlug: 'ghe-thu-gian',
-    categoryName: 'Ghế Armchair Thư Giãn',
-    group: 'sofa',
-    collection: 'osaka',
-    price: 14200000,
-    priceDisplay: '14.200.000₫',
-    oldPriceDisplay: '16.500.000₫',
-    image: '/images/products/ghe-thu-gian.jpg',
-    secondaryImage: '/images/lookbook/lookbook-armchair.jpg',
-    tag: 'Biểu Tượng KTS',
-    material: 'Mây Đan Mắt Cáo Thủ Công & Gỗ Sồi Khối',
-    materialType: 'wood',
-    dimensions: 'D82 × R80 × C95 cm',
-    rating: 5.0,
-    inStock: true,
-  },
-  {
-    id: 502,
-    name: 'Ghế Đọc Sách Lounge Chair & Ottoman Tuscany',
-    categorySlug: 'ghe-thu-gian',
-    categoryName: 'Ghế Armchair Thư Giãn',
-    group: 'sofa',
-    collection: 'victoria',
-    price: 21500000,
-    priceDisplay: '21.500.000₫',
-    oldPriceDisplay: '24.800.000₫',
-    image: '/images/products/ghe-thu-gian.jpg',
-    secondaryImage: '/images/lookbook/lookbook-living.jpg',
-    tag: 'Được Yêu Thích',
-    material: 'Da Bò Thuộc Thảo Mộc & Khung Gỗ Uốn Nhiệt',
-    materialType: 'leather',
-    dimensions: 'D88 × R85 × C85 cm',
-    rating: 4.9,
-    inStock: true,
-  },
-
-  // --- GHẾ ĂN ---
-  {
-    id: 601,
-    name: 'Ghế Ăn Bọc Da Nappa Roma Chân Kim Loại',
-    categorySlug: 'ghe-an',
-    categoryName: 'Ghế Ăn Sang Trọng',
-    group: 'sofa',
-    collection: 'elegance',
-    price: 4800000,
-    priceDisplay: '4.800.000₫',
-    oldPriceDisplay: '5.500.000₫',
-    image: '/images/categories/phong-am.jpg',
-    secondaryImage: '/images/lookbook/lookbook-dining.jpg',
-    tag: 'Bán Chạy',
-    material: 'Da Bò Ý Cao Cấp & Chân Thép Mạ PVD Vàng',
-    materialType: 'leather',
-    dimensions: 'D52 × R56 × C82 cm',
-    rating: 4.8,
-    inStock: true,
-  },
-  {
-    id: 602,
-    name: 'Bộ Ghế Ăn Tựa Mây Duyên Dáng Scandinavian',
-    categorySlug: 'ghe-an',
-    categoryName: 'Ghế Ăn Sang Trọng',
-    group: 'sofa',
-    collection: 'osaka',
-    price: 6200000,
-    priceDisplay: '6.200.000₫',
-    oldPriceDisplay: '7.500.000₫',
-    image: '/images/lookbook/lookbook-dining.jpg',
-    secondaryImage: '/images/categories/phong-am.jpg',
-    tag: 'Tinh Hoa Thủ Công',
-    material: 'Gỗ Sồi Khối Tự Nhiên & Tựa Mây Mắt Cáo',
-    materialType: 'wood',
-    dimensions: 'D54 × R56 × C84 cm',
-    rating: 4.9,
-    inStock: true,
-  },
-  {
-    id: 603,
-    name: 'Ghế Thư Giãn Valencia Khung Titan Champagne',
-    categorySlug: 'ghe-thu-gian',
-    categoryName: 'Ghế Armchair Thư Giãn',
-    group: 'sofa',
-    collection: 'valencia',
-    price: 13800000,
-    priceDisplay: '13.800.000₫',
-    oldPriceDisplay: '15.500.000₫',
-    image: '/images/products/ghe-thu-gian.jpg',
-    secondaryImage: '/images/lookbook/lookbook-living.jpg',
-    tag: 'Đường Cong Hữu Cơ',
-    material: 'Vải Len Bouclé & Titan Khung Mạ Vàng',
-    materialType: 'fabric',
-    dimensions: 'D78 × R76 × C88 cm',
-    rating: 4.9,
-    inStock: true,
-  },
-
-  // --- GIƯỜNG NGỦ ---
-  {
-    id: 701,
-    name: 'Giường Ngủ Master Gỗ Sồi Victoria Tự Nhiên',
-    categorySlug: 'giuong-ngu',
-    categoryName: 'Giường Ngủ Cao Cấp',
-    group: 'phong-ngu',
-    collection: 'victoria',
-    price: 32500000,
-    priceDisplay: '32.500.000₫',
-    oldPriceDisplay: '37.000.000₫',
-    image: '/images/products/giuong-ngu-go-tu-nhien.jpg',
-    secondaryImage: '/images/lookbook/lookbook-bedroom.jpg',
-    tag: 'Tâm Điểm Phòng Ngủ',
-    material: 'Gỗ Sồi Khối Tự Nhiên & Drap Linen Dệt Thô',
-    materialType: 'wood',
-    dimensions: 'D220 × R200 × C110 cm',
-    rating: 5.0,
-    inStock: true,
-  },
-  {
-    id: 702,
-    name: 'Giường Ngủ Gỗ Óc Chó Viền Đồng Master Luxury',
-    categorySlug: 'giuong-ngu',
-    categoryName: 'Giường Ngủ Cao Cấp',
-    group: 'phong-ngu',
-    collection: 'moretti',
-    price: 35000000,
-    priceDisplay: '35.000.000₫',
-    oldPriceDisplay: '39.500.000₫',
-    image: '/images/categories/giuong-ngu.jpg',
-    secondaryImage: '/images/products/giuong-ngu-go-tu-nhien.jpg',
-    tag: 'Độc Bản Master',
-    material: 'Gỗ Óc Chó FAS & Chỉ Đồng Thau Chế Tác',
-    materialType: 'wood',
-    dimensions: 'D215 × R190 × C105 cm',
-    rating: 5.0,
-    inStock: true,
-  },
-
-  // --- TAB & TỦ KỆ ---
-  {
-    id: 801,
-    name: 'Tab Đầu Giường Gỗ Tự Nhiên Nordic Tinh Tế',
-    categorySlug: 'tu-ke',
-    categoryName: 'Tab Đầu Giường & Tủ Kệ',
-    group: 'phong-ngu',
-    collection: 'coastal',
-    price: 4500000,
-    priceDisplay: '4.500.000₫',
-    oldPriceDisplay: '5.200.000₫',
-    image: '/images/products/ke-tivi-oc-cho.jpg',
-    secondaryImage: '/images/products/tu-quan-ao.jpg',
-    tag: 'Bán Chạy',
-    material: 'Gỗ Sồi Trắng & Ray Giảm Chấn Hafele',
-    materialType: 'wood',
-    dimensions: 'D50 × R40 × C45 cm',
-    rating: 4.8,
-    inStock: true,
-  },
-  {
-    id: 802,
-    name: 'Tủ Quần Áo Master Victoria Cánh Kính Khói',
-    categorySlug: 'tu-ke',
-    categoryName: 'Tab Đầu Giường & Tủ Kệ',
-    group: 'phong-ngu',
-    collection: 'victoria',
-    price: 28500000,
-    priceDisplay: '28.500.000₫',
-    oldPriceDisplay: '33.000.000₫',
-    image: '/images/products/tu-quan-ao.jpg',
-    secondaryImage: '/images/products/ke-tivi-oc-cho.jpg',
-    tag: 'Kính Khói Sang Trọng',
-    material: 'Gỗ Sồi Bắc Mỹ & Cánh Kính Khói Cường Lực',
-    materialType: 'wood',
-    dimensions: 'D220 × R60 × C240 cm',
-    rating: 4.9,
-    inStock: true,
-  },
-];
+export const PRODUCTS_CATALOG = [];
 
 // Khoảng giá lọc
 export const PRICE_RANGES = [
@@ -707,6 +310,33 @@ export default function CategoryPage({ categoryId }) {
   const [collectionOpen, setCollectionOpen] = useState(Boolean(activeCollection));
   const [wishlist, setWishlist] = useState([]);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // State lưu danh sách sản phẩm lấy từ Backend API
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Gọi API lấy dữ liệu sản phẩm thật từ Backend
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    productApi.getAll({ per_page: 100 })
+      .then((res) => {
+        if (isMounted && res.data && res.data.status) {
+          setProducts(res.data.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Lỗi khi tải sản phẩm từ API:', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
 
   // Tự động mở danh mục nhỏ bộ sưu tập khi có activeCollection
   useEffect(() => {
@@ -797,7 +427,8 @@ export default function CategoryPage({ categoryId }) {
 
   // 2. Lọc danh sách sản phẩm theo Collection, Category, Giá, Chất liệu và Sắp xếp
   const filteredProducts = useMemo(() => {
-    let result = [...PRODUCTS_CATALOG];
+    let result = [...products];
+
 
     // Lọc theo Collection nếu có param trên URL
     if (activeCollection) {
@@ -867,7 +498,8 @@ export default function CategoryPage({ categoryId }) {
     }
 
     return result;
-  }, [activeCollection, activeCategory, selectedPriceRange, selectedMaterial, sortOption]);
+  }, [activeCollection, activeCategory, selectedPriceRange, selectedMaterial, sortOption, products]);
+
 
   // Thông tin tiêu đề và banner trang (ưu tiên collection nếu có)
   const meta = useMemo(() => {
@@ -1091,7 +723,7 @@ export default function CategoryPage({ categoryId }) {
                         : 'bg-neutral-100 text-neutral-500'
                     }`}
                   >
-                    {PRODUCTS_CATALOG.length}
+                    {products.length}
                   </span>
                 </button>
 
@@ -1099,7 +731,7 @@ export default function CategoryPage({ categoryId }) {
                 <div className="space-y-4 pt-1">
                   {CATEGORY_GROUPS.map((grp, gIdx) => {
                     const isGroupActive = activeCategory === grp.groupSlug;
-                    const groupItemCount = PRODUCTS_CATALOG.filter(
+                    const groupItemCount = products.filter(
                       (p) => p.group === grp.groupSlug
                     ).length;
 
@@ -1128,9 +760,10 @@ export default function CategoryPage({ categoryId }) {
                         <div className="pl-2 space-y-0.5">
                           {grp.items.map((sub, sIdx) => {
                             const isSubActive = activeCategory === sub.slug;
-                            const subCount = PRODUCTS_CATALOG.filter(
-                              (p) => p.categorySlug === sub.slug
+                            const subCount = products.filter(
+                              (p) => (p.categorySlug === sub.slug || p.category_slug === sub.slug)
                             ).length;
+
 
                             return (
                               <button
@@ -1193,7 +826,8 @@ export default function CategoryPage({ categoryId }) {
 
                         {Object.entries(COLLECTIONS_META).map(([cSlug, cMeta]) => {
                           const isColActive = activeCollection === cSlug;
-                          const colCount = PRODUCTS_CATALOG.filter((p) => p.collection === cSlug).length;
+                          const colCount = products.filter((p) => p.collection === cSlug).length;
+
 
                           return (
                             <button
@@ -1439,8 +1073,16 @@ export default function CategoryPage({ categoryId }) {
             )}
 
             {/* 2. LƯỚI CARD SẢN PHẨM (PRODUCT GRID) */}
-            {filteredProducts.length > 0 ? (
+            {loading ? (
+              <div className="py-28 flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="w-9 h-9 text-[#8C6A48] animate-spin" />
+                <p className="text-sm font-medium text-neutral-500 font-serif tracking-wide">
+                  Đang tải tác phẩm nội thất từ hệ thống...
+                </p>
+              </div>
+            ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+
                 {filteredProducts.map((prod) => {
                   const isLiked = wishlist.includes(prod.id);
 
@@ -1640,7 +1282,7 @@ export default function CategoryPage({ categoryId }) {
                           : 'text-neutral-700 hover:bg-neutral-50'
                       }`}
                     >
-                      ✦ Tất cả sản phẩm ({PRODUCTS_CATALOG.length})
+                      ✦ Tất cả sản phẩm ({products.length})
                     </button>
 
                     {CATEGORY_GROUPS.map((grp, gIdx) => (
@@ -1702,9 +1344,10 @@ export default function CategoryPage({ categoryId }) {
                         <div className="pl-2 space-y-1 mt-1">
                           {Object.entries(COLLECTIONS_META).map(([cSlug, cMeta]) => {
                             const isColActive = activeCollection === cSlug;
-                            const colCount = PRODUCTS_CATALOG.filter(
+                            const colCount = products.filter(
                               (p) => p.collection === cSlug
                             ).length;
+
 
                             return (
                               <button
