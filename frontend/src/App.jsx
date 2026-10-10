@@ -5,8 +5,20 @@ import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
 import AuthCallback from './pages/AuthCallback';
-import CategoryPage from './pages/CategoryPage';
+import CategoryPage, { PRODUCTS_CATALOG } from './pages/CategoryPage';
 import CollectionsPage from './pages/CollectionsPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import { useParams } from 'react-router-dom';
+
+function ProductOrCategoryRoute() {
+  const { categorySlug } = useParams();
+  // Nếu param là số hoặc khớp với ID của một sản phẩm trong CATALOG -> Điều hướng trang Chi tiết sản phẩm
+  const isProduct = PRODUCTS_CATALOG.some((p) => String(p.id) === String(categorySlug));
+  if (isProduct) {
+    return <ProductDetailPage />;
+  }
+  return <CategoryPage />;
+}
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -33,7 +45,9 @@ function AnimatedRoutes() {
           <Route path="phong-ngu" element={<CategoryPage categoryId="05" />} />
           <Route path="giuong-ngu" element={<CategoryPage categoryId="05" />} />
           <Route path="san-pham" element={<CategoryPage />} />
-          <Route path="san-pham/:categorySlug" element={<CategoryPage />} />
+          <Route path="san-pham/chi-tiet/:id" element={<ProductDetailPage />} />
+          <Route path="chi-tiet-san-pham/:id" element={<ProductDetailPage />} />
+          <Route path="san-pham/:categorySlug" element={<ProductOrCategoryRoute />} />
           <Route path="bo-suu-tap" element={<CollectionsPage />} />
           <Route path="bo-suu-tap/:collectionSlug" element={<CollectionsPage />} />
           <Route path="thiet-ke-noi-that" element={<HomePage />} />

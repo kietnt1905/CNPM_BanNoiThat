@@ -687,14 +687,14 @@ export default function CategoryPage({ categoryId }) {
       ? categoryId === '01'
         ? 'ban-an'
         : categoryId === '02'
-        ? 'sofa'
-        : categoryId === '03'
-        ? 'ban-lam-viec'
-        : categoryId === '04'
-        ? 'ghe-thu-gian'
-        : categoryId === '05'
-        ? 'phong-ngu'
-        : 'all'
+          ? 'sofa'
+          : categoryId === '03'
+            ? 'ban-lam-viec'
+            : categoryId === '04'
+              ? 'ghe-thu-gian'
+              : categoryId === '05'
+                ? 'phong-ngu'
+                : 'all'
       : 'all');
 
   const activeCategory = rawParam || 'all';
@@ -953,9 +953,8 @@ export default function CategoryPage({ categoryId }) {
             <Link
               to="/san-pham"
               onClick={handleResetFilters}
-              className={`hover:text-neutral-900 transition-colors ${
-                !activeCollection && activeCategory === 'all' ? 'font-semibold text-neutral-900' : ''
-              }`}
+              className={`hover:text-neutral-900 transition-colors ${!activeCollection && activeCategory === 'all' ? 'font-semibold text-neutral-900' : ''
+                }`}
             >
               Sản phẩm
             </Link>
@@ -1070,26 +1069,23 @@ export default function CategoryPage({ categoryId }) {
                 <button
                   type="button"
                   onClick={() => handleSelectCategory('all')}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all duration-200 mb-1.5 ${
-                    activeCategory === 'all' && !activeCollection
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all duration-200 mb-1.5 ${activeCategory === 'all' && !activeCollection
                       ? 'bg-[#FAF6F0] text-[#8C6A48] font-bold border border-[#E5DACD] shadow-sm'
                       : 'text-neutral-700 hover:bg-[#FAF8F5] hover:text-neutral-900'
-                  }`}
+                    }`}
                 >
                   <span className="flex items-center space-x-2">
                     <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        activeCategory === 'all' && !activeCollection ? 'bg-[#8C6A48]' : 'bg-neutral-300'
-                      }`}
+                      className={`w-1.5 h-1.5 rounded-full ${activeCategory === 'all' && !activeCollection ? 'bg-[#8C6A48]' : 'bg-neutral-300'
+                        }`}
                     />
                     <span>Tất cả sản phẩm</span>
                   </span>
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
-                      activeCategory === 'all' && !activeCollection
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${activeCategory === 'all' && !activeCollection
                         ? 'bg-[#8C6A48] text-white'
                         : 'bg-neutral-100 text-neutral-500'
-                    }`}
+                      }`}
                   >
                     {PRODUCTS_CATALOG.length}
                   </span>
@@ -1109,11 +1105,10 @@ export default function CategoryPage({ categoryId }) {
                         <button
                           type="button"
                           onClick={() => handleSelectCategory(grp.groupSlug)}
-                          className={`w-full flex items-center justify-between text-[11.5px] font-bold uppercase tracking-wider text-left py-1 px-1 transition-colors ${
-                            isGroupActive
+                          className={`w-full flex items-center justify-between text-[11.5px] font-bold uppercase tracking-wider text-left py-1 px-1 transition-colors ${isGroupActive
                               ? 'text-[#8C6A48]'
                               : 'text-neutral-800 hover:text-[#8C6A48]'
-                          }`}
+                            }`}
                         >
                           <span className="flex items-center space-x-1.5">
                             <span className="text-[#8C6A48] text-[10px]">■</span>
@@ -1137,19 +1132,17 @@ export default function CategoryPage({ categoryId }) {
                                 key={sIdx}
                                 type="button"
                                 onClick={() => handleSelectCategory(sub.slug)}
-                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left ${
-                                  isSubActive
+                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left ${isSubActive
                                     ? 'bg-[#FAF6F0] text-[#8C6A48] font-semibold border-l-2 border-[#8C6A48]'
                                     : 'text-neutral-600 hover:text-neutral-900 hover:bg-[#FAF8F5]'
-                                }`}
+                                  }`}
                               >
                                 <span className="truncate pr-2">{sub.name}</span>
                                 <span
-                                  className={`text-[10px] font-mono ${
-                                    isSubActive
+                                  className={`text-[10px] font-mono ${isSubActive
                                       ? 'text-[#8C6A48] font-bold'
                                       : 'text-neutral-400'
-                                  }`}
+                                    }`}
                                 >
                                   {subCount}
                                 </span>
@@ -1167,19 +1160,17 @@ export default function CategoryPage({ categoryId }) {
                     <button
                       type="button"
                       onClick={() => setCollectionOpen((prev) => !prev)}
-                      className={`w-full flex items-center justify-between text-[11.5px] font-bold uppercase tracking-wider text-left py-1 px-1 transition-colors group cursor-pointer ${
-                        activeCollection
+                      className={`w-full flex items-center justify-between text-[11.5px] font-bold uppercase tracking-wider text-left py-1 px-1 transition-colors group cursor-pointer ${activeCollection
                           ? 'text-[#8C6A48]'
                           : 'text-neutral-800 hover:text-[#8C6A48]'
-                      }`}
+                        }`}
                     >
                       <span className="flex items-center space-x-1.5">
                         <span className="text-[#8C6A48] text-[10px]">■</span>
                         <span>BỘ SƯU TẬP</span>
                         <ChevronDown
-                          className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                            collectionOpen ? 'rotate-180 text-[#8C6A48]' : 'text-neutral-400 group-hover:text-[#8C6A48]'
-                          }`}
+                          className={`w-3.5 h-3.5 transition-transform duration-200 ${collectionOpen ? 'rotate-180 text-[#8C6A48]' : 'text-neutral-400 group-hover:text-[#8C6A48]'
+                            }`}
                         />
                       </span>
                       <span className="text-[10px] text-neutral-400 font-mono font-normal">
@@ -1200,17 +1191,15 @@ export default function CategoryPage({ categoryId }) {
                               key={cSlug}
                               type="button"
                               onClick={() => handleSelectCollection(cSlug)}
-                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left ${
-                                isColActive
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left ${isColActive
                                   ? 'bg-[#FAF6F0] text-[#8C6A48] font-semibold border-l-2 border-[#8C6A48]'
                                   : 'text-neutral-600 hover:text-neutral-900 hover:bg-[#FAF8F5]'
-                              }`}
+                                }`}
                             >
                               <span className="truncate pr-2">{cMeta.name}</span>
                               <span
-                                className={`text-[10px] font-mono ${
-                                  isColActive ? 'text-[#8C6A48] font-bold' : 'text-neutral-400'
-                                }`}
+                                className={`text-[10px] font-mono ${isColActive ? 'text-[#8C6A48] font-bold' : 'text-neutral-400'
+                                  }`}
                               >
                                 {colCount}
                               </span>
@@ -1246,11 +1235,10 @@ export default function CategoryPage({ categoryId }) {
                     return (
                       <label
                         key={range.id}
-                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs cursor-pointer transition-all ${
-                          isSelected
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs cursor-pointer transition-all ${isSelected
                             ? 'bg-[#FAF6F0] text-[#8C6A48] font-semibold border border-[#E5DACD]'
                             : 'text-neutral-700 hover:bg-[#FAF8F5]'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center space-x-2.5">
                           <input
@@ -1289,11 +1277,10 @@ export default function CategoryPage({ categoryId }) {
                       key={mat.id}
                       type="button"
                       onClick={() => setSelectedMaterial(mat.id)}
-                      className={`text-[11px] px-2.5 py-1.5 rounded-lg border transition-all ${
-                        selectedMaterial === mat.id
+                      className={`text-[11px] px-2.5 py-1.5 rounded-lg border transition-all ${selectedMaterial === mat.id
                           ? 'bg-neutral-900 text-white border-neutral-900 font-medium'
                           : 'bg-white text-neutral-600 border-[#E8E2D8] hover:border-neutral-400'
-                      }`}
+                        }`}
                     >
                       {mat.label}
                     </button>
@@ -1454,7 +1441,10 @@ export default function CategoryPage({ categoryId }) {
                       className="group bg-white rounded-2xl border border-[#E8E2D8] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-400 flex flex-col justify-between"
                     >
                       {/* Ảnh sản phẩm với Dual photo swap */}
-                      <div className="relative aspect-[4/3] bg-[#FAF8F5] overflow-hidden">
+                      <Link
+                        to={`/san-pham/${prod.id}`}
+                        className="block relative aspect-[4/3] bg-[#FAF8F5] overflow-hidden cursor-pointer"
+                      >
                         {/* Ảnh chính */}
                         <img
                           src={prod.image}
@@ -1478,21 +1468,30 @@ export default function CategoryPage({ categoryId }) {
                         )}
 
                         {/* Nút hành động nổi trên ảnh */}
-                        <div className="absolute top-3 right-3 flex flex-col space-y-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="absolute top-3 right-3 flex flex-col space-y-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
                           <button
                             type="button"
-                            onClick={() => toggleWishlist(prod)}
-                            className={`w-8 h-8 rounded-full backdrop-blur-md shadow-md flex items-center justify-center transition-all ${
-                              isLiked
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleWishlist(prod);
+                            }}
+                            className={`w-8 h-8 rounded-full backdrop-blur-md shadow-md flex items-center justify-center transition-all ${isLiked
                                 ? 'bg-rose-50 text-rose-500'
                                 : 'bg-white/90 hover:bg-white text-neutral-700 hover:text-rose-500'
-                            }`}
+                              }`}
                             title="Lưu yêu thích"
                           >
                             <Heart
                               className={`w-4 h-4 ${isLiked ? 'fill-rose-500' : ''}`}
                             />
                           </button>
+                          <span
+                            className="w-8 h-8 rounded-full backdrop-blur-md shadow-md flex items-center justify-center bg-white/90 hover:bg-[#8C6A48] text-neutral-700 hover:text-white transition-all"
+                            title="Xem chi tiết"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </span>
                         </div>
 
                         {/* Thanh thông số kích thước hover */}
@@ -1505,7 +1504,7 @@ export default function CategoryPage({ categoryId }) {
                             <span className="text-[#E6C280]">★ {prod.rating}</span>
                           </div>
                         )}
-                      </div>
+                      </Link>
 
                       {/* Chi tiết nội dung card */}
                       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
@@ -1522,7 +1521,7 @@ export default function CategoryPage({ categoryId }) {
                           </div>
 
                           <h3 className="font-serif text-base font-semibold text-neutral-900 group-hover:text-[#8C6A48] transition-colors leading-snug line-clamp-2">
-                            {prod.name}
+                            <Link to={`/san-pham/${prod.id}`}>{prod.name}</Link>
                           </h3>
 
                           <p className="text-[11.5px] text-neutral-500 mt-1 font-light line-clamp-1">
@@ -1634,11 +1633,10 @@ export default function CategoryPage({ categoryId }) {
                     <button
                       type="button"
                       onClick={() => handleSelectCategory('all')}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium mb-1 ${
-                        activeCategory === 'all' && !activeCollection
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium mb-1 ${activeCategory === 'all' && !activeCollection
                           ? 'bg-[#FAF6F0] text-[#8C6A48] font-bold border border-[#E5DACD]'
                           : 'text-neutral-700 hover:bg-neutral-50'
-                      }`}
+                        }`}
                     >
                       ✦ Tất cả sản phẩm ({PRODUCTS_CATALOG.length})
                     </button>
@@ -1648,11 +1646,10 @@ export default function CategoryPage({ categoryId }) {
                         <button
                           type="button"
                           onClick={() => handleSelectCategory(grp.groupSlug)}
-                          className={`w-full text-left text-[11px] font-bold uppercase tracking-wider py-1 ${
-                            activeCategory === grp.groupSlug
+                          className={`w-full text-left text-[11px] font-bold uppercase tracking-wider py-1 ${activeCategory === grp.groupSlug
                               ? 'text-[#8C6A48]'
                               : 'text-neutral-800'
-                          }`}
+                            }`}
                         >
                           ■ {grp.group}
                         </button>
@@ -1662,11 +1659,10 @@ export default function CategoryPage({ categoryId }) {
                               key={sIdx}
                               type="button"
                               onClick={() => handleSelectCategory(sub.slug)}
-                              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs ${
-                                activeCategory === sub.slug
+                              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs ${activeCategory === sub.slug
                                   ? 'bg-[#FAF6F0] text-[#8C6A48] font-bold'
                                   : 'text-neutral-600'
-                              }`}
+                                }`}
                             >
                               {sub.name}
                             </button>
@@ -1680,17 +1676,15 @@ export default function CategoryPage({ categoryId }) {
                       <button
                         type="button"
                         onClick={() => setCollectionOpen((prev) => !prev)}
-                        className={`w-full flex items-center justify-between text-[11px] font-bold uppercase tracking-wider py-1 ${
-                          activeCollection ? 'text-[#8C6A48]' : 'text-neutral-800'
-                        }`}
+                        className={`w-full flex items-center justify-between text-[11px] font-bold uppercase tracking-wider py-1 ${activeCollection ? 'text-[#8C6A48]' : 'text-neutral-800'
+                          }`}
                       >
                         <span className="flex items-center space-x-1.5">
                           <span className="text-[#8C6A48] text-[10px]">■</span>
                           <span>BỘ SƯU TẬP</span>
                           <ChevronDown
-                            className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                              collectionOpen ? 'rotate-180 text-[#8C6A48]' : 'text-neutral-400'
-                            }`}
+                            className={`w-3.5 h-3.5 transition-transform duration-200 ${collectionOpen ? 'rotate-180 text-[#8C6A48]' : 'text-neutral-400'
+                              }`}
                           />
                         </span>
                         <span className="text-[10px] text-neutral-400 font-mono font-normal">
@@ -1711,11 +1705,10 @@ export default function CategoryPage({ categoryId }) {
                                 key={cSlug}
                                 type="button"
                                 onClick={() => handleSelectCollection(cSlug)}
-                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs ${
-                                  isColActive
+                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs ${isColActive
                                     ? 'bg-[#FAF6F0] text-[#8C6A48] font-bold border-l-2 border-[#8C6A48]'
                                     : 'text-neutral-600'
-                                }`}
+                                  }`}
                               >
                                 <span>{cMeta.name}</span>
                                 <span className={`text-[10px] font-mono ${isColActive ? 'text-[#8C6A48] font-bold' : 'text-neutral-400'}`}>
@@ -1740,11 +1733,10 @@ export default function CategoryPage({ categoryId }) {
                           key={r.id}
                           type="button"
                           onClick={() => setSelectedPriceRange(r.id)}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-xs ${
-                            selectedPriceRange === r.id
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs ${selectedPriceRange === r.id
                               ? 'bg-[#FAF6F0] text-[#8C6A48] font-bold border border-[#E5DACD]'
                               : 'text-neutral-700 hover:bg-neutral-50'
-                          }`}
+                            }`}
                         >
                           {r.label}
                         </button>
@@ -1769,11 +1761,10 @@ export default function CategoryPage({ categoryId }) {
                           key={m.id}
                           type="button"
                           onClick={() => setSelectedMaterial(m.id)}
-                          className={`text-xs px-2.5 py-1 rounded-lg border ${
-                            selectedMaterial === m.id
+                          className={`text-xs px-2.5 py-1 rounded-lg border ${selectedMaterial === m.id
                               ? 'bg-neutral-900 text-white border-neutral-900'
                               : 'bg-white text-neutral-700 border-neutral-200'
-                          }`}
+                            }`}
                         >
                           {m.label}
                         </button>
