@@ -18,12 +18,43 @@ class ProductController extends Controller
             $query = Product::where('is_active', true)
                 ->with(['category', 'images', 'variants']);
 
-            // 1. Lọc theo danh mục (ID hoặc Slug)
+            // 1. Lọc theo danh mục (ID hoặc Slug hoặc Group)
             if ($request->filled('category')) {
                 $categoryParam = $request->query('category');
-                $query->whereHas('category', function ($q) use ($categoryParam) {
-                    $q->where('id', $categoryParam)
-                      ->orWhere('slug', $categoryParam);
+                if ($categoryParam === 'ban') {
+                    $query->whereHas('category', function ($q) {
+                        $q->whereIn('slug', ['ban-an', 'ban-tra', 'ban-lam-viec', 'ban-trang-diem']);
+                    });
+                } elseif ($categoryParam === 'sofa' || $categoryParam === 'ghe') {
+                    $query->whereHas('category', function ($q) {
+                        $q->whereIn('slug', ['sofa-da', 'sofa-vai', 'ghe-thu-gian', 'ghe-an']);
+                    });
+                } elseif ($categoryParam === 'phong-ngu') {
+                    $query->whereHas('category', function ($q) {
+                        $q->whereIn('slug', ['giuong-ngu', 'tu-ke', 'phong-ngu']);
+                    });
+                } elseif ($categoryParam === 'phong-khach') {
+                    $query->whereHas('category', function ($q) {
+                        $q->whereIn('slug', ['sofa-da', 'sofa-vai', 'ban-tra', 'ghe-thu-gian']);
+                    });
+                } elseif ($categoryParam === 'phong-an') {
+                    $query->whereHas('category', function ($q) {
+                        $q->whereIn('slug', ['ban-an', 'ghe-an']);
+                    });
+                } else {
+                    $query->whereHas('category', function ($q) use ($categoryParam) {
+                        $q->where('id', $categoryParam)
+                          ->orWhere('slug', $categoryParam);
+                    });
+                }
+            }
+
+            // 1.5. Lọc theo bộ sưu tập (Collection)
+            if ($request->filled('collection')) {
+                $collectionParam = mb_strtolower($request->query('collection'), 'UTF-8');
+                $query->where(function ($q) use ($collectionParam) {
+                    $q->where('name', 'like', "%{$collectionParam}%")
+                      ->orWhere('slug', 'like', "%{$collectionParam}%");
                 });
             }
 
@@ -237,6 +268,24 @@ class ProductController extends Controller
             $materialType = 'fabric';
         }
 
+        // Xác định collection từ tên hoặc slug
+        $nameLower = mb_strtolower($product->name, 'UTF-8');
+        $productSlugLower = mb_strtolower($product->slug, 'UTF-8');
+        $collection = '';
+        if (str_contains($nameLower, 'victoria') || str_contains($productSlugLower, 'victoria') || str_contains($nameLower, 'tuscany')) {
+            $collection = 'victoria';
+        } elseif (str_contains($nameLower, 'valencia') || str_contains($productSlugLower, 'valencia') || str_contains($nameLower, 'calacatta')) {
+            $collection = 'valencia';
+        } elseif (str_contains($nameLower, 'moretti') || str_contains($productSlugLower, 'moretti') || str_contains($nameLower, 'atelier')) {
+            $collection = 'moretti';
+        } elseif (str_contains($nameLower, 'osaka') || str_contains($productSlugLower, 'osaka')) {
+            $collection = 'osaka';
+        } elseif (str_contains($nameLower, 'elegance') || str_contains($productSlugLower, 'elegance')) {
+            $collection = 'elegance';
+        } elseif (str_contains($nameLower, 'coastal') || str_contains($productSlugLower, 'coastal') || str_contains($nameLower, 'nordic')) {
+            $collection = 'coastal';
+        }
+
         return [
             'id' => $product->id,
             'name' => $product->name,
@@ -248,6 +297,7 @@ class ProductController extends Controller
             'category_slug' => $catSlug,
             'categorySlug' => $catSlug,
             'group' => $group,
+            'collection' => $collection,
             'price' => $minPrice,
             'price_display' => number_format($minPrice, 0, ',', '.') . '₫',
             'priceDisplay' => number_format($minPrice, 0, ',', '.') . '₫',

@@ -13,7 +13,7 @@ import { useParams } from 'react-router-dom';
 function ProductOrCategoryRoute() {
   const { categorySlug } = useParams();
   // Nếu param là số hoặc khớp với ID của một sản phẩm trong CATALOG -> Điều hướng trang Chi tiết sản phẩm
-  const isProduct = PRODUCTS_CATALOG.some((p) => String(p.id) === String(categorySlug));
+  const isProduct = /^\d+$/.test(categorySlug) || PRODUCTS_CATALOG.some((p) => String(p.id) === String(categorySlug));
   if (isProduct) {
     return <ProductDetailPage />;
   }

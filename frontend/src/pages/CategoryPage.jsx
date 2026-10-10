@@ -23,7 +23,142 @@ import {
   CheckCircle2,
   Loader2
 } from 'lucide-react';
+import categoryApi from '../api/categoryApi';
 import productApi from '../api/productApi';
+
+// ==========================================
+// HÀM CHUẨN HÓA DỮ LIỆU SẢN PHẨM TỪ API
+// ==========================================
+export const normalizeProduct = (item) => {
+  if (!item) return null;
+
+  const id = item.id;
+  const name = item.name || 'Sản phẩm nội thất TK House';
+  const slug = item.slug || String(id);
+  const brand = item.brand || 'TK House';
+  const description = item.description || '';
+
+  // Danh mục
+  const catObj = typeof item.category === 'object' && item.category !== null ? item.category : null;
+  const categoryName =
+    item.categoryName ||
+    item.category_name ||
+    catObj?.name ||
+    (typeof item.category === 'string' ? item.category : 'Nội thất cao cấp');
+  const categorySlug =
+    item.categorySlug ||
+    item.category_slug ||
+    catObj?.slug ||
+    '';
+
+  // Nhóm danh mục
+  let group = item.group;
+  if (!group) {
+    if (['sofa-da', 'sofa-vai', 'ghe-thu-gian', 'ghe-an'].includes(categorySlug) || categorySlug.startsWith('sofa') || categorySlug.startsWith('ghe')) {
+      group = 'sofa';
+    } else if (['giuong-ngu', 'tu-ke', 'phong-ngu'].includes(categorySlug) || categorySlug.includes('giuong') || categorySlug.includes('tu')) {
+      group = 'phong-ngu';
+    } else {
+      group = 'ban';
+    }
+  }
+
+  // Bộ sưu tập
+  let collection = (item.collection || '').toLowerCase().trim();
+  if (!collection) {
+    const lowerName = name.toLowerCase();
+    const lowerSlug = slug.toLowerCase();
+    if (lowerName.includes('victoria') || lowerSlug.includes('victoria') || lowerName.includes('tuscany')) {
+      collection = 'victoria';
+    } else if (lowerName.includes('valencia') || lowerSlug.includes('valencia') || lowerName.includes('calacatta')) {
+      collection = 'valencia';
+    } else if (lowerName.includes('moretti') || lowerSlug.includes('moretti') || lowerName.includes('atelier')) {
+      collection = 'moretti';
+    } else if (lowerName.includes('osaka') || lowerSlug.includes('osaka')) {
+      collection = 'osaka';
+    } else if (lowerName.includes('elegance') || lowerSlug.includes('elegance')) {
+      collection = 'elegance';
+    } else if (lowerName.includes('coastal') || lowerSlug.includes('coastal') || lowerName.includes('nordic')) {
+      collection = 'coastal';
+    }
+  }
+
+  // Giá & hiển thị giá
+  const price = Number(item.price ?? item.min_price ?? 0);
+  const oldPrice = item.oldPrice ?? item.old_price ?? item.sale_price ?? null;
+  const priceDisplay =
+    item.priceDisplay ||
+    item.price_display ||
+    (price > 0 ? `${new Intl.NumberFormat('vi-VN').format(price)}₫` : 'Liên hệ');
+  const oldPriceDisplay =
+    item.oldPriceDisplay ||
+    item.old_price_display ||
+    (oldPrice ? `${new Intl.NumberFormat('vi-VN').format(Number(oldPrice))}₫` : null);
+
+  // Hình ảnh
+  let image = item.image || item.thumbnail;
+  let secondaryImage = item.secondaryImage || item.secondary_image;
+
+  if (Array.isArray(item.images) && item.images.length > 0) {
+    if (!image) {
+      const first = item.images[0];
+      image = typeof first === 'string' ? first : first.url || first.image_url;
+    }
+    if (!secondaryImage && item.images.length > 1) {
+      const second = item.images[1];
+      secondaryImage = typeof second === 'string' ? second : second.url || second.image_url;
+    }
+  }
+  if (!image) {
+    image = '/images/placeholder.jpg';
+  }
+
+  // Vật liệu
+  const material = item.material || 'Vật liệu cao cấp FAS';
+  let materialType = item.materialType || item.material_type || '';
+  if (!materialType) {
+    const matLower = material.toLowerCase();
+    if (matLower.includes('đá') || matLower.includes('ceramic') || matLower.includes('marble')) {
+      materialType = 'stone';
+    } else if (matLower.includes('da bò') || matLower.includes('da nappa') || matLower.includes('da thật')) {
+      materialType = 'leather';
+    } else if (matLower.includes('vải') || matLower.includes('nỉ') || matLower.includes('bouclé')) {
+      materialType = 'fabric';
+    } else {
+      materialType = 'wood';
+    }
+  }
+
+  const dimensions = item.dimensions || '';
+  const rating = Number(item.rating || 4.9);
+  const tag = item.tag || (item.is_featured ? 'Nổi Bật' : 'Mới Ra Mắt');
+  const inStock = Boolean(item.inStock ?? item.in_stock ?? true);
+
+  return {
+    id,
+    name,
+    slug,
+    brand,
+    description,
+    categoryName,
+    categorySlug,
+    group,
+    collection,
+    price,
+    oldPrice,
+    priceDisplay,
+    oldPriceDisplay,
+    image,
+    secondaryImage,
+    material,
+    materialType,
+    dimensions,
+    rating,
+    tag,
+    inStock,
+    raw: item,
+  };
+};
 
 
 // ==========================================
@@ -311,22 +446,166 @@ export default function CategoryPage({ categoryId }) {
   const [wishlist, setWishlist] = useState([]);
   const [toastMessage, setToastMessage] = useState(null);
 
+  // State lưu danh mục từ Backend API
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+
   // State lưu danh sách sản phẩm lấy từ Backend API
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Gọi API lấy dữ liệu sản phẩm thật từ Backend
+  // 1. Gọi API lấy danh mục thật từ Backend
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
-    productApi.getAll({ per_page: 100 })
+    setCategoriesLoading(true);
+
+    categoryApi
+      .getAll()
       .then((res) => {
-        if (isMounted && res.data && res.data.status) {
-          setProducts(res.data.data);
+        if (!isMounted) return;
+        const data = res.data?.data || res.data || [];
+        if (Array.isArray(data)) {
+          setCategories(data);
         }
       })
       .catch((err) => {
-        console.error('Lỗi khi tải sản phẩm từ API:', err);
+        console.error('Lỗi khi tải danh mục từ categoryApi.getAll:', err);
+      })
+      .finally(() => {
+        if (isMounted) setCategoriesLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. Chuyển đổi danh mục API thành các nhóm hiển thị trên Sidebar
+  const categoryGroups = useMemo(() => {
+    if (!categories || categories.length === 0) {
+      return CATEGORY_GROUPS;
+    }
+
+    const banItems = [];
+    const sofaItems = [];
+    const phongNguItems = [];
+    const otherItems = [];
+
+    categories.forEach((cat) => {
+      const slug = cat.slug || '';
+      const item = {
+        id: cat.id,
+        slug: cat.slug,
+        name: cat.name,
+        desc: cat.description || '',
+        products_count: cat.products_count ?? 0,
+      };
+
+      if (['ban-an', 'ban-tra', 'ban-lam-viec', 'ban-trang-diem'].includes(slug) || slug.startsWith('ban-')) {
+        banItems.push(item);
+      } else if (['sofa-da', 'sofa-vai', 'ghe-thu-gian', 'ghe-an'].includes(slug) || slug.startsWith('sofa-') || slug.startsWith('ghe-')) {
+        sofaItems.push(item);
+      } else if (['giuong-ngu', 'tu-ke', 'phong-ngu'].includes(slug) || slug.includes('giuong') || slug.includes('tu-')) {
+        phongNguItems.push(item);
+      } else {
+        otherItems.push(item);
+      }
+    });
+
+    const groups = [];
+    if (banItems.length > 0) {
+      groups.push({
+        group: 'BÀN CAO CẤP',
+        groupSlug: 'ban',
+        items: banItems,
+      });
+    }
+    if (sofaItems.length > 0) {
+      groups.push({
+        group: 'GHẾ & SOFA',
+        groupSlug: 'sofa',
+        items: sofaItems,
+      });
+    }
+    if (phongNguItems.length > 0) {
+      groups.push({
+        group: 'PHÒNG NGỦ & TỦ KỆ',
+        groupSlug: 'phong-ngu',
+        items: phongNguItems,
+      });
+    }
+    if (otherItems.length > 0) {
+      groups.push({
+        group: 'DANH MỤC KHÁC',
+        groupSlug: 'other',
+        items: otherItems,
+      });
+    }
+
+    return groups.length > 0 ? groups : CATEGORY_GROUPS;
+  }, [categories]);
+
+  // 3. Gọi API lấy danh sách sản phẩm thật từ Backend với các query params hiện tại
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+
+    const params = {
+      per_page: 100,
+    };
+
+    // Lọc theo Category
+    if (activeCategory && activeCategory !== 'all') {
+      params.category = activeCategory;
+    }
+
+    // Lọc theo Collection
+    if (activeCollection) {
+      params.collection = activeCollection;
+    }
+
+    // Lọc theo Khoảng giá
+    if (selectedPriceRange !== 'all') {
+      const range = PRICE_RANGES.find((r) => r.id === selectedPriceRange);
+      if (range) {
+        if (range.min > 0) params.min_price = range.min;
+        if (range.max < Infinity) params.max_price = range.max;
+      }
+    }
+
+    // Sắp xếp
+    if (sortOption) {
+      const sortMap = {
+        featured: 'newest',
+        'price-asc': 'price_asc',
+        'price-desc': 'price_desc',
+        'name-asc': 'name_asc',
+        rating: 'newest',
+      };
+      params.sort = sortMap[sortOption] || 'newest';
+    }
+
+    productApi
+      .getAll(params)
+      .then((res) => {
+        if (!isMounted) return;
+        const rawItems = res.data?.data || res.data || [];
+        const normalizedItems = Array.isArray(rawItems)
+          ? rawItems.map(normalizeProduct).filter(Boolean)
+          : [];
+        setProducts(normalizedItems);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('Lỗi khi tải sản phẩm từ productApi.getAll:', err);
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            'Không thể kết nối máy chủ để tải danh sách sản phẩm.'
+        );
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -335,7 +614,7 @@ export default function CategoryPage({ categoryId }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activeCategory, activeCollection, selectedPriceRange, sortOption, retryCount]);
 
 
   // Tự động mở danh mục nhỏ bộ sưu tập khi có activeCollection
@@ -520,7 +799,7 @@ export default function CategoryPage({ categoryId }) {
     if (collectionMeta) {
       if (activeCategory && activeCategory !== 'all') {
         let catLabel = activeCategory;
-        for (const group of CATEGORY_GROUPS) {
+        for (const group of categoryGroups) {
           const found = group.items.find((item) => item.slug === activeCategory);
           if (found) {
             catLabel = found.name;
@@ -539,12 +818,16 @@ export default function CategoryPage({ categoryId }) {
     if (activeCategory === 'phong-khach') return 'Không Gian Phòng Khách';
     if (activeCategory === 'phong-an') return 'Không Gian Phòng Ăn';
 
-    for (const group of CATEGORY_GROUPS) {
+    for (const group of categoryGroups) {
       const found = group.items.find((item) => item.slug === activeCategory);
       if (found) return found.name;
     }
+
+    const foundInCategories = categories.find((c) => c.slug === activeCategory);
+    if (foundInCategories) return foundInCategories.name;
+
     return meta.title || 'Sản Phẩm';
-  }, [collectionMeta, activeCategory, meta.title]);
+  }, [collectionMeta, activeCategory, categoryGroups, categories, meta.title]);
 
   return (
     <motion.div
@@ -725,7 +1008,7 @@ export default function CategoryPage({ categoryId }) {
 
                 {/* Nhóm các danh mục */}
                 <div className="space-y-4 pt-1">
-                  {CATEGORY_GROUPS.map((grp, gIdx) => {
+                  {categoryGroups.map((grp, gIdx) => {
                     const isGroupActive = activeCategory === grp.groupSlug;
                     const groupItemCount = products.filter(
                       (p) => p.group === grp.groupSlug
@@ -757,8 +1040,7 @@ export default function CategoryPage({ categoryId }) {
                             const isSubActive = activeCategory === sub.slug;
                             const subCount = products.filter(
                               (p) => (p.categorySlug === sub.slug || p.category_slug === sub.slug)
-                            ).length;
-
+                            ).length || sub.products_count || 0;
 
                             return (
                               <button
@@ -1060,12 +1342,59 @@ export default function CategoryPage({ categoryId }) {
             )}
 
             {/* 2. LƯỚI CARD SẢN PHẨM (PRODUCT GRID) */}
-            {loading ? (
-              <div className="py-28 flex flex-col items-center justify-center space-y-4">
-                <Loader2 className="w-9 h-9 text-[#8C6A48] animate-spin" />
-                <p className="text-sm font-medium text-neutral-500 font-serif tracking-wide">
-                  Đang tải tác phẩm nội thất từ hệ thống...
+            {error ? (
+              <div className="bg-white rounded-2xl border border-rose-200/80 p-12 text-center space-y-4 shadow-sm">
+                <div className="w-14 h-14 mx-auto rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500">
+                  <RotateCcw className="w-6 h-6" />
+                </div>
+                <h3 className="font-serif text-xl font-normal text-neutral-900">
+                  Không thể tải sản phẩm từ hệ thống
+                </h3>
+                <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto font-light leading-relaxed">
+                  {error}
                 </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setRetryCount((c) => c + 1)}
+                    className="px-6 py-2.5 rounded-full bg-[#8C6A48] hover:bg-[#734b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center space-x-2 shadow-sm"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Tải lại dữ liệu</span>
+                  </button>
+                </div>
+              </div>
+            ) : loading ? (
+              <div className="space-y-6">
+                <div className="flex items-center justify-center space-x-2.5 text-xs text-[#8C6A48] font-medium py-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#8C6A48]" />
+                  <span>Đang tải danh sách tác phẩm nội thất...</span>
+                </div>
+                {/* Skeleton Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+                  {[1, 2, 3, 4, 5, 6].map((idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white rounded-2xl border border-[#E8E2D8] overflow-hidden shadow-sm flex flex-col justify-between animate-pulse"
+                    >
+                      <div className="relative aspect-[4/3] bg-[#F2EDE4]">
+                        <div className="absolute top-3 left-3 w-16 h-4 bg-neutral-300/60 rounded-full" />
+                        <div className="absolute top-3 right-3 w-7 h-7 bg-neutral-300/60 rounded-full" />
+                      </div>
+                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div className="space-y-2">
+                          <div className="w-20 h-3 bg-neutral-200 rounded" />
+                          <div className="w-4/5 h-4 bg-neutral-300/80 rounded" />
+                          <div className="w-3/5 h-3 bg-neutral-200 rounded" />
+                        </div>
+                        <div className="pt-3.5 border-t border-neutral-100 flex items-center justify-between">
+                          <div className="w-24 h-4 bg-neutral-300/80 rounded" />
+                          <div className="w-9 h-9 rounded-full bg-neutral-200" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
@@ -1283,7 +1612,7 @@ export default function CategoryPage({ categoryId }) {
                       ✦ Tất cả sản phẩm ({products.length})
                     </button>
 
-                    {CATEGORY_GROUPS.map((grp, gIdx) => (
+                    {categoryGroups.map((grp, gIdx) => (
                       <div key={gIdx} className="pt-2">
                         <button
                           type="button"
