@@ -1,0 +1,12 @@
+{
+  "name": "cnpm-ban-noi-that",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Furniture eCommerce Project (Laravel + React Vite)",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "build": "npm --prefix frontend run build"
+  }
+}

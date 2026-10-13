@@ -12,8 +12,10 @@ import {
     ChevronDown,
     ChevronRight,
     ArrowRight,
-    LogOut
+    LogOut,
+    Sparkles
 } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 export default function Header() {
     const navigate = useNavigate();
@@ -110,8 +112,9 @@ export default function Header() {
         }
     };
 
-    // Cart & Wishlist counts (có thể nối context/Redux sau này)
-    const [cartCount] = useState(2);
+    // Cart & Wishlist counts từ CartContext
+    const { summary, setIsCartOpen } = useCart();
+    const cartCount = summary?.total_items || 0;
     const [wishlistCount] = useState(3);
 
     // Listen to scroll to adjust header elevation
@@ -550,12 +553,13 @@ export default function Header() {
                                 )}
                             </Link>
 
-                            {/* Nút Giỏ Hàng kèm Badge số lượng */}
-                            <Link
-                                to="/gio-hang"
-                                className="relative p-2 text-neutral-800 hover:text-neutral-950 transition-colors group"
+                            {/* Nút Giỏ Hàng kèm Badge số lượng và mở Cart Drawer */}
+                            <button
+                                type="button"
+                                onClick={() => setIsCartOpen(true)}
+                                className="relative p-2 text-neutral-800 hover:text-neutral-950 transition-colors group cursor-pointer focus:outline-none"
                                 aria-label="Giỏ hàng"
-                                title="Giỏ hàng"
+                                title="Mở giỏ hàng"
                             >
                                 <ShoppingBag className="w-5 h-5 stroke-[1.8] group-hover:scale-105 transition-transform" />
                                 {cartCount > 0 && (
@@ -563,7 +567,7 @@ export default function Header() {
                                         {cartCount}
                                     </span>
                                 )}
-                            </Link>
+                            </button>
 
                             {/* Nút Tài Khoản: Hiển thị Avatar khi đã đăng nhập hoặc Nút Đăng ký/Đăng nhập */}
                             {user ? (
@@ -877,6 +881,18 @@ export default function Header() {
                                         <Heart className="w-4 h-4 text-neutral-500" />
                                         <span>Sản phẩm yêu thích ({wishlistCount})</span>
                                     </Link>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            setIsCartOpen(true);
+                                        }}
+                                        className="flex items-center space-x-2 py-1 hover:text-neutral-900 text-left w-full cursor-pointer"
+                                    >
+                                        <ShoppingBag className="w-4 h-4 text-neutral-500" />
+                                        <span>Giỏ hàng của bạn ({cartCount})</span>
+                                    </button>
 
                                     {user ? (
                                         <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 flex items-center justify-between">

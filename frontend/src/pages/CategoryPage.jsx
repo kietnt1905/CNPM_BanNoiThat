@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import categoryApi from '../api/categoryApi';
 import productApi from '../api/productApi';
+import { useCart } from '../context/CartContext';
 
 // ==========================================
 // HÀM CHUẨN HÓA DỮ LIỆU SẢN PHẨM TỪ API
@@ -386,9 +387,30 @@ export const COLLECTIONS_META = {
 };
 
 // ==========================================
-// 2. DANH SÁCH SẢN PHẨM HOÀN CHỈNH (MOCK DATA LUXURY)
+// 2. DANH SÁCH SẢN PHẨM DẠNG TĨNH ĐỂ TEST UI/UX (1 SẢN PHẨM DUY NHẤT)
 // ==========================================
-export const PRODUCTS_CATALOG = [];
+export const PRODUCTS_CATALOG = [
+  {
+    id: 101,
+    name: 'Sofa Băng Da Bò Ý Florence',
+    slug: 'sofa-bang-da-bo-y-florence',
+    categoryName: 'Sofa Phòng Khách',
+    categorySlug: 'sofa-da',
+    group: 'sofa',
+    collection: 'valencia',
+    price: 28500000,
+    priceDisplay: '28.500.000₫',
+    oldPriceDisplay: '33.000.000₫',
+    image: '/images/products/sofa-3-cho-victoria.jpg',
+    secondaryImage: '/images/materials/mat-leather.jpg',
+    material: 'Da Bò Ý Cao Cấp & Gỗ Sồi Bắc Mỹ',
+    materialType: 'leather',
+    dimensions: 'D220 × R95 × C75 cm',
+    rating: 5.0,
+    tag: 'Độc Bản Masterpiece',
+    inStock: true,
+  },
+];
 
 // Khoảng giá lọc
 export const PRICE_RANGES = [
@@ -411,6 +433,7 @@ export const SORT_OPTIONS = [
 export default function CategoryPage({ categoryId }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { categorySlug } = useParams();
+  const { addToCart } = useCart();
 
   // 1. Xác định query category và collection từ URL
   const activeCollection = (searchParams.get('collection') || '').toLowerCase().trim();
@@ -450,10 +473,11 @@ export default function CategoryPage({ categoryId }) {
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
 
-  // State lưu danh sách sản phẩm lấy từ Backend API
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // State lưu danh sách sản phẩm lấy từ Backend API (mặc định nạp PRODUCTS_CATALOG để luôn có sản phẩm xem demo)
+  const [products, setProducts] = useState(PRODUCTS_CATALOG);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isDemoMode, setIsDemoMode] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
 
   // 1. Gọi API lấy danh mục thật từ Backend
@@ -547,74 +571,13 @@ export default function CategoryPage({ categoryId }) {
     return groups.length > 0 ? groups : CATEGORY_GROUPS;
   }, [categories]);
 
-  // 3. Gọi API lấy danh sách sản phẩm thật từ Backend với các query params hiện tại
+  // 3. Sử dụng 1 sản phẩm tĩnh duy nhất để phục vụ test UI/UX theo yêu cầu
   useEffect(() => {
-    let isMounted = true;
-    setLoading(true);
+    setProducts(PRODUCTS_CATALOG);
+    setIsDemoMode(true);
+    setLoading(false);
     setError(null);
-
-    const params = {
-      per_page: 100,
-    };
-
-    // Lọc theo Category
-    if (activeCategory && activeCategory !== 'all') {
-      params.category = activeCategory;
-    }
-
-    // Lọc theo Collection
-    if (activeCollection) {
-      params.collection = activeCollection;
-    }
-
-    // Lọc theo Khoảng giá
-    if (selectedPriceRange !== 'all') {
-      const range = PRICE_RANGES.find((r) => r.id === selectedPriceRange);
-      if (range) {
-        if (range.min > 0) params.min_price = range.min;
-        if (range.max < Infinity) params.max_price = range.max;
-      }
-    }
-
-    // Sắp xếp
-    if (sortOption) {
-      const sortMap = {
-        featured: 'newest',
-        'price-asc': 'price_asc',
-        'price-desc': 'price_desc',
-        'name-asc': 'name_asc',
-        rating: 'newest',
-      };
-      params.sort = sortMap[sortOption] || 'newest';
-    }
-
-    productApi
-      .getAll(params)
-      .then((res) => {
-        if (!isMounted) return;
-        const rawItems = res.data?.data || res.data || [];
-        const normalizedItems = Array.isArray(rawItems)
-          ? rawItems.map(normalizeProduct).filter(Boolean)
-          : [];
-        setProducts(normalizedItems);
-      })
-      .catch((err) => {
-        if (!isMounted) return;
-        console.error('Lỗi khi tải sản phẩm từ productApi.getAll:', err);
-        setError(
-          err?.response?.data?.message ||
-            err?.message ||
-            'Không thể kết nối máy chủ để tải danh sách sản phẩm.'
-        );
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activeCategory, activeCollection, selectedPriceRange, sortOption, retryCount]);
+  }, []);
 
 
   // Tự động mở danh mục nhỏ bộ sưu tập khi có activeCollection
@@ -646,9 +609,24 @@ export default function CategoryPage({ categoryId }) {
     });
   };
 
-  // Thêm vào giỏ hàng
-  const handleAddToCart = (product) => {
-    showToast(`Đã thêm "${product.name}" vào giỏ hàng thành công!`);
+  // Thêm vào giỏ hàng nhanh từ danh mục (Mở trực tiếp Cart Drawer)
+  const handleAddToCart = async (product) => {
+    try {
+      await addToCart(Number(product.id) * 100 + 1, 1, {
+        openDrawer: true,
+        productInfo: {
+          product_id: product.id,
+          product_name: product.name,
+          product_slug: product.slug,
+          variant_name: `${product.dimensions || 'Tiêu chuẩn'} • ${product.material || 'Vật liệu tự nhiên'}`,
+          price: product.price,
+          thumbnail: product.image,
+          stock_quantity: 10,
+        },
+      });
+    } catch (err) {
+      console.warn('Lỗi thêm giỏ hàng:', err);
+    }
   };
 
   // Cập nhật URL khi chuyển danh mục ở Sidebar
@@ -841,11 +819,11 @@ export default function CategoryPage({ categoryId }) {
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 0.25 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[#2C241E] text-white px-5 py-3 rounded-full shadow-2xl border border-white/20 flex items-center space-x-3 text-xs sm:text-sm font-medium tracking-wide backdrop-blur-md"
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-[#2C241E]/95 text-white px-5 py-2.5 rounded-full shadow-2xl border border-white/20 flex items-center space-x-2.5 text-xs font-medium tracking-wide backdrop-blur-md"
           >
             <CheckCircle2 className="w-4 h-4 text-[#E6C280] flex-shrink-0" />
             <span>{toastMessage}</span>
@@ -1341,30 +1319,9 @@ export default function CategoryPage({ categoryId }) {
               </div>
             )}
 
+
             {/* 2. LƯỚI CARD SẢN PHẨM (PRODUCT GRID) */}
-            {error ? (
-              <div className="bg-white rounded-2xl border border-rose-200/80 p-12 text-center space-y-4 shadow-sm">
-                <div className="w-14 h-14 mx-auto rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500">
-                  <RotateCcw className="w-6 h-6" />
-                </div>
-                <h3 className="font-serif text-xl font-normal text-neutral-900">
-                  Không thể tải sản phẩm từ hệ thống
-                </h3>
-                <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto font-light leading-relaxed">
-                  {error}
-                </p>
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setRetryCount((c) => c + 1)}
-                    className="px-6 py-2.5 rounded-full bg-[#8C6A48] hover:bg-[#734b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center space-x-2 shadow-sm"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Tải lại dữ liệu</span>
-                  </button>
-                </div>
-              </div>
-            ) : loading ? (
+            {loading ? (
               <div className="space-y-6">
                 <div className="flex items-center justify-center space-x-2.5 text-xs text-[#8C6A48] font-medium py-2">
                   <Loader2 className="w-4 h-4 animate-spin text-[#8C6A48]" />
@@ -1457,12 +1414,13 @@ export default function CategoryPage({ categoryId }) {
                               className={`w-4 h-4 ${isLiked ? 'fill-rose-500' : ''}`}
                             />
                           </button>
-                          <span
-                            className="w-8 h-8 rounded-full backdrop-blur-md shadow-md flex items-center justify-center bg-white/90 hover:bg-[#8C6A48] text-neutral-700 hover:text-white transition-all"
-                            title="Xem chi tiết"
+                          <Link
+                            to={`/san-pham/${prod.id}`}
+                            className="w-8 h-8 rounded-full backdrop-blur-md shadow-md flex items-center justify-center bg-white/90 hover:bg-[#8C6A48] text-neutral-700 hover:text-white transition-all cursor-pointer"
+                            title="Xem chi tiết sản phẩm"
                           >
                             <Eye className="w-4 h-4" />
-                          </span>
+                          </Link>
                         </div>
 
                         {/* Thanh thông số kích thước hover */}
@@ -1500,7 +1458,7 @@ export default function CategoryPage({ categoryId }) {
                           </p>
                         </div>
 
-                        {/* Giá tiền và Nút thêm vào giỏ */}
+                        {/* Giá tiền và Nút thêm vào giỏ (Icon giỏ hàng cũ) */}
                         <div className="mt-4 pt-3.5 border-t border-neutral-100 flex items-center justify-between">
                           <div>
                             <span className="text-sm sm:text-base font-bold text-neutral-900 font-mono tracking-tight">
@@ -1539,11 +1497,11 @@ export default function CategoryPage({ categoryId }) {
                 <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto font-light leading-relaxed">
                   Hiện chưa có sản phẩm nào thuộc bộ lọc bạn đã chọn. Vui lòng mở rộng khoảng giá hoặc chọn danh mục khác.
                 </p>
-                <div className="pt-2">
+                <div className="pt-2 flex items-center justify-center space-x-3 flex-wrap gap-y-2">
                   <button
                     type="button"
                     onClick={handleResetFilters}
-                    className="px-6 py-2.5 rounded-full bg-[#8C6A48] hover:bg-[#734b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center space-x-2"
+                    className="px-6 py-2.5 rounded-full bg-[#8C6A48] hover:bg-[#734b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center space-x-2 shadow-sm"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Xem tất cả sản phẩm</span>
