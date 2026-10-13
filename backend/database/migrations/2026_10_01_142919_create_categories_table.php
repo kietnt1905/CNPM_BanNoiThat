@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name', 100);
-            $table->string('slug', 191)->unique('slug');
+            $table->string('slug', 191)->unique('categories_slug_unique');
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamp('created_at')->nullable()->useCurrent();

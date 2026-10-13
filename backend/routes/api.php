@@ -38,7 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/clear', [CartController::class, 'clearCart']);
         Route::post('/sync', [CartController::class, 'syncCart']);
     });
-
     // Order routes (Đơn hàng)
     Route::prefix('orders')->group(function () {
         Route::get('/', [OrderController::class, 'index']);

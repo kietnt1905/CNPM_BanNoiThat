@@ -23,7 +23,143 @@ import {
   CheckCircle2,
   Loader2
 } from 'lucide-react';
+import categoryApi from '../api/categoryApi';
 import productApi from '../api/productApi';
+import { useCart } from '../context/CartContext';
+
+// ==========================================
+// HÀM CHUẨN HÓA DỮ LIỆU SẢN PHẨM TỪ API
+// ==========================================
+export const normalizeProduct = (item) => {
+  if (!item) return null;
+
+  const id = item.id;
+  const name = item.name || 'Sản phẩm nội thất TK House';
+  const slug = item.slug || String(id);
+  const brand = item.brand || 'TK House';
+  const description = item.description || '';
+
+  // Danh mục
+  const catObj = typeof item.category === 'object' && item.category !== null ? item.category : null;
+  const categoryName =
+    item.categoryName ||
+    item.category_name ||
+    catObj?.name ||
+    (typeof item.category === 'string' ? item.category : 'Nội thất cao cấp');
+  const categorySlug =
+    item.categorySlug ||
+    item.category_slug ||
+    catObj?.slug ||
+    '';
+
+  // Nhóm danh mục
+  let group = item.group;
+  if (!group) {
+    if (['sofa-da', 'sofa-vai', 'ghe-thu-gian', 'ghe-an'].includes(categorySlug) || categorySlug.startsWith('sofa') || categorySlug.startsWith('ghe')) {
+      group = 'sofa';
+    } else if (['giuong-ngu', 'tu-ke', 'phong-ngu'].includes(categorySlug) || categorySlug.includes('giuong') || categorySlug.includes('tu')) {
+      group = 'phong-ngu';
+    } else {
+      group = 'ban';
+    }
+  }
+
+  // Bộ sưu tập
+  let collection = (item.collection || '').toLowerCase().trim();
+  if (!collection) {
+    const lowerName = name.toLowerCase();
+    const lowerSlug = slug.toLowerCase();
+    if (lowerName.includes('victoria') || lowerSlug.includes('victoria') || lowerName.includes('tuscany')) {
+      collection = 'victoria';
+    } else if (lowerName.includes('valencia') || lowerSlug.includes('valencia') || lowerName.includes('calacatta')) {
+      collection = 'valencia';
+    } else if (lowerName.includes('moretti') || lowerSlug.includes('moretti') || lowerName.includes('atelier')) {
+      collection = 'moretti';
+    } else if (lowerName.includes('osaka') || lowerSlug.includes('osaka')) {
+      collection = 'osaka';
+    } else if (lowerName.includes('elegance') || lowerSlug.includes('elegance')) {
+      collection = 'elegance';
+    } else if (lowerName.includes('coastal') || lowerSlug.includes('coastal') || lowerName.includes('nordic')) {
+      collection = 'coastal';
+    }
+  }
+
+  // Giá & hiển thị giá
+  const price = Number(item.price ?? item.min_price ?? 0);
+  const oldPrice = item.oldPrice ?? item.old_price ?? item.sale_price ?? null;
+  const priceDisplay =
+    item.priceDisplay ||
+    item.price_display ||
+    (price > 0 ? `${new Intl.NumberFormat('vi-VN').format(price)}₫` : 'Liên hệ');
+  const oldPriceDisplay =
+    item.oldPriceDisplay ||
+    item.old_price_display ||
+    (oldPrice ? `${new Intl.NumberFormat('vi-VN').format(Number(oldPrice))}₫` : null);
+
+  // Hình ảnh
+  let image = item.image || item.thumbnail;
+  let secondaryImage = item.secondaryImage || item.secondary_image;
+
+  if (Array.isArray(item.images) && item.images.length > 0) {
+    if (!image) {
+      const first = item.images[0];
+      image = typeof first === 'string' ? first : first.url || first.image_url;
+    }
+    if (!secondaryImage && item.images.length > 1) {
+      const second = item.images[1];
+      secondaryImage = typeof second === 'string' ? second : second.url || second.image_url;
+    }
+  }
+  if (!image) {
+    image = '/images/placeholder.jpg';
+  }
+
+  // Vật liệu
+  const material = item.material || 'Vật liệu cao cấp FAS';
+  let materialType = item.materialType || item.material_type || '';
+  if (!materialType) {
+    const matLower = material.toLowerCase();
+    if (matLower.includes('đá') || matLower.includes('ceramic') || matLower.includes('marble')) {
+      materialType = 'stone';
+    } else if (matLower.includes('da bò') || matLower.includes('da nappa') || matLower.includes('da thật')) {
+      materialType = 'leather';
+    } else if (matLower.includes('vải') || matLower.includes('nỉ') || matLower.includes('bouclé')) {
+      materialType = 'fabric';
+    } else {
+      materialType = 'wood';
+    }
+  }
+
+  const dimensions = item.dimensions || '';
+  const rating = Number(item.rating || 4.9);
+  const tag = item.tag || (item.is_featured ? 'Nổi Bật' : 'Mới Ra Mắt');
+  const inStock = Boolean(item.inStock ?? item.in_stock ?? true);
+
+  return {
+    id,
+    name,
+    slug,
+    brand,
+    description,
+    categoryName,
+    categorySlug,
+    group,
+    collection,
+    price,
+    oldPrice,
+    priceDisplay,
+    oldPriceDisplay,
+    image,
+    secondaryImage,
+    material,
+    materialType,
+    dimensions,
+    rating,
+    tag,
+    inStock,
+    raw: item,
+  };
+};
 
 
 // ==========================================
@@ -251,7 +387,7 @@ export const COLLECTIONS_META = {
 };
 
 // ==========================================
-// 2. DANH SÁCH SẢN PHẨM HOÀN CHỈNH (MOCK DATA LUXURY)
+// 2. DANH SÁCH SẢN PHẨM (DÙNG DỮ LIỆU TỪ BACKEND API)
 // ==========================================
 export const PRODUCTS_CATALOG = [];
 
@@ -276,6 +412,7 @@ export const SORT_OPTIONS = [
 export default function CategoryPage({ categoryId }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const { categorySlug } = useParams();
+  const { addToCart } = useCart();
 
   // 1. Xác định query category và collection từ URL
   const activeCollection = (searchParams.get('collection') || '').toLowerCase().trim();
@@ -290,14 +427,14 @@ export default function CategoryPage({ categoryId }) {
       ? categoryId === '01'
         ? 'ban-an'
         : categoryId === '02'
-        ? 'sofa'
-        : categoryId === '03'
-        ? 'ban-lam-viec'
-        : categoryId === '04'
-        ? 'ghe-thu-gian'
-        : categoryId === '05'
-        ? 'phong-ngu'
-        : 'all'
+          ? 'sofa'
+          : categoryId === '03'
+            ? 'ban-lam-viec'
+            : categoryId === '04'
+              ? 'ghe-thu-gian'
+              : categoryId === '05'
+                ? 'phong-ngu'
+                : 'all'
       : 'all');
 
   const activeCategory = rawParam || 'all';
@@ -311,22 +448,171 @@ export default function CategoryPage({ categoryId }) {
   const [wishlist, setWishlist] = useState([]);
   const [toastMessage, setToastMessage] = useState(null);
 
+  // State lưu danh mục từ Backend API
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+
   // State lưu danh sách sản phẩm lấy từ Backend API
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Gọi API lấy dữ liệu sản phẩm thật từ Backend
+  // 1. Gọi API lấy danh mục thật từ Backend
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
-    productApi.getAll({ per_page: 100 })
+    setCategoriesLoading(true);
+
+    categoryApi
+      .getAll()
       .then((res) => {
-        if (isMounted && res.data && res.data.status) {
-          setProducts(res.data.data);
+        if (!isMounted) return;
+        const data = res.data?.data || res.data || [];
+        if (Array.isArray(data)) {
+          setCategories(data);
         }
       })
       .catch((err) => {
-        console.error('Lỗi khi tải sản phẩm từ API:', err);
+        console.error('Lỗi khi tải danh mục từ categoryApi.getAll:', err);
+      })
+      .finally(() => {
+        if (isMounted) setCategoriesLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // 2. Chuyển đổi danh mục API thành các nhóm hiển thị trên Sidebar
+  const categoryGroups = useMemo(() => {
+    if (!categories || categories.length === 0) {
+      return CATEGORY_GROUPS;
+    }
+
+    const banItems = [];
+    const sofaItems = [];
+    const phongNguItems = [];
+    const otherItems = [];
+
+    categories.forEach((cat) => {
+      const slug = cat.slug || '';
+      const item = {
+        id: cat.id,
+        slug: cat.slug,
+        name: cat.name,
+        desc: cat.description || '',
+        products_count: cat.products_count ?? 0,
+      };
+
+      if (['ban-an', 'ban-tra', 'ban-lam-viec', 'ban-trang-diem'].includes(slug) || slug.startsWith('ban-')) {
+        banItems.push(item);
+      } else if (['sofa-da', 'sofa-vai', 'ghe-thu-gian', 'ghe-an'].includes(slug) || slug.startsWith('sofa-') || slug.startsWith('ghe-')) {
+        sofaItems.push(item);
+      } else if (['giuong-ngu', 'tu-ke', 'phong-ngu'].includes(slug) || slug.includes('giuong') || slug.includes('tu-')) {
+        phongNguItems.push(item);
+      } else {
+        otherItems.push(item);
+      }
+    });
+
+    const groups = [];
+    if (banItems.length > 0) {
+      groups.push({
+        group: 'BÀN CAO CẤP',
+        groupSlug: 'ban',
+        items: banItems,
+      });
+    }
+    if (sofaItems.length > 0) {
+      groups.push({
+        group: 'GHẾ & SOFA',
+        groupSlug: 'sofa',
+        items: sofaItems,
+      });
+    }
+    if (phongNguItems.length > 0) {
+      groups.push({
+        group: 'PHÒNG NGỦ & TỦ KỆ',
+        groupSlug: 'phong-ngu',
+        items: phongNguItems,
+      });
+    }
+    if (otherItems.length > 0) {
+      groups.push({
+        group: 'DANH MỤC KHÁC',
+        groupSlug: 'other',
+        items: otherItems,
+      });
+    }
+
+    return groups.length > 0 ? groups : CATEGORY_GROUPS;
+  }, [categories]);
+
+  // 3. Gọi API lấy danh sách sản phẩm thật từ Backend với các bộ lọc
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+
+    const params = {
+      per_page: 100,
+    };
+
+    // Lọc theo Category
+    if (activeCategory && activeCategory !== 'all') {
+      params.category = activeCategory;
+    }
+
+    // Lọc theo Collection
+    if (activeCollection) {
+      params.collection = activeCollection;
+    }
+
+    // Lọc theo Khoảng giá
+    if (selectedPriceRange !== 'all') {
+      const range = PRICE_RANGES.find((r) => r.id === selectedPriceRange);
+      if (range) {
+        if (range.min > 0) params.min_price = range.min;
+        if (range.max < Infinity) params.max_price = range.max;
+      }
+    }
+
+    // Sắp xếp
+    if (sortOption) {
+      const sortMap = {
+        featured: 'newest',
+        'price-asc': 'price_asc',
+        'price-desc': 'price_desc',
+        'name-asc': 'name_asc',
+        rating: 'newest',
+      };
+      params.sort = sortMap[sortOption] || 'newest';
+    }
+
+    productApi
+      .getAll(params)
+      .then((res) => {
+        if (!isMounted) return;
+        const rawItems = res.data?.data || res.data || [];
+        const normalizedItems = Array.isArray(rawItems)
+          ? rawItems.map(normalizeProduct).filter(Boolean)
+          : [];
+        setProducts(normalizedItems);
+        setIsDemoMode(false);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('Lỗi khi tải sản phẩm từ productApi.getAll:', err);
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            'Không thể kết nối máy chủ để tải danh sách sản phẩm.'
+        );
+        setProducts([]);
+        setIsDemoMode(false);
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -335,7 +621,7 @@ export default function CategoryPage({ categoryId }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activeCategory, activeCollection, selectedPriceRange, sortOption, retryCount]);
 
 
   // Tự động mở danh mục nhỏ bộ sưu tập khi có activeCollection
@@ -367,9 +653,24 @@ export default function CategoryPage({ categoryId }) {
     });
   };
 
-  // Thêm vào giỏ hàng
-  const handleAddToCart = (product) => {
-    showToast(`Đã thêm "${product.name}" vào giỏ hàng thành công!`);
+  // Thêm vào giỏ hàng nhanh từ danh mục (Mở trực tiếp Cart Drawer)
+  const handleAddToCart = async (product) => {
+    try {
+      await addToCart(Number(product.id) * 100 + 1, 1, {
+        openDrawer: true,
+        productInfo: {
+          product_id: product.id,
+          product_name: product.name,
+          product_slug: product.slug,
+          variant_name: `${product.dimensions || 'Tiêu chuẩn'} • ${product.material || 'Vật liệu tự nhiên'}`,
+          price: product.price,
+          thumbnail: product.image,
+          stock_quantity: 10,
+        },
+      });
+    } catch (err) {
+      console.warn('Lỗi thêm giỏ hàng:', err);
+    }
   };
 
   // Cập nhật URL khi chuyển danh mục ở Sidebar
@@ -520,7 +821,7 @@ export default function CategoryPage({ categoryId }) {
     if (collectionMeta) {
       if (activeCategory && activeCategory !== 'all') {
         let catLabel = activeCategory;
-        for (const group of CATEGORY_GROUPS) {
+        for (const group of categoryGroups) {
           const found = group.items.find((item) => item.slug === activeCategory);
           if (found) {
             catLabel = found.name;
@@ -539,12 +840,16 @@ export default function CategoryPage({ categoryId }) {
     if (activeCategory === 'phong-khach') return 'Không Gian Phòng Khách';
     if (activeCategory === 'phong-an') return 'Không Gian Phòng Ăn';
 
-    for (const group of CATEGORY_GROUPS) {
+    for (const group of categoryGroups) {
       const found = group.items.find((item) => item.slug === activeCategory);
       if (found) return found.name;
     }
+
+    const foundInCategories = categories.find((c) => c.slug === activeCategory);
+    if (foundInCategories) return foundInCategories.name;
+
     return meta.title || 'Sản Phẩm';
-  }, [collectionMeta, activeCategory, meta.title]);
+  }, [collectionMeta, activeCategory, categoryGroups, categories, meta.title]);
 
   return (
     <motion.div
@@ -558,11 +863,11 @@ export default function CategoryPage({ categoryId }) {
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 0.25 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-[#2C241E] text-white px-5 py-3 rounded-full shadow-2xl border border-white/20 flex items-center space-x-3 text-xs sm:text-sm font-medium tracking-wide backdrop-blur-md"
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-[#2C241E]/95 text-white px-5 py-2.5 rounded-full shadow-2xl border border-white/20 flex items-center space-x-2.5 text-xs font-medium tracking-wide backdrop-blur-md"
           >
             <CheckCircle2 className="w-4 h-4 text-[#E6C280] flex-shrink-0" />
             <span>{toastMessage}</span>
@@ -585,9 +890,8 @@ export default function CategoryPage({ categoryId }) {
             <Link
               to="/san-pham"
               onClick={handleResetFilters}
-              className={`hover:text-neutral-900 transition-colors ${
-                !activeCollection && activeCategory === 'all' ? 'font-semibold text-neutral-900' : ''
-              }`}
+              className={`hover:text-neutral-900 transition-colors ${!activeCollection && activeCategory === 'all' ? 'font-semibold text-neutral-900' : ''
+                }`}
             >
               Sản phẩm
             </Link>
@@ -702,26 +1006,23 @@ export default function CategoryPage({ categoryId }) {
                 <button
                   type="button"
                   onClick={() => handleSelectCategory('all')}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all duration-200 mb-1.5 ${
-                    activeCategory === 'all' && !activeCollection
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all duration-200 mb-1.5 ${activeCategory === 'all' && !activeCollection
                       ? 'bg-[#FAF6F0] text-[#8C6A48] font-bold border border-[#E5DACD] shadow-sm'
                       : 'text-neutral-700 hover:bg-[#FAF8F5] hover:text-neutral-900'
-                  }`}
+                    }`}
                 >
                   <span className="flex items-center space-x-2">
                     <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        activeCategory === 'all' && !activeCollection ? 'bg-[#8C6A48]' : 'bg-neutral-300'
-                      }`}
+                      className={`w-1.5 h-1.5 rounded-full ${activeCategory === 'all' && !activeCollection ? 'bg-[#8C6A48]' : 'bg-neutral-300'
+                        }`}
                     />
                     <span>Tất cả sản phẩm</span>
                   </span>
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
-                      activeCategory === 'all' && !activeCollection
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${activeCategory === 'all' && !activeCollection
                         ? 'bg-[#8C6A48] text-white'
                         : 'bg-neutral-100 text-neutral-500'
-                    }`}
+                      }`}
                   >
                     {products.length}
                   </span>
@@ -729,7 +1030,7 @@ export default function CategoryPage({ categoryId }) {
 
                 {/* Nhóm các danh mục */}
                 <div className="space-y-4 pt-1">
-                  {CATEGORY_GROUPS.map((grp, gIdx) => {
+                  {categoryGroups.map((grp, gIdx) => {
                     const isGroupActive = activeCategory === grp.groupSlug;
                     const groupItemCount = products.filter(
                       (p) => p.group === grp.groupSlug
@@ -741,11 +1042,10 @@ export default function CategoryPage({ categoryId }) {
                         <button
                           type="button"
                           onClick={() => handleSelectCategory(grp.groupSlug)}
-                          className={`w-full flex items-center justify-between text-[11.5px] font-bold uppercase tracking-wider text-left py-1 px-1 transition-colors ${
-                            isGroupActive
+                          className={`w-full flex items-center justify-between text-[11.5px] font-bold uppercase tracking-wider text-left py-1 px-1 transition-colors ${isGroupActive
                               ? 'text-[#8C6A48]'
                               : 'text-neutral-800 hover:text-[#8C6A48]'
-                          }`}
+                            }`}
                         >
                           <span className="flex items-center space-x-1.5">
                             <span className="text-[#8C6A48] text-[10px]">■</span>
@@ -762,27 +1062,24 @@ export default function CategoryPage({ categoryId }) {
                             const isSubActive = activeCategory === sub.slug;
                             const subCount = products.filter(
                               (p) => (p.categorySlug === sub.slug || p.category_slug === sub.slug)
-                            ).length;
-
+                            ).length || sub.products_count || 0;
 
                             return (
                               <button
                                 key={sIdx}
                                 type="button"
                                 onClick={() => handleSelectCategory(sub.slug)}
-                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left ${
-                                  isSubActive
+                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left ${isSubActive
                                     ? 'bg-[#FAF6F0] text-[#8C6A48] font-semibold border-l-2 border-[#8C6A48]'
                                     : 'text-neutral-600 hover:text-neutral-900 hover:bg-[#FAF8F5]'
-                                }`}
+                                  }`}
                               >
                                 <span className="truncate pr-2">{sub.name}</span>
                                 <span
-                                  className={`text-[10px] font-mono ${
-                                    isSubActive
+                                  className={`text-[10px] font-mono ${isSubActive
                                       ? 'text-[#8C6A48] font-bold'
                                       : 'text-neutral-400'
-                                  }`}
+                                    }`}
                                 >
                                   {subCount}
                                 </span>
@@ -800,19 +1097,17 @@ export default function CategoryPage({ categoryId }) {
                     <button
                       type="button"
                       onClick={() => setCollectionOpen((prev) => !prev)}
-                      className={`w-full flex items-center justify-between text-[11.5px] font-bold uppercase tracking-wider text-left py-1 px-1 transition-colors group cursor-pointer ${
-                        activeCollection
+                      className={`w-full flex items-center justify-between text-[11.5px] font-bold uppercase tracking-wider text-left py-1 px-1 transition-colors group cursor-pointer ${activeCollection
                           ? 'text-[#8C6A48]'
                           : 'text-neutral-800 hover:text-[#8C6A48]'
-                      }`}
+                        }`}
                     >
                       <span className="flex items-center space-x-1.5">
                         <span className="text-[#8C6A48] text-[10px]">■</span>
                         <span>BỘ SƯU TẬP</span>
                         <ChevronDown
-                          className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                            collectionOpen ? 'rotate-180 text-[#8C6A48]' : 'text-neutral-400 group-hover:text-[#8C6A48]'
-                          }`}
+                          className={`w-3.5 h-3.5 transition-transform duration-200 ${collectionOpen ? 'rotate-180 text-[#8C6A48]' : 'text-neutral-400 group-hover:text-[#8C6A48]'
+                            }`}
                         />
                       </span>
                       <span className="text-[10px] text-neutral-400 font-mono font-normal">
@@ -834,17 +1129,15 @@ export default function CategoryPage({ categoryId }) {
                               key={cSlug}
                               type="button"
                               onClick={() => handleSelectCollection(cSlug)}
-                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left ${
-                                isColActive
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left ${isColActive
                                   ? 'bg-[#FAF6F0] text-[#8C6A48] font-semibold border-l-2 border-[#8C6A48]'
                                   : 'text-neutral-600 hover:text-neutral-900 hover:bg-[#FAF8F5]'
-                              }`}
+                                }`}
                             >
                               <span className="truncate pr-2">{cMeta.name}</span>
                               <span
-                                className={`text-[10px] font-mono ${
-                                  isColActive ? 'text-[#8C6A48] font-bold' : 'text-neutral-400'
-                                }`}
+                                className={`text-[10px] font-mono ${isColActive ? 'text-[#8C6A48] font-bold' : 'text-neutral-400'
+                                  }`}
                               >
                                 {colCount}
                               </span>
@@ -880,11 +1173,10 @@ export default function CategoryPage({ categoryId }) {
                     return (
                       <label
                         key={range.id}
-                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs cursor-pointer transition-all ${
-                          isSelected
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs cursor-pointer transition-all ${isSelected
                             ? 'bg-[#FAF6F0] text-[#8C6A48] font-semibold border border-[#E5DACD]'
                             : 'text-neutral-700 hover:bg-[#FAF8F5]'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center space-x-2.5">
                           <input
@@ -923,11 +1215,10 @@ export default function CategoryPage({ categoryId }) {
                       key={mat.id}
                       type="button"
                       onClick={() => setSelectedMaterial(mat.id)}
-                      className={`text-[11px] px-2.5 py-1.5 rounded-lg border transition-all ${
-                        selectedMaterial === mat.id
+                      className={`text-[11px] px-2.5 py-1.5 rounded-lg border transition-all ${selectedMaterial === mat.id
                           ? 'bg-neutral-900 text-white border-neutral-900 font-medium'
                           : 'bg-white text-neutral-600 border-[#E8E2D8] hover:border-neutral-400'
-                      }`}
+                        }`}
                     >
                       {mat.label}
                     </button>
@@ -1072,13 +1363,61 @@ export default function CategoryPage({ categoryId }) {
               </div>
             )}
 
+
             {/* 2. LƯỚI CARD SẢN PHẨM (PRODUCT GRID) */}
-            {loading ? (
-              <div className="py-28 flex flex-col items-center justify-center space-y-4">
-                <Loader2 className="w-9 h-9 text-[#8C6A48] animate-spin" />
-                <p className="text-sm font-medium text-neutral-500 font-serif tracking-wide">
-                  Đang tải tác phẩm nội thất từ hệ thống...
+            {error ? (
+              <div className="bg-white rounded-2xl border border-rose-200/80 p-12 text-center space-y-4 shadow-sm">
+                <div className="w-14 h-14 mx-auto rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500">
+                  <RotateCcw className="w-6 h-6" />
+                </div>
+                <h3 className="font-serif text-xl font-normal text-neutral-900">
+                  Không thể tải sản phẩm từ hệ thống
+                </h3>
+                <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto font-light leading-relaxed">
+                  {error}
                 </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setRetryCount((c) => c + 1)}
+                    className="px-6 py-2.5 rounded-full bg-[#8C6A48] hover:bg-[#734b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center space-x-2 shadow-sm cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Tải lại dữ liệu</span>
+                  </button>
+                </div>
+              </div>
+            ) : loading ? (
+              <div className="space-y-6">
+                <div className="flex items-center justify-center space-x-2.5 text-xs text-[#8C6A48] font-medium py-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#8C6A48]" />
+                  <span>Đang tải danh sách tác phẩm nội thất...</span>
+                </div>
+                {/* Skeleton Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+                  {[1, 2, 3, 4, 5, 6].map((idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white rounded-2xl border border-[#E8E2D8] overflow-hidden shadow-sm flex flex-col justify-between animate-pulse"
+                    >
+                      <div className="relative aspect-[4/3] bg-[#F2EDE4]">
+                        <div className="absolute top-3 left-3 w-16 h-4 bg-neutral-300/60 rounded-full" />
+                        <div className="absolute top-3 right-3 w-7 h-7 bg-neutral-300/60 rounded-full" />
+                      </div>
+                      <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div className="space-y-2">
+                          <div className="w-20 h-3 bg-neutral-200 rounded" />
+                          <div className="w-4/5 h-4 bg-neutral-300/80 rounded" />
+                          <div className="w-3/5 h-3 bg-neutral-200 rounded" />
+                        </div>
+                        <div className="pt-3.5 border-t border-neutral-100 flex items-center justify-between">
+                          <div className="w-24 h-4 bg-neutral-300/80 rounded" />
+                          <div className="w-9 h-9 rounded-full bg-neutral-200" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
@@ -1096,7 +1435,10 @@ export default function CategoryPage({ categoryId }) {
                       className="group bg-white rounded-2xl border border-[#E8E2D8] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-400 flex flex-col justify-between"
                     >
                       {/* Ảnh sản phẩm với Dual photo swap */}
-                      <div className="relative aspect-[4/3] bg-[#FAF8F5] overflow-hidden">
+                      <Link
+                        to={`/san-pham/${prod.id}`}
+                        className="block relative aspect-[4/3] bg-[#FAF8F5] overflow-hidden cursor-pointer"
+                      >
                         {/* Ảnh chính */}
                         <img
                           src={prod.image}
@@ -1120,21 +1462,31 @@ export default function CategoryPage({ categoryId }) {
                         )}
 
                         {/* Nút hành động nổi trên ảnh */}
-                        <div className="absolute top-3 right-3 flex flex-col space-y-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="absolute top-3 right-3 flex flex-col space-y-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
                           <button
                             type="button"
-                            onClick={() => toggleWishlist(prod)}
-                            className={`w-8 h-8 rounded-full backdrop-blur-md shadow-md flex items-center justify-center transition-all ${
-                              isLiked
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleWishlist(prod);
+                            }}
+                            className={`w-8 h-8 rounded-full backdrop-blur-md shadow-md flex items-center justify-center transition-all ${isLiked
                                 ? 'bg-rose-50 text-rose-500'
                                 : 'bg-white/90 hover:bg-white text-neutral-700 hover:text-rose-500'
-                            }`}
+                              }`}
                             title="Lưu yêu thích"
                           >
                             <Heart
                               className={`w-4 h-4 ${isLiked ? 'fill-rose-500' : ''}`}
                             />
                           </button>
+                          <Link
+                            to={`/san-pham/${prod.id}`}
+                            className="w-8 h-8 rounded-full backdrop-blur-md shadow-md flex items-center justify-center bg-white/90 hover:bg-[#8C6A48] text-neutral-700 hover:text-white transition-all cursor-pointer"
+                            title="Xem chi tiết sản phẩm"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
                         </div>
 
                         {/* Thanh thông số kích thước hover */}
@@ -1147,7 +1499,7 @@ export default function CategoryPage({ categoryId }) {
                             <span className="text-[#E6C280]">★ {prod.rating}</span>
                           </div>
                         )}
-                      </div>
+                      </Link>
 
                       {/* Chi tiết nội dung card */}
                       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
@@ -1164,7 +1516,7 @@ export default function CategoryPage({ categoryId }) {
                           </div>
 
                           <h3 className="font-serif text-base font-semibold text-neutral-900 group-hover:text-[#8C6A48] transition-colors leading-snug line-clamp-2">
-                            {prod.name}
+                            <Link to={`/san-pham/${prod.id}`}>{prod.name}</Link>
                           </h3>
 
                           <p className="text-[11.5px] text-neutral-500 mt-1 font-light line-clamp-1">
@@ -1172,7 +1524,7 @@ export default function CategoryPage({ categoryId }) {
                           </p>
                         </div>
 
-                        {/* Giá tiền và Nút thêm vào giỏ */}
+                        {/* Giá tiền và Nút thêm vào giỏ (Icon giỏ hàng cũ) */}
                         <div className="mt-4 pt-3.5 border-t border-neutral-100 flex items-center justify-between">
                           <div>
                             <span className="text-sm sm:text-base font-bold text-neutral-900 font-mono tracking-tight">
@@ -1211,11 +1563,11 @@ export default function CategoryPage({ categoryId }) {
                 <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto font-light leading-relaxed">
                   Hiện chưa có sản phẩm nào thuộc bộ lọc bạn đã chọn. Vui lòng mở rộng khoảng giá hoặc chọn danh mục khác.
                 </p>
-                <div className="pt-2">
+                <div className="pt-2 flex items-center justify-center space-x-3 flex-wrap gap-y-2">
                   <button
                     type="button"
                     onClick={handleResetFilters}
-                    className="px-6 py-2.5 rounded-full bg-[#8C6A48] hover:bg-[#734b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center space-x-2"
+                    className="px-6 py-2.5 rounded-full bg-[#8C6A48] hover:bg-[#734b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center space-x-2 shadow-sm"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Xem tất cả sản phẩm</span>
@@ -1276,25 +1628,23 @@ export default function CategoryPage({ categoryId }) {
                     <button
                       type="button"
                       onClick={() => handleSelectCategory('all')}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium mb-1 ${
-                        activeCategory === 'all' && !activeCollection
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium mb-1 ${activeCategory === 'all' && !activeCollection
                           ? 'bg-[#FAF6F0] text-[#8C6A48] font-bold border border-[#E5DACD]'
                           : 'text-neutral-700 hover:bg-neutral-50'
-                      }`}
+                        }`}
                     >
                       ✦ Tất cả sản phẩm ({products.length})
                     </button>
 
-                    {CATEGORY_GROUPS.map((grp, gIdx) => (
+                    {categoryGroups.map((grp, gIdx) => (
                       <div key={gIdx} className="pt-2">
                         <button
                           type="button"
                           onClick={() => handleSelectCategory(grp.groupSlug)}
-                          className={`w-full text-left text-[11px] font-bold uppercase tracking-wider py-1 ${
-                            activeCategory === grp.groupSlug
+                          className={`w-full text-left text-[11px] font-bold uppercase tracking-wider py-1 ${activeCategory === grp.groupSlug
                               ? 'text-[#8C6A48]'
                               : 'text-neutral-800'
-                          }`}
+                            }`}
                         >
                           ■ {grp.group}
                         </button>
@@ -1304,11 +1654,10 @@ export default function CategoryPage({ categoryId }) {
                               key={sIdx}
                               type="button"
                               onClick={() => handleSelectCategory(sub.slug)}
-                              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs ${
-                                activeCategory === sub.slug
+                              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs ${activeCategory === sub.slug
                                   ? 'bg-[#FAF6F0] text-[#8C6A48] font-bold'
                                   : 'text-neutral-600'
-                              }`}
+                                }`}
                             >
                               {sub.name}
                             </button>
@@ -1322,17 +1671,15 @@ export default function CategoryPage({ categoryId }) {
                       <button
                         type="button"
                         onClick={() => setCollectionOpen((prev) => !prev)}
-                        className={`w-full flex items-center justify-between text-[11px] font-bold uppercase tracking-wider py-1 ${
-                          activeCollection ? 'text-[#8C6A48]' : 'text-neutral-800'
-                        }`}
+                        className={`w-full flex items-center justify-between text-[11px] font-bold uppercase tracking-wider py-1 ${activeCollection ? 'text-[#8C6A48]' : 'text-neutral-800'
+                          }`}
                       >
                         <span className="flex items-center space-x-1.5">
                           <span className="text-[#8C6A48] text-[10px]">■</span>
                           <span>BỘ SƯU TẬP</span>
                           <ChevronDown
-                            className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                              collectionOpen ? 'rotate-180 text-[#8C6A48]' : 'text-neutral-400'
-                            }`}
+                            className={`w-3.5 h-3.5 transition-transform duration-200 ${collectionOpen ? 'rotate-180 text-[#8C6A48]' : 'text-neutral-400'
+                              }`}
                           />
                         </span>
                         <span className="text-[10px] text-neutral-400 font-mono font-normal">
@@ -1354,11 +1701,10 @@ export default function CategoryPage({ categoryId }) {
                                 key={cSlug}
                                 type="button"
                                 onClick={() => handleSelectCollection(cSlug)}
-                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs ${
-                                  isColActive
+                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs ${isColActive
                                     ? 'bg-[#FAF6F0] text-[#8C6A48] font-bold border-l-2 border-[#8C6A48]'
                                     : 'text-neutral-600'
-                                }`}
+                                  }`}
                               >
                                 <span>{cMeta.name}</span>
                                 <span className={`text-[10px] font-mono ${isColActive ? 'text-[#8C6A48] font-bold' : 'text-neutral-400'}`}>
@@ -1383,11 +1729,10 @@ export default function CategoryPage({ categoryId }) {
                           key={r.id}
                           type="button"
                           onClick={() => setSelectedPriceRange(r.id)}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-xs ${
-                            selectedPriceRange === r.id
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs ${selectedPriceRange === r.id
                               ? 'bg-[#FAF6F0] text-[#8C6A48] font-bold border border-[#E5DACD]'
                               : 'text-neutral-700 hover:bg-neutral-50'
-                          }`}
+                            }`}
                         >
                           {r.label}
                         </button>
@@ -1412,11 +1757,10 @@ export default function CategoryPage({ categoryId }) {
                           key={m.id}
                           type="button"
                           onClick={() => setSelectedMaterial(m.id)}
-                          className={`text-xs px-2.5 py-1 rounded-lg border ${
-                            selectedMaterial === m.id
+                          className={`text-xs px-2.5 py-1 rounded-lg border ${selectedMaterial === m.id
                               ? 'bg-neutral-900 text-white border-neutral-900'
                               : 'bg-white text-neutral-700 border-neutral-200'
-                          }`}
+                            }`}
                         >
                           {m.label}
                         </button>

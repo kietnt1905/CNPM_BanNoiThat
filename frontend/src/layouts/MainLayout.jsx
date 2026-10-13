@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import CartDrawer from '../components/cart/CartDrawer';
 import { ArrowUp, Phone, MessageCircle, Home } from 'lucide-react';
 
 export default function MainLayout() {
@@ -37,6 +38,9 @@ export default function MainLayout() {
     <div className="min-h-screen flex flex-col bg-[#faf9f6] text-[#222222] font-sans antialiased selection:bg-neutral-900 selection:text-white">
       {/* 1. Header chính */}
       <Header />
+
+      {/* Cart Drawer trượt từ bên phải */}
+      <CartDrawer />
 
       {/* 2. Main Content (Outlet chứa các trang con như Home, Shop, Product Detail, Cart...) */}
       <main className="flex-1 w-full">
