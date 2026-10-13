@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\OrderController;
 
 // Public routes - Auth
 Route::post('/register', [AuthController::class, 'register']);
@@ -36,6 +37,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/items/{id}', [CartController::class, 'removeItem']);
         Route::delete('/clear', [CartController::class, 'clearCart']);
         Route::post('/sync', [CartController::class, 'syncCart']);
+    });
+
+    // Order routes (Đơn hàng)
+    Route::prefix('orders')->group(function () {
+        Route::get('/', [OrderController::class, 'index']);
+        Route::post('/', [OrderController::class, 'store']);
+        Route::get('/{id}', [OrderController::class, 'show']);
+        Route::patch('/{id}/cancel', [OrderController::class, 'cancel']);
     });
 });
 

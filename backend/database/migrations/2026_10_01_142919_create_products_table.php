@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('category_id')->index('fk_products_category');
             $table->string('name', 200);
-            $table->string('slug', 191)->unique('slug');
+            $table->string('slug', 191)->unique('products_slug_unique');
             $table->text('description')->nullable();
             $table->string('brand', 100)->nullable();
             $table->unsignedSmallInteger('warranty_months')->default(0);
