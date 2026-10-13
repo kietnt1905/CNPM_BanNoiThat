@@ -12,16 +12,42 @@ import {
   Truck,
   RotateCcw,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Check
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 export default function CartDrawer() {
   const navigate = useNavigate();
-  const { cart, summary, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, loading } = useCart();
+  const {
+    cart,
+    summary,
+    isCartOpen,
+    setIsCartOpen,
+    updateQuantity,
+    removeFromCart,
+    loading,
+    selectedIds,
+    toggleSelectItem,
+    selectAllItems,
+    deselectAllItems,
+    selectedItems,
+    selectedSummary,
+  } = useCart();
 
   const items = cart?.items || [];
   const isEmpty = items.length === 0;
+
+  const availableItems = items.filter((item) => !item.is_out_of_stock);
+  const isAllSelected = availableItems.length > 0 && selectedItems.length === availableItems.length;
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      deselectAllItems();
+    } else {
+      selectAllItems();
+    }
+  };
 
   const handleClose = () => {
     setIsCartOpen(false);
@@ -33,8 +59,9 @@ export default function CartDrawer() {
   };
 
   const handleCheckout = () => {
+    if (selectedItems.length === 0) return;
     handleClose();
-    navigate('/gio-hang');
+    navigate('/thanh-toan');
   };
 
   return (
@@ -92,6 +119,28 @@ export default function CartDrawer() {
                 <span className="font-medium">Miễn phí giao hàng & lắp đặt tận nơi toàn quốc</span>
               </div>
 
+              {/* 2.1. Thanh Chọn tất cả sản phẩm */}
+              {!isEmpty && (
+                <div className="bg-[#FAF8F5] px-6 py-2.5 border-b border-[#E8E2D8] flex items-center justify-between text-xs">
+                  <label className="flex items-center space-x-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={handleToggleSelectAll}
+                      className="w-4 h-4 rounded border-[#D1C7BA] text-[#8C6A48] focus:ring-[#8C6A48] cursor-pointer accent-[#8C6A48]"
+                    />
+                    <span className="font-medium text-neutral-800">
+                      Chọn tất cả ({selectedItems.length}/{availableItems.length})
+                    </span>
+                  </label>
+                  {selectedItems.length > 0 && (
+                    <span className="text-[11px] text-[#8C6A48] font-mono font-medium">
+                      {selectedSummary.total_amount_display}
+                    </span>
+                  )}
+                </div>
+              )}
+
               {/* 3. Danh sách sản phẩm trong giỏ */}
               <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
                 {isEmpty ? (
@@ -124,9 +173,22 @@ export default function CartDrawer() {
                       const itemKey = item.id || `variant-${item.variant_id}-${idx}`;
                       const isOutOfStock = item.is_out_of_stock;
                       const exceedsStock = item.exceeds_stock;
+                      const isChecked = selectedIds.includes(item.variant_id);
 
                       return (
-                        <div key={itemKey} className="pt-3.5 first:pt-0 flex space-x-3.5 group">
+                        <div key={itemKey} className="pt-3.5 first:pt-0 flex space-x-3 group items-center">
+                          {/* Checkbox chọn sản phẩm */}
+                          <div className="flex items-center justify-center pt-0.5">
+                            <input
+                              type="checkbox"
+                              disabled={isOutOfStock}
+                              checked={isChecked}
+                              onChange={() => toggleSelectItem(item.variant_id)}
+                              className="w-4 h-4 rounded border-[#D1C7BA] text-[#8C6A48] focus:ring-[#8C6A48] cursor-pointer accent-[#8C6A48] disabled:opacity-30 disabled:cursor-not-allowed"
+                              title={isOutOfStock ? 'Sản phẩm tạm hết hàng' : 'Chọn sản phẩm'}
+                            />
+                          </div>
+
                           {/* Ảnh sản phẩm */}
                           <Link
                             to={`/san-pham/${item.product_slug || item.product_id}`}
@@ -249,9 +311,9 @@ export default function CartDrawer() {
                   {/* Tạm tính & Tổng cộng */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs text-neutral-500">
-                      <span>Tạm tính ({summary.total_items} món):</span>
+                      <span>Đã chọn ({selectedSummary.total_items} món):</span>
                       <span className="font-mono text-neutral-800 font-medium">
-                        {summary.total_amount_display}
+                        {selectedSummary.total_amount_display}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-neutral-500">
@@ -265,7 +327,7 @@ export default function CartDrawer() {
                         Tổng thanh toán:
                       </span>
                       <span className="font-mono text-lg font-bold text-neutral-900">
-                        {summary.total_amount_display}
+                        {selectedSummary.total_amount_display}
                       </span>
                     </div>
                   </div>
@@ -281,10 +343,11 @@ export default function CartDrawer() {
                     </button>
                     <button
                       type="button"
+                      disabled={selectedItems.length === 0}
                       onClick={handleCheckout}
-                      className="w-full py-3 rounded-xl bg-[#2C241E] hover:bg-[#8C6A48] text-white text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center space-x-1.5 shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                      className="w-full py-3 rounded-xl bg-[#2C241E] hover:bg-[#8C6A48] disabled:bg-neutral-300 disabled:text-neutral-500 disabled:cursor-not-allowed text-white text-xs font-semibold uppercase tracking-wider transition-all flex items-center justify-center space-x-1.5 shadow-md hover:scale-[1.02] active:scale-[0.98]"
                     >
-                      <span>Thanh toán</span>
+                      <span>{selectedItems.length > 0 ? `Thanh toán (${selectedSummary.total_items})` : 'Chọn sản phẩm'}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>

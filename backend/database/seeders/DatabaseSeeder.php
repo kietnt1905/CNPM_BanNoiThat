@@ -66,7 +66,7 @@ class DatabaseSeeder extends Seeder
                 'brand' => 'TK House',
                 'description' => 'Mặt đá Ceramic Nano tôi luyện nhiệt độ 1200°C chống xước vĩnh cửu và chân gỗ óc chó nguyên khối phong cách quý tộc.',
                 'warranty_months' => 36,
-                'price' => 46500000,
+                'price' => 36000,
                 'stock' => 10,
                 'sku' => 'BA-ELG-01',
                 'color' => 'Nâu óc chó & Trắng vân mây',

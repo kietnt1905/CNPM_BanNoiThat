@@ -31,6 +31,29 @@
   background: #8e8e8e;
 }
 
+/* Tinh chỉnh scrollbar mỏng tinh tế cho bộ lọc và khu vực cuộn riêng */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #E2D9CC;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #8C6A48;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #E2D9CC transparent;
+}
+
 /* ==========================================================================
    HERO BANNER KEN BURNS & PROGRESS BAR ANIMATIONS (NHÀ XINH LUXURY STYLE)
    ========================================================================== */

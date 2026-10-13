@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import categoryApi from '../api/categoryApi';
 import productApi from '../api/productApi';
+import cacheHelper from '../utils/cache';
 import { useCart } from '../context/CartContext';
 
 // ==========================================
@@ -135,6 +136,10 @@ export const normalizeProduct = (item) => {
   const tag = item.tag || (item.is_featured ? 'Nổi Bật' : 'Mới Ra Mắt');
   const inStock = Boolean(item.inStock ?? item.in_stock ?? true);
 
+  const defaultVariantId =
+    Number(item.default_variant_id || item.variant_id || item.first_variant_id) ||
+    (Array.isArray(item.variants) && item.variants.length > 0 ? Number(item.variants[0]?.id) : null);
+
   return {
     id,
     name,
@@ -157,6 +162,9 @@ export const normalizeProduct = (item) => {
     rating,
     tag,
     inStock,
+    defaultVariantId,
+    default_variant_id: defaultVariantId,
+    variant_id: defaultVariantId,
     raw: item,
   };
 };
@@ -410,9 +418,11 @@ export const SORT_OPTIONS = [
 ];
 
 export default function CategoryPage({ categoryId }) {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { categorySlug } = useParams();
   const { addToCart } = useCart();
+  const [addingProductId, setAddingProductId] = useState(null);
 
   // 1. Xác định query category và collection từ URL
   const activeCollection = (searchParams.get('collection') || '').toLowerCase().trim();
@@ -448,21 +458,41 @@ export default function CategoryPage({ categoryId }) {
   const [wishlist, setWishlist] = useState([]);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // State lưu danh mục từ Backend API
-  const [categories, setCategories] = useState([]);
+  // Helper lấy cache key theo bộ lọc
+  const getProductCacheKey = (cat, col, price, sort) => {
+    return `products_${cat}_${col || 'none'}_${price}_${sort}`;
+  };
+
+  // State lưu danh mục từ Backend API (ưu tiên nạp từ cache)
+  const [categories, setCategories] = useState(() => {
+    return cacheHelper.get('categories') || [];
+  });
   const [categoriesLoading, setCategoriesLoading] = useState(false);
 
-  // State lưu danh sách sản phẩm lấy từ Backend API
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // State lưu danh sách sản phẩm lấy từ Backend API (nạp tức thì từ cache nếu có)
+  const initialCacheKey = getProductCacheKey(activeCategory, activeCollection, selectedPriceRange, sortOption);
+  const initialCached = cacheHelper.get(initialCacheKey);
+
+  const [products, setProducts] = useState(() => {
+    if (initialCached && Array.isArray(initialCached) && initialCached.length > 0) {
+      return initialCached.map(normalizeProduct).filter(Boolean);
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    return !(initialCached && Array.isArray(initialCached) && initialCached.length > 0);
+  });
   const [error, setError] = useState(null);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  // 1. Gọi API lấy danh mục thật từ Backend
+  // 1. Gọi API lấy danh mục thật từ Backend (Stale-While-Revalidate)
   useEffect(() => {
     let isMounted = true;
-    setCategoriesLoading(true);
+    const cached = cacheHelper.get('categories');
+    if (!cached || cached.length === 0) {
+      setCategoriesLoading(true);
+    }
 
     categoryApi
       .getAll()
@@ -471,6 +501,7 @@ export default function CategoryPage({ categoryId }) {
         const data = res.data?.data || res.data || [];
         if (Array.isArray(data)) {
           setCategories(data);
+          cacheHelper.set('categories', data, 15);
         }
       })
       .catch((err) => {
@@ -550,10 +581,19 @@ export default function CategoryPage({ categoryId }) {
     return groups.length > 0 ? groups : CATEGORY_GROUPS;
   }, [categories]);
 
-  // 3. Gọi API lấy danh sách sản phẩm thật từ Backend với các bộ lọc
+  // 3. Gọi API lấy danh sách sản phẩm thật từ Backend với các bộ lọc (Stale-While-Revalidate)
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
+    const cacheKey = getProductCacheKey(activeCategory, activeCollection, selectedPriceRange, sortOption);
+    const cachedItems = cacheHelper.get(cacheKey);
+
+    // Nếu đã có sẵn cache: Hiển thị ngay tức thì, KHÔNG bật spinner che màn hình
+    if (cachedItems && Array.isArray(cachedItems) && cachedItems.length > 0) {
+      setProducts(cachedItems.map(normalizeProduct).filter(Boolean));
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setError(null);
 
     const params = {
@@ -600,18 +640,25 @@ export default function CategoryPage({ categoryId }) {
           ? rawItems.map(normalizeProduct).filter(Boolean)
           : [];
         setProducts(normalizedItems);
+        // Lưu vào cache để lần sau nạp ngay trong 0s
+        if (rawItems.length > 0) {
+          cacheHelper.set(cacheKey, rawItems, 10);
+        }
         setIsDemoMode(false);
         setError(null);
       })
       .catch((err) => {
         if (!isMounted) return;
         console.error('Lỗi khi tải sản phẩm từ productApi.getAll:', err);
-        setError(
-          err?.response?.data?.message ||
-            err?.message ||
-            'Không thể kết nối máy chủ để tải danh sách sản phẩm.'
-        );
-        setProducts([]);
+        // Nếu đã có cache thì vẫn giữ để người dùng xem bình thường
+        if (!cachedItems || cachedItems.length === 0) {
+          setError(
+            err?.response?.data?.message ||
+              err?.message ||
+              'Không thể kết nối máy chủ để tải danh sách sản phẩm.'
+          );
+          setProducts([]);
+        }
         setIsDemoMode(false);
       })
       .finally(() => {
@@ -653,11 +700,33 @@ export default function CategoryPage({ categoryId }) {
     });
   };
 
-  // Thêm vào giỏ hàng nhanh từ danh mục (Mở trực tiếp Cart Drawer)
+  // Thêm vào giỏ hàng nhanh từ danh mục (Không mở Drawer, thêm đúng 1 sản phẩm)
   const handleAddToCart = async (product) => {
+    if (addingProductId) return;
     try {
-      await addToCart(Number(product.id) * 100 + 1, 1, {
-        openDrawer: true,
+      setAddingProductId(product.id);
+      let vId = product.defaultVariantId || product.default_variant_id || product.variant_id;
+
+      // Nếu chưa có vId sẵn trên card, gọi API chi tiết lấy variant ID đầu tiên
+      if (!vId) {
+        try {
+          const detailRes = await productApi.getById(product.id);
+          const pData = detailRes.data?.data || detailRes.data;
+          if (Array.isArray(pData?.variants) && pData.variants.length > 0) {
+            vId = pData.variants[0].id;
+          }
+        } catch (detailErr) {
+          console.warn('Không thể tải chi tiết variant:', detailErr);
+        }
+      }
+
+      if (!vId) {
+        navigate(`/san-pham/${product.slug || product.id}`);
+        return;
+      }
+
+      await addToCart(vId, 1, {
+        openDrawer: false,
         productInfo: {
           product_id: product.id,
           product_name: product.name,
@@ -668,8 +737,12 @@ export default function CategoryPage({ categoryId }) {
           stock_quantity: 10,
         },
       });
+      showToast(`Đã thêm 1 "${product.name}" vào giỏ hàng`);
     } catch (err) {
       console.warn('Lỗi thêm giỏ hàng:', err);
+      showToast(err.message || 'Lỗi thêm vào giỏ hàng');
+    } finally {
+      setAddingProductId(null);
     }
   };
 
@@ -974,9 +1047,9 @@ export default function CategoryPage({ categoryId }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* CỘT TRÁI: DESKTOP SIDEBAR FILTER */}
           <aside className="hidden lg:block lg:col-span-3">
-            <div className="sticky top-[140px] bg-white rounded-2xl border border-[#E8E2D8] p-5 shadow-sm space-y-6">
-              {/* Header của Sidebar */}
-              <div className="flex items-center justify-between pb-3 border-b border-[#E8E2D8]">
+            <div className="sticky top-[135px] max-h-[calc(100vh-155px)] flex flex-col bg-white rounded-2xl border border-[#E8E2D8] shadow-sm overflow-hidden">
+              {/* Header của Sidebar - Cố định ở đầu hộp bộ lọc */}
+              <div className="flex items-center justify-between p-5 pb-3 border-b border-[#E8E2D8] flex-shrink-0 bg-white">
                 <div className="flex items-center space-x-2">
                   <SlidersHorizontal className="w-4 h-4 text-[#8C6A48]" />
                   <span className="text-xs font-bold uppercase tracking-wider text-neutral-900">
@@ -987,14 +1060,16 @@ export default function CategoryPage({ categoryId }) {
                   <button
                     type="button"
                     onClick={handleResetFilters}
-                    className="text-[11px] text-[#8C6A48] hover:underline font-medium"
+                    className="text-[11px] text-[#8C6A48] hover:underline font-medium transition-colors"
                   >
                     Xóa tất cả
                   </button>
                 )}
               </div>
 
-              {/* PHẦN 1: DANH MỤC NỘI THẤT */}
+              {/* Nội dung bộ lọc - Cho phép cuộn riêng mượt mà */}
+              <div className="p-5 pt-3 overflow-y-auto space-y-6 custom-scrollbar flex-1">
+                {/* PHẦN 1: DANH MỤC NỘI THẤT */}
               <div>
                 <div className="flex items-center justify-between mb-2.5">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
@@ -1237,7 +1312,8 @@ export default function CategoryPage({ categoryId }) {
                 </p>
               </div>
             </div>
-          </aside>
+          </div>
+        </aside>
 
           {/* ======================================================== */}
           {/* CỘT PHẢI: TOOLBAR & LƯỚI SẢN PHẨM (PRODUCT GRID) */}
@@ -1539,11 +1615,20 @@ export default function CategoryPage({ categoryId }) {
 
                           <button
                             type="button"
-                            onClick={() => handleAddToCart(prod)}
-                            className="p-2.5 rounded-full bg-neutral-900 hover:bg-[#8C6A48] text-white transition-all shadow-sm hover:scale-105 active:scale-95"
+                            disabled={addingProductId === prod.id}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleAddToCart(prod);
+                            }}
+                            className="p-2.5 rounded-full bg-neutral-900 hover:bg-[#8C6A48] text-white transition-all shadow-sm hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
                             title="Thêm vào giỏ hàng"
                           >
-                            <ShoppingBag className="w-4 h-4" />
+                            {addingProductId === prod.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-[#E6C280]" />
+                            ) : (
+                              <ShoppingBag className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </div>

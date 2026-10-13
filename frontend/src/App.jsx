@@ -113,6 +113,8 @@ function AnimatedRoutes() {
           <Route index element={<HomePage />} />
           <Route path="gio-hang" element={<CartPage />} />
           <Route path="cart" element={<CartPage />} />
+          <Route path="thanh-toan" element={<CartPage />} />
+          <Route path="checkout" element={<CartPage />} />
 
           <Route path="sofa-ban-tra" element={<CategoryPage categoryId="02" />} />
           <Route path="phong-khach" element={<CategoryPage categoryId="02" />} />

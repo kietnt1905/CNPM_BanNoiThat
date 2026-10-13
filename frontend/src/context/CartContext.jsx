@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import cartApi from '../api/cartApi';
 
 const CartContext = createContext(null);
@@ -84,6 +84,22 @@ export function CartProvider({ children }) {
   const [cart, setCart] = useState(DEFAULT_CART);
   const [loading, setLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  // Tự động đồng bộ các ID sản phẩm được chọn khi giỏ hàng thay đổi
+  useEffect(() => {
+    const availableItems = (cart?.items || []).filter((item) => !item.is_out_of_stock);
+    const availableIds = availableItems.map((item) => item.variant_id);
+
+    setSelectedIds((prev) => {
+      if (prev.length === 0) {
+        return availableIds;
+      }
+      // Giữ lại các ID cũ vẫn còn hợp lệ trong giỏ
+      const stillValid = prev.filter((id) => availableIds.includes(id));
+      return stillValid.length > 0 ? stillValid : availableIds;
+    });
+  }, [cart?.items]);
 
   // Helper đọc guest cart từ localStorage (đã lọc bỏ sản phẩm test)
   const getGuestCartFromStorage = useCallback(() => {
@@ -204,7 +220,7 @@ export function CartProvider({ children }) {
    * @param {number} quantity
    * @param {Object} options { openDrawer: true, productInfo: { ... } }
    */
-  const addToCart = async (variantId, quantity = 1, options = { openDrawer: true }) => {
+  const addToCart = async (variantId, quantity = 1, options = { openDrawer: false }) => {
     setLoading(true);
     try {
       const vId = Number(variantId);
@@ -212,28 +228,14 @@ export function CartProvider({ children }) {
       const pInfo = options.productInfo || {};
 
       if (isAuthenticated()) {
-        try {
-          const res = await cartApi.addItem(vId, qty);
-          if (res.data?.status && res.data.data) {
-            setCart(res.data.data);
-          }
-        } catch (apiErr) {
-          console.warn('API addItem error, fallback local:', apiErr.message);
-          // Fallback guest cart nếu backend có sự cố
-          const currentGuestItems = getGuestCartFromStorage();
-          const existingIndex = currentGuestItems.findIndex((item) => Number(item.variant_id) === vId);
-          let nextGuestItems;
-          if (existingIndex > -1) {
-            nextGuestItems = [...currentGuestItems];
-            nextGuestItems[existingIndex].quantity += qty;
-          } else {
-            nextGuestItems = [...currentGuestItems, { variant_id: vId, quantity: qty, ...pInfo }];
-          }
-          saveGuestCartToStorage(nextGuestItems);
-          setCart(buildLocalCartPreview(nextGuestItems));
+        const res = await cartApi.addItem(vId, qty);
+        if (res.data?.status && res.data.data) {
+          setCart(res.data.data);
+        } else {
+          await refreshCart();
         }
       } else {
-        // Cập nhật LocalStorage
+        // Cập nhật LocalStorage cho khách vãng lai
         const currentGuestItems = getGuestCartFromStorage();
         const existingIndex = currentGuestItems.findIndex((item) => Number(item.variant_id) === vId);
 
@@ -265,10 +267,6 @@ export function CartProvider({ children }) {
         } catch {
           setCart(buildLocalCartPreview(nextGuestItems));
         }
-      }
-
-      if (options.openDrawer !== false) {
-        setIsCartOpen(true);
       }
 
       return { success: true };
@@ -404,6 +402,55 @@ export function CartProvider({ children }) {
     }
   };
 
+  const toggleSelectItem = (variantId) => {
+    setSelectedIds((prev) =>
+      prev.includes(variantId) ? prev.filter((id) => id !== variantId) : [...prev, variantId]
+    );
+  };
+
+  const selectAllItems = () => {
+    const availableIds = (cart?.items || [])
+      .filter((item) => !item.is_out_of_stock)
+      .map((item) => item.variant_id);
+    setSelectedIds(availableIds);
+  };
+
+  const deselectAllItems = () => {
+    setSelectedIds([]);
+  };
+
+  const selectedItems = useMemo(() => {
+    return (cart?.items || []).filter((item) => selectedIds.includes(item.variant_id));
+  }, [cart?.items, selectedIds]);
+
+  const selectedSummary = useMemo(() => {
+    const total_items = selectedItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+    const total_amount = selectedItems.reduce(
+      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
+      0
+    );
+    return {
+      total_items,
+      total_unique_items: selectedItems.length,
+      total_amount,
+      total_amount_display: `${new Intl.NumberFormat('vi-VN').format(total_amount)}₫`,
+    };
+  }, [selectedItems]);
+
+  /**
+   * Xóa danh sách các biến thể đã đặt hàng thành công khỏi giỏ
+   * @param {number[]} purchasedVariantIds
+   */
+  const removePurchasedItems = async (purchasedVariantIds = []) => {
+    const ids = (purchasedVariantIds || []).map(Number);
+    if (!isAuthenticated()) {
+      const currentGuest = getGuestCartFromStorage();
+      const remainingGuest = currentGuest.filter((item) => !ids.includes(Number(item.variant_id)));
+      saveGuestCartToStorage(remainingGuest);
+    }
+    await refreshCart();
+  };
+
   const value = {
     cart,
     summary: cart?.summary || DEFAULT_SUMMARY,
@@ -414,8 +461,16 @@ export function CartProvider({ children }) {
     addToCart,
     updateQuantity,
     removeFromCart,
+    removePurchasedItems,
     clearAll,
     refreshCart,
+    selectedIds,
+    setSelectedIds,
+    toggleSelectItem,
+    selectAllItems,
+    deselectAllItems,
+    selectedItems,
+    selectedSummary,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

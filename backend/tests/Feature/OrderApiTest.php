@@ -504,4 +504,61 @@ class OrderApiTest extends TestCase
         $this->assertCount(1, $data);
         $this->assertEquals('ORD-STATUS-PENDING', $data[0]['order_code']);
     }
+
+    /**
+     * Test 13: Đặt hàng một số sản phẩm đã chọn, chỉ xóa các món đã mua, giữ lại các món còn lại trong giỏ hàng
+     */
+    public function test_create_order_for_selected_items_preserves_remaining_cart_items(): void
+    {
+        $variant2 = ProductVariant::create([
+            'product_id' => $this->product->id,
+            'sku' => 'VAR-TEST-2-' . strtoupper(uniqid()),
+            'color' => 'Sồi Tự Nhiên',
+            'material' => 'Gỗ sồi Nga',
+            'price' => 10000000,
+            'stock_quantity' => 10,
+            'is_active' => true,
+        ]);
+
+        $cart = Cart::firstOrCreate(['user_id' => $this->user->id]);
+        CartItem::create([
+            'cart_id' => $cart->id,
+            'variant_id' => $this->variant->id,
+            'quantity' => 1,
+        ]);
+        CartItem::create([
+            'cart_id' => $cart->id,
+            'variant_id' => $variant2->id,
+            'quantity' => 2,
+        ]);
+
+        // Khách hàng chỉ chọn mua variant 1
+        $response = $this->actingAs($this->user, 'sanctum')->postJson('/api/orders', [
+            'recipient_name' => 'Nguyễn Tuấn Kiệt',
+            'recipient_phone' => '0909999888',
+            'shipping_address' => 'Tòa Landmark 81, Vinhomes Central Park, TP.HCM',
+            'payment_method' => 'cod',
+            'items' => [
+                [
+                    'variant_id' => $this->variant->id,
+                    'quantity' => 1,
+                ]
+            ],
+        ]);
+
+        $response->assertStatus(201);
+
+        // Món đã mua (variant 1) bị xóa khỏi giỏ
+        $this->assertDatabaseMissing('cart_items', [
+            'cart_id' => $cart->id,
+            'variant_id' => $this->variant->id,
+        ]);
+
+        // Món CHƯA mua (variant 2) VẪN CÒN trong giỏ hàng
+        $this->assertDatabaseHas('cart_items', [
+            'cart_id' => $cart->id,
+            'variant_id' => $variant2->id,
+            'quantity' => 2,
+        ]);
+    }
 }

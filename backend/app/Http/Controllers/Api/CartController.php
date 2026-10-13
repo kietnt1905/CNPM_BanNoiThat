@@ -378,11 +378,21 @@ class CartController extends Controller
             $totalAmount = 0;
             $totalQuantity = 0;
 
+            // Tối ưu hóa: Lấy toàn bộ biến thể trong 1 câu query duy nhất (tránh N+1 query làm chậm hệ thống)
+            $variantIds = array_unique(array_filter(array_map(function ($item) {
+                return (int) ($item['variant_id'] ?? 0);
+            }, $rawItems)));
+
+            $variants = ProductVariant::with(['product.images', 'product.category'])
+                ->whereIn('id', $variantIds)
+                ->get()
+                ->keyBy('id');
+
             foreach ($rawItems as $rawItem) {
                 $variantId = (int) $rawItem['variant_id'];
                 $quantity = (int) $rawItem['quantity'];
 
-                $variant = ProductVariant::with(['product.images', 'product.category'])->find($variantId);
+                $variant = $variants->get($variantId);
 
                 if (!$variant) {
                     continue;

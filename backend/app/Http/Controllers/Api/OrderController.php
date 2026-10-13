@@ -250,10 +250,15 @@ class OrderController extends Controller
                 'transaction_code' => 'TXN' . date('YmdHis') . strtoupper(Str::random(4)),
             ]);
 
-            // 7. Làm trống giỏ hàng của khách
+            // 7. Xóa các món đã đặt mua khỏi giỏ hàng của khách
             $cart = Cart::where('user_id', $user->id)->first();
             if ($cart) {
-                $cart->items()->delete();
+                if ($request->has('items') && is_array($request->items) && count($request->items) > 0) {
+                    $purchasedVariantIds = collect($checkoutItems)->pluck('variant_id')->all();
+                    $cart->items()->whereIn('variant_id', $purchasedVariantIds)->delete();
+                } else {
+                    $cart->items()->delete();
+                }
             }
 
             DB::commit();

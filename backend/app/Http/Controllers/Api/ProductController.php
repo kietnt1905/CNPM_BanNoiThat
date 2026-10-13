@@ -412,8 +412,8 @@ class ProductController extends Controller
      */
     private function formatProductSummary($product)
     {
-        $firstVariant = $product->variants->first();
-        $minPrice = $product->variants->min('price') ?? 0;
+        $firstVariant = $product->variants->where('is_active', true)->first() ?? $product->variants->first();
+        $minPrice = $product->variants->where('is_active', true)->min('price') ?? ($product->variants->min('price') ?? 0);
         $firstImage = $product->images->first()?->image_url;
         $secondaryImage = $product->images->skip(1)->first()?->image_url;
         $totalStock = $product->variants->sum('stock_quantity');
@@ -482,6 +482,10 @@ class ProductController extends Controller
             'inStock' => $totalStock > 0,
             'in_stock' => $totalStock > 0,
             'variants_count' => $product->variants->count(),
+            'default_variant_id' => $firstVariant?->id,
+            'variant_id' => $firstVariant?->id,
+            'first_variant_id' => $firstVariant?->id,
+            'stock_quantity' => $firstVariant?->stock_quantity ?? $totalStock,
             'description' => $product->description,
             'material' => $material,
             'materialType' => $materialType,

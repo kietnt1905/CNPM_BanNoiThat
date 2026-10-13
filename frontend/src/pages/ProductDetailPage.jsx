@@ -27,6 +27,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import productApi from '../api/productApi';
+import cacheHelper from '../utils/cache';
 import { useCart } from '../context/CartContext';
 import { PRODUCTS_CATALOG, COLLECTIONS_META } from './CategoryPage';
 
@@ -280,7 +281,7 @@ export default function ProductDetailPage({ id: propId }) {
   const categorySlug = params.categorySlug;
   const splat = params['*'];
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, setSelectedIds } = useCart();
 
   // Nhận diện product ID hoặc slug từ prop hoặc params
   const rawTarget = propId || idOrSlug || routeId || categorySlug || splat;
@@ -291,13 +292,16 @@ export default function ProductDetailPage({ id: propId }) {
     targetId = rawTarget ? String(rawTarget).trim() : '';
   }
 
-  const [apiProduct, setApiProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const detailCacheKey = `product_detail_${targetId}`;
+  const initialDetailCached = cacheHelper.get(detailCacheKey);
+
+  const [apiProduct, setApiProduct] = useState(() => initialDetailCached || null);
+  const [loading, setLoading] = useState(() => !initialDetailCached);
   const [fetchError, setFetchError] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [dynamicRelated, setDynamicRelated] = useState([]);
 
-  // Cuộn lên đầu trang và tải chi tiết sản phẩm từ backend API
+  // Cuộn lên đầu trang và tải chi tiết sản phẩm từ backend API (Stale-While-Revalidate)
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     let isMounted = true;
@@ -308,12 +312,20 @@ export default function ProductDetailPage({ id: propId }) {
     }
 
     const fetchDetail = async () => {
-      setLoading(true);
+      const cached = cacheHelper.get(detailCacheKey);
+      if (cached) {
+        setApiProduct(cached);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       setFetchError(null);
+
       try {
         const res = await productApi.getByIdOrSlug(targetId);
         if (isMounted && res.data?.status && res.data.data) {
           setApiProduct(res.data.data);
+          cacheHelper.set(detailCacheKey, res.data.data, 10);
           setFetchError(null);
           setLoading(false);
           return;
@@ -323,8 +335,10 @@ export default function ProductDetailPage({ id: propId }) {
       }
 
       if (isMounted) {
-        setFetchError('Không tìm thấy thông tin sản phẩm trên máy chủ.');
-        setApiProduct(null);
+        if (!cached) {
+          setFetchError('Không tìm thấy thông tin sản phẩm trên máy chủ.');
+          setApiProduct(null);
+        }
         setLoading(false);
       }
     };
@@ -557,7 +571,7 @@ export default function ProductDetailPage({ id: propId }) {
     try {
       setIsAdding(true);
       await addToCart(selectedVariant.id, quantity, {
-        openDrawer: true,
+        openDrawer: false,
         productInfo: {
           product_id: product.id,
           product_name: product.name,
@@ -572,6 +586,7 @@ export default function ProductDetailPage({ id: propId }) {
           stock_quantity: selectedVariant.stock_quantity,
         },
       });
+      showToast(`Đã thêm ${quantity} sản phẩm vào giỏ hàng thành công!`);
     } catch (err) {
       showToast(err.message || 'Lỗi khi thêm vào giỏ hàng');
     } finally {
@@ -607,7 +622,17 @@ export default function ProductDetailPage({ id: propId }) {
           stock_quantity: selectedVariant.stock_quantity,
         },
       });
-      navigate('/gio-hang');
+      // Chọn riêng sản phẩm này để thanh toán ngay
+      if (setSelectedIds) {
+        setSelectedIds([Number(selectedVariant.id)]);
+      }
+      // Chuyển thẳng đến bước thanh toán (không qua trang giỏ hàng)
+      navigate('/thanh-toan', {
+        state: {
+          buyNowVariantId: Number(selectedVariant.id),
+          fromBuyNow: true,
+        },
+      });
     } catch (err) {
       showToast(err.message || 'Lỗi khi chuẩn bị đơn hàng');
     } finally {
