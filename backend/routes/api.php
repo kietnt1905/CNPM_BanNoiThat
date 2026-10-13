@@ -17,6 +17,7 @@ Route::get('/categories/{idOrSlug}', [CategoryController::class, 'show']);
 
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/featured', [ProductController::class, 'featured']);
+Route::get('/products/{idOrSlug}/related', [ProductController::class, 'related']);
 Route::get('/products/{idOrSlug}', [ProductController::class, 'show']);
 
 // Public routes - Cart Preview (Dành cho khách chưa đăng nhập tính toán giỏ hàng)
