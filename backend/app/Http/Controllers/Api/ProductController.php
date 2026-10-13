@@ -128,8 +128,13 @@ class ProductController extends Controller
 
     /**
      * Lấy chi tiết sản phẩm theo ID hoặc Slug
+     * Trả về:
+     * - Thông tin chi tiết bàn/ghế
+     * - Thông số kỹ thuật (Kích thước Dài x Rộng x Cao, chất liệu, màu sắc, bảo hành, tồn kho)
+     * - Danh sách ảnh phụ (product_images)
+     * - 4–6 sản phẩm liên quan (cùng category_id, trừ sản phẩm đang xem)
      */
-    public function show($idOrSlug)
+    public function show(Request $request, $idOrSlug)
     {
         try {
             $product = Product::where('is_active', true)
@@ -137,9 +142,15 @@ class ProductController extends Controller
                     $q->where('id', $idOrSlug)
                       ->orWhere('slug', $idOrSlug);
                 })
-                ->with(['category', 'images', 'variants' => function ($q) {
-                    $q->where('is_active', true);
-                }])
+                ->with([
+                    'category',
+                    'images' => function ($q) {
+                        $q->orderBy('sort_order', 'asc');
+                    },
+                    'variants' => function ($q) {
+                        $q->where('is_active', true);
+                    }
+                ])
                 ->first();
 
             if (!$product) {
@@ -149,53 +160,134 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            $minPrice = $product->variants->min('price') ?? 0;
-            $maxPrice = $product->variants->max('price') ?? 0;
-            $totalStock = $product->variants->sum('stock_quantity');
+            // 1. Tính toán giá và tồn kho tổng quan
+            $minPrice = (float) ($product->variants->min('price') ?? 0);
+            $maxPrice = (float) ($product->variants->max('price') ?? 0);
+            $totalStock = (int) $product->variants->sum('stock_quantity');
+            $firstVariant = $product->variants->first();
 
+            // 2. Danh sách ảnh (product_images)
+            $allImages = $product->images->map(function ($img, $index) {
+                return [
+                    'id' => $img->id,
+                    'image_url' => $img->image_url,
+                    'url' => $img->image_url,
+                    'alt_text' => $img->alt_text,
+                    'alt' => $img->alt_text,
+                    'sort_order' => (int) $img->sort_order,
+                    'is_primary' => $index === 0,
+                ];
+            });
+
+            $firstImageItem = $allImages->first();
+            $primaryImage = $firstImageItem ? $firstImageItem['image_url'] : '/images/placeholder.jpg';
+            // Danh sách ảnh phụ (loại bỏ ảnh đại diện đầu tiên)
+            $secondaryImages = $allImages->slice(1)->values();
+
+            // 3. Chuẩn hóa biến thể (variants) với chi tiết kích thước D x R x C
+            $variants = $product->variants->map(function ($v) {
+                $hasDimensions = $v->length_cm || $v->width_cm || $v->height_cm;
+                $dimensionsFormatted = $hasDimensions
+                    ? "Dài {$v->length_cm} cm × Rộng {$v->width_cm} cm × Cao {$v->height_cm} cm"
+                    : 'Đang cập nhật';
+                $dimensionsCompact = $hasDimensions
+                    ? "{$v->length_cm}x{$v->width_cm}x{$v->height_cm} cm"
+                    : null;
+
+                return [
+                    'id' => $v->id,
+                    'sku' => $v->sku,
+                    'color' => $v->color,
+                    'material' => $v->material,
+                    'price' => (float) $v->price,
+                    'price_display' => number_format($v->price, 0, ',', '.') . '₫',
+                    'stock_quantity' => (int) $v->stock_quantity,
+                    'in_stock' => $v->stock_quantity > 0,
+                    'length_cm' => $v->length_cm ? (float) $v->length_cm : null,
+                    'width_cm' => $v->width_cm ? (float) $v->width_cm : null,
+                    'height_cm' => $v->height_cm ? (float) $v->height_cm : null,
+                    'weight_kg' => $v->weight_kg ? (float) $v->weight_kg : null,
+                    'dimensions' => $dimensionsCompact,
+                    'dimensions_formatted' => $dimensionsFormatted,
+                    'is_active' => (bool) $v->is_active,
+                ];
+            });
+
+            // 4. Thông số kỹ thuật chi tiết (Specifications)
+            $specDimensions = ($firstVariant && ($firstVariant->length_cm || $firstVariant->width_cm || $firstVariant->height_cm))
+                ? "Dài {$firstVariant->length_cm} cm × Rộng {$firstVariant->width_cm} cm × Cao {$firstVariant->height_cm} cm"
+                : 'Đang cập nhật';
+
+            $specifications = [
+                'dimensions' => $specDimensions,
+                'dimensions_detail' => [
+                    'length_cm' => $firstVariant?->length_cm ? (float) $firstVariant->length_cm : null,
+                    'width_cm' => $firstVariant?->width_cm ? (float) $firstVariant->width_cm : null,
+                    'height_cm' => $firstVariant?->height_cm ? (float) $firstVariant->height_cm : null,
+                    'weight_kg' => $firstVariant?->weight_kg ? (float) $firstVariant->weight_kg : null,
+                    'formatted' => $specDimensions,
+                ],
+                'material' => $firstVariant?->material ?? 'Vật liệu cao cấp',
+                'color' => $firstVariant?->color ?? 'Tiêu chuẩn',
+                'warranty' => $product->warranty_months ? "{$product->warranty_months} tháng" : '12 tháng',
+                'warranty_months' => (int) $product->warranty_months,
+                'stock_quantity' => $totalStock,
+                'in_stock' => $totalStock > 0,
+                'brand' => $product->brand ?? 'TK House',
+                'sku' => $firstVariant?->sku ?? 'N/A',
+                'available_colors' => $product->variants->pluck('color')->unique()->filter()->values(),
+                'available_materials' => $product->variants->pluck('material')->unique()->filter()->values(),
+            ];
+
+            // 5. Truy vấn 4–6 sản phẩm liên quan (cùng category_id, trừ sản phẩm đang xem)
+            $relatedLimit = (int) $request->query('related_limit', 6);
+            if ($relatedLimit < 4) {
+                $relatedLimit = 4;
+            } elseif ($relatedLimit > 10) {
+                $relatedLimit = 6;
+            }
+
+            $relatedProducts = $this->getRelatedProducts($product, $relatedLimit);
+
+            // 6. Dữ liệu chi tiết trả về
             $data = [
                 'id' => $product->id,
                 'name' => $product->name,
                 'slug' => $product->slug,
                 'brand' => $product->brand,
                 'description' => $product->description,
-                'warranty_months' => $product->warranty_months,
+                'warranty_months' => (int) $product->warranty_months,
+                'category_id' => $product->category_id,
                 'category' => $product->category ? [
                     'id' => $product->category->id,
                     'name' => $product->category->name,
                     'slug' => $product->category->slug,
+                    'description' => $product->category->description,
                 ] : null,
                 'min_price' => $minPrice,
                 'max_price' => $maxPrice,
+                'price' => $minPrice,
                 'price_display' => number_format($minPrice, 0, ',', '.') . '₫',
                 'in_stock' => $totalStock > 0,
                 'total_stock' => $totalStock,
-                'images' => $product->images->map(function ($img) {
-                    return [
-                        'id' => $img->id,
-                        'url' => $img->image_url,
-                        'alt' => $img->alt_text,
-                    ];
-                }),
-                'variants' => $product->variants->map(function ($v) {
-                    return [
-                        'id' => $v->id,
-                        'sku' => $v->sku,
-                        'color' => $v->color,
-                        'material' => $v->material,
-                        'price' => $v->price,
-                        'price_display' => number_format($v->price, 0, ',', '.') . '₫',
-                        'stock_quantity' => $v->stock_quantity,
-                        'dimensions' => trim("{$v->length_cm}x{$v->width_cm}x{$v->height_cm} cm", 'x '),
-                        'weight_kg' => $v->weight_kg,
-                    ];
-                }),
+                'stock_quantity' => $totalStock,
+                'specifications' => $specifications,
+                'specs' => $specifications,
+                'primary_image' => $primaryImage,
+                'images' => $allImages,
+                'product_images' => $allImages,
+                'secondary_images' => $secondaryImages,
+                'variants' => $variants,
+                'related_products' => $relatedProducts,
                 'created_at' => $product->created_at,
+                'updated_at' => $product->updated_at,
             ];
 
             return response()->json([
                 'status' => true,
+                'message' => 'Lấy thông tin chi tiết sản phẩm thành công',
                 'data' => $data,
+                'related_products' => $relatedProducts,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -203,6 +295,89 @@ class ProductController extends Controller
                 'message' => 'Lỗi: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * API GET /api/products/{idOrSlug}/related
+     * Lấy 4–6 sản phẩm liên quan của một sản phẩm (cùng category_id, trừ sản phẩm đang xem)
+     */
+    public function related(Request $request, $idOrSlug)
+    {
+        try {
+            $product = Product::where('is_active', true)
+                ->where(function ($q) use ($idOrSlug) {
+                    $q->where('id', $idOrSlug)
+                      ->orWhere('slug', $idOrSlug);
+                })
+                ->first();
+
+            if (!$product) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không tìm thấy sản phẩm',
+                ], 404);
+            }
+
+            $limit = (int) $request->query('limit', 6);
+            if ($limit < 4) {
+                $limit = 4;
+            } elseif ($limit > 10) {
+                $limit = 6;
+            }
+
+            $relatedProducts = $this->getRelatedProducts($product, $limit);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Lấy danh sách sản phẩm liên quan thành công',
+                'data' => $relatedProducts,
+                'total' => $relatedProducts->count(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Lỗi: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Helper truy vấn 4-6 sản phẩm liên quan (cùng category_id, trừ sản phẩm đang xem)
+     */
+    public function getRelatedProducts($product, $limit = 6)
+    {
+        // 1. Truy vấn sản phẩm cùng category_id, loại trừ sản phẩm hiện tại
+        $related = Product::where('is_active', true)
+            ->where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->with(['category', 'images', 'variants' => function ($q) {
+                $q->where('is_active', true);
+            }])
+            ->latest()
+            ->take($limit)
+            ->get();
+
+        // 2. Nếu cùng category_id có ít hơn 4 sản phẩm, bổ sung thêm các sản phẩm khác
+        // để đảm bảo luôn trả về ít nhất 4–6 sản phẩm liên quan cho frontend
+        if ($related->count() < 4) {
+            $needed = 4 - $related->count();
+            $excludeIds = $related->pluck('id')->push($product->id)->all();
+
+            $fallback = Product::where('is_active', true)
+                ->whereNotIn('id', $excludeIds)
+                ->with(['category', 'images', 'variants' => function ($q) {
+                    $q->where('is_active', true);
+                }])
+                ->latest()
+                ->take($needed)
+                ->get();
+
+            $related = $related->concat($fallback);
+        }
+
+        return $related->map(function ($item) {
+            return $this->formatProductSummary($item);
+        });
     }
 
     /**

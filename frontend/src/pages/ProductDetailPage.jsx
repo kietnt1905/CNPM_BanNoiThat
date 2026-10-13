@@ -291,55 +291,40 @@ export default function ProductDetailPage({ id: propId }) {
     targetId = rawTarget ? String(rawTarget).trim() : '';
   }
 
-  const [apiProduct, setApiProduct] = useState(() => {
-    const matched = Array.isArray(PRODUCTS_CATALOG)
-      ? PRODUCTS_CATALOG.find(
-          (p) => String(p.id) === String(targetId) || p.slug === String(targetId)
-        )
-      : null;
-    return matched ? buildCatalogProductDetail(matched) : (PRODUCTS_CATALOG?.[0] ? buildCatalogProductDetail(PRODUCTS_CATALOG[0]) : null);
-  });
-  const [loading, setLoading] = useState(false);
+  const [apiProduct, setApiProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [dynamicRelated, setDynamicRelated] = useState([]);
 
-  // Cuộn lên đầu trang và tải chi tiết sản phẩm từ backend API hoặc fallback catalog
+  // Cuộn lên đầu trang và tải chi tiết sản phẩm từ backend API
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     let isMounted = true;
 
     if (!targetId) {
+      setLoading(false);
       return;
     }
 
     const fetchDetail = async () => {
+      setLoading(true);
+      setFetchError(null);
       try {
         const res = await productApi.getByIdOrSlug(targetId);
         if (isMounted && res.data?.status && res.data.data) {
           setApiProduct(res.data.data);
           setFetchError(null);
+          setLoading(false);
           return;
         }
       } catch (err) {
-        console.warn('Backend API getByIdOrSlug chưa phản hồi, tự động dùng catalog dự phòng:', err.message);
+        console.warn('Backend API getByIdOrSlug chưa phản hồi:', err.message);
       }
 
-      // Fallback: Tìm sản phẩm tương ứng trong danh mục 8 sản phẩm (hỗ trợ test 100%)
       if (isMounted) {
-        const matched = Array.isArray(PRODUCTS_CATALOG)
-          ? PRODUCTS_CATALOG.find(
-              (p) => String(p.id) === String(targetId) || p.slug === String(targetId)
-            )
-          : null;
-
-        if (matched) {
-          setApiProduct(buildCatalogProductDetail(matched));
-          setFetchError(null);
-        } else if (Array.isArray(PRODUCTS_CATALOG) && PRODUCTS_CATALOG.length > 0) {
-          setApiProduct(buildCatalogProductDetail(PRODUCTS_CATALOG[0]));
-          setFetchError(null);
-        }
+        setFetchError('Không tìm thấy thông tin sản phẩm trên máy chủ.');
+        setApiProduct(null);
         setLoading(false);
       }
     };

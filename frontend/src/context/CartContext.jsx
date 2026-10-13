@@ -18,15 +18,28 @@ const DEFAULT_CART = {
   summary: DEFAULT_SUMMARY,
 };
 
+// Tự động làm sạch sản phẩm test cũ khỏi localStorage khi khởi động
+try {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(GUEST_CART_KEY);
+  }
+} catch {
+  // ignore
+}
+
 // Helper tính toán preview cục bộ khi backend offline hoặc variant chưa có trong database
 const buildLocalCartPreview = (guestItems) => {
   let totalAmount = 0;
   let totalItems = 0;
 
-  const items = guestItems.map((item, idx) => {
+  const validItems = (guestItems || []).filter(
+    (item) => item && item.product_name !== 'Sofa Băng Da Bò Ý Florence' && item.product_id !== 101
+  );
+
+  const items = validItems.map((item, idx) => {
     const qty = Math.max(1, Number(item.quantity) || 1);
     totalItems += qty;
-    const price = Number(item.price || 28500000);
+    const price = Number(item.price || 0);
     const itemTotal = price * qty;
     totalAmount += itemTotal;
 
@@ -36,20 +49,20 @@ const buildLocalCartPreview = (guestItems) => {
     return {
       id: item.id || `guest_${item.variant_id || idx}`,
       variant_id: item.variant_id,
-      product_id: item.product_id || 101,
-      product_name: item.product_name || 'Sofa Băng Da Bò Ý Florence',
-      product_slug: item.product_slug || 'sofa-bang-da-bo-y-florence',
+      product_id: item.product_id,
+      product_name: item.product_name || 'Sản phẩm nội thất',
+      product_slug: item.product_slug || '',
       variant_name: variantName,
       sku: item.sku || `TK-VAR-${item.variant_id}`,
-      color: item.color || 'Nâu Cognac',
-      material: item.material || 'Da Bò Ý',
-      dimensions: item.dimensions || '2m2',
+      color: item.color || '',
+      material: item.material || '',
+      dimensions: item.dimensions || '',
       price: price,
       price_display: `${new Intl.NumberFormat('vi-VN').format(price)}₫`,
       quantity: qty,
       total_price: itemTotal,
       total_price_display: `${new Intl.NumberFormat('vi-VN').format(itemTotal)}₫`,
-      thumbnail: item.thumbnail || '/images/products/sofa-3-cho-victoria.jpg',
+      thumbnail: item.thumbnail || '/images/placeholder.jpg',
       stock_quantity: item.stock_quantity ?? 10,
       in_stock: true,
     };
@@ -72,12 +85,17 @@ export function CartProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Helper đọc guest cart từ localStorage
+  // Helper đọc guest cart từ localStorage (đã lọc bỏ sản phẩm test)
   const getGuestCartFromStorage = useCallback(() => {
     try {
       const raw = localStorage.getItem(GUEST_CART_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
+      const validItems = Array.isArray(parsed)
+        ? parsed.filter(
+            (item) => item && item.product_name !== 'Sofa Băng Da Bò Ý Florence' && item.product_id !== 101
+          )
+        : [];
+      return validItems;
     } catch {
       return [];
     }

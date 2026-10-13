@@ -387,30 +387,9 @@ export const COLLECTIONS_META = {
 };
 
 // ==========================================
-// 2. DANH SÁCH SẢN PHẨM DẠNG TĨNH ĐỂ TEST UI/UX (1 SẢN PHẨM DUY NHẤT)
+// 2. DANH SÁCH SẢN PHẨM (DÙNG DỮ LIỆU TỪ BACKEND API)
 // ==========================================
-export const PRODUCTS_CATALOG = [
-  {
-    id: 101,
-    name: 'Sofa Băng Da Bò Ý Florence',
-    slug: 'sofa-bang-da-bo-y-florence',
-    categoryName: 'Sofa Phòng Khách',
-    categorySlug: 'sofa-da',
-    group: 'sofa',
-    collection: 'valencia',
-    price: 28500000,
-    priceDisplay: '28.500.000₫',
-    oldPriceDisplay: '33.000.000₫',
-    image: '/images/products/sofa-3-cho-victoria.jpg',
-    secondaryImage: '/images/materials/mat-leather.jpg',
-    material: 'Da Bò Ý Cao Cấp & Gỗ Sồi Bắc Mỹ',
-    materialType: 'leather',
-    dimensions: 'D220 × R95 × C75 cm',
-    rating: 5.0,
-    tag: 'Độc Bản Masterpiece',
-    inStock: true,
-  },
-];
+export const PRODUCTS_CATALOG = [];
 
 // Khoảng giá lọc
 export const PRICE_RANGES = [
@@ -473,11 +452,11 @@ export default function CategoryPage({ categoryId }) {
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
 
-  // State lưu danh sách sản phẩm lấy từ Backend API (mặc định nạp PRODUCTS_CATALOG để luôn có sản phẩm xem demo)
-  const [products, setProducts] = useState(PRODUCTS_CATALOG);
+  // State lưu danh sách sản phẩm lấy từ Backend API
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isDemoMode, setIsDemoMode] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
   // 1. Gọi API lấy danh mục thật từ Backend
@@ -571,13 +550,78 @@ export default function CategoryPage({ categoryId }) {
     return groups.length > 0 ? groups : CATEGORY_GROUPS;
   }, [categories]);
 
-  // 3. Sử dụng 1 sản phẩm tĩnh duy nhất để phục vụ test UI/UX theo yêu cầu
+  // 3. Gọi API lấy danh sách sản phẩm thật từ Backend với các bộ lọc
   useEffect(() => {
-    setProducts(PRODUCTS_CATALOG);
-    setIsDemoMode(true);
-    setLoading(false);
+    let isMounted = true;
+    setLoading(true);
     setError(null);
-  }, []);
+
+    const params = {
+      per_page: 100,
+    };
+
+    // Lọc theo Category
+    if (activeCategory && activeCategory !== 'all') {
+      params.category = activeCategory;
+    }
+
+    // Lọc theo Collection
+    if (activeCollection) {
+      params.collection = activeCollection;
+    }
+
+    // Lọc theo Khoảng giá
+    if (selectedPriceRange !== 'all') {
+      const range = PRICE_RANGES.find((r) => r.id === selectedPriceRange);
+      if (range) {
+        if (range.min > 0) params.min_price = range.min;
+        if (range.max < Infinity) params.max_price = range.max;
+      }
+    }
+
+    // Sắp xếp
+    if (sortOption) {
+      const sortMap = {
+        featured: 'newest',
+        'price-asc': 'price_asc',
+        'price-desc': 'price_desc',
+        'name-asc': 'name_asc',
+        rating: 'newest',
+      };
+      params.sort = sortMap[sortOption] || 'newest';
+    }
+
+    productApi
+      .getAll(params)
+      .then((res) => {
+        if (!isMounted) return;
+        const rawItems = res.data?.data || res.data || [];
+        const normalizedItems = Array.isArray(rawItems)
+          ? rawItems.map(normalizeProduct).filter(Boolean)
+          : [];
+        setProducts(normalizedItems);
+        setIsDemoMode(false);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('Lỗi khi tải sản phẩm từ productApi.getAll:', err);
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            'Không thể kết nối máy chủ để tải danh sách sản phẩm.'
+        );
+        setProducts([]);
+        setIsDemoMode(false);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeCategory, activeCollection, selectedPriceRange, sortOption, retryCount]);
 
 
   // Tự động mở danh mục nhỏ bộ sưu tập khi có activeCollection
@@ -1321,7 +1365,29 @@ export default function CategoryPage({ categoryId }) {
 
 
             {/* 2. LƯỚI CARD SẢN PHẨM (PRODUCT GRID) */}
-            {loading ? (
+            {error ? (
+              <div className="bg-white rounded-2xl border border-rose-200/80 p-12 text-center space-y-4 shadow-sm">
+                <div className="w-14 h-14 mx-auto rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-500">
+                  <RotateCcw className="w-6 h-6" />
+                </div>
+                <h3 className="font-serif text-xl font-normal text-neutral-900">
+                  Không thể tải sản phẩm từ hệ thống
+                </h3>
+                <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto font-light leading-relaxed">
+                  {error}
+                </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setRetryCount((c) => c + 1)}
+                    className="px-6 py-2.5 rounded-full bg-[#8C6A48] hover:bg-[#734b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center space-x-2 shadow-sm cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Tải lại dữ liệu</span>
+                  </button>
+                </div>
+              </div>
+            ) : loading ? (
               <div className="space-y-6">
                 <div className="flex items-center justify-center space-x-2.5 text-xs text-[#8C6A48] font-medium py-2">
                   <Loader2 className="w-4 h-4 animate-spin text-[#8C6A48]" />

@@ -6,6 +6,10 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CartController;
+<<<<<<< HEAD
+=======
+use App\Http\Controllers\Api\OrderController;
+>>>>>>> origin/develop
 
 // Public routes - Auth
 Route::post('/register', [AuthController::class, 'register']);
@@ -17,6 +21,7 @@ Route::get('/categories/{idOrSlug}', [CategoryController::class, 'show']);
 
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/featured', [ProductController::class, 'featured']);
+Route::get('/products/{idOrSlug}/related', [ProductController::class, 'related']);
 Route::get('/products/{idOrSlug}', [ProductController::class, 'show']);
 
 // Public routes - Cart Preview (Dành cho khách chưa đăng nhập tính toán giỏ hàng)
@@ -36,6 +41,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/clear', [CartController::class, 'clearCart']);
         Route::post('/sync', [CartController::class, 'syncCart']);
     });
+<<<<<<< HEAD
+=======
+
+    // Order routes (Đơn hàng)
+    Route::prefix('orders')->group(function () {
+        Route::get('/', [OrderController::class, 'index']);
+        Route::post('/', [OrderController::class, 'store']);
+        Route::get('/{id}', [OrderController::class, 'show']);
+        Route::patch('/{id}/cancel', [OrderController::class, 'cancel']);
+    });
+>>>>>>> origin/develop
 });
 
 Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
