@@ -53,3 +53,20 @@ Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
+// =========================================================================
+// ADMIN ROUTES (Yêu cầu đăng nhập token + vai trò Admin: auth:sanctum & admin)
+// =========================================================================
+use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    // Quản lý đơn hàng (Admin Orders Management)
+    Route::prefix('orders')->group(function () {
+        Route::get('/statistics', [AdminOrderController::class, 'statistics']);
+        Route::get('/', [AdminOrderController::class, 'index']);
+        Route::get('/{id}', [AdminOrderController::class, 'show']);
+        Route::patch('/{id}/status', [AdminOrderController::class, 'updateStatus']);
+        Route::patch('/{id}/payment-status', [AdminOrderController::class, 'updatePaymentStatus']);
+    });
+});
+
+
