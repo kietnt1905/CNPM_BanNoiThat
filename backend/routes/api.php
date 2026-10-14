@@ -57,9 +57,27 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 // ADMIN ROUTES (Yêu cầu đăng nhập token + vai trò Admin: auth:sanctum & admin)
 // =========================================================================
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
-    // Quản lý đơn hàng (Admin Orders Management)
+    // 1. Thống kê tổng quan Admin Dashboard
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/overview', [AdminDashboardController::class, 'overview']);
+    });
+
+    // 2. Quản lý phân quyền & tài khoản người dùng (User & Role Management)
+    Route::prefix('users')->group(function () {
+        Route::get('/', [AdminUserController::class, 'index']);
+        Route::post('/', [AdminUserController::class, 'store']);
+        Route::get('/{id}', [AdminUserController::class, 'show']);
+        Route::put('/{id}', [AdminUserController::class, 'update']);
+        Route::patch('/{id}/role', [AdminUserController::class, 'updateRole']);
+        Route::patch('/{id}/status', [AdminUserController::class, 'updateStatus']);
+        Route::delete('/{id}', [AdminUserController::class, 'destroy']);
+    });
+
+    // 3. Quản lý đơn hàng (Admin Orders Management)
     Route::prefix('orders')->group(function () {
         Route::get('/statistics', [AdminOrderController::class, 'statistics']);
         Route::get('/', [AdminOrderController::class, 'index']);
@@ -68,5 +86,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
         Route::patch('/{id}/payment-status', [AdminOrderController::class, 'updatePaymentStatus']);
     });
 });
+
 
 

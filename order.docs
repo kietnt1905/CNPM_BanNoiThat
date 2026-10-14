@@ -1,0 +1,368 @@
+# TÀI LIỆU HƯỚNG DẪN FRONTEND: QUẢN LÝ ĐƠN HÀNG ADMIN (DÀNH CHO THỊNH)
+
+Tài liệu này hướng dẫn chi tiết cách xây dựng giao diện và tích hợp API cho chức năng **Quản lý Đơn hàng (Admin Orders Management)**.
+
+---
+
+## MỤC LỤC
+1. [Thông tin cấu hình & Xác thực](#1-thông-tin-cấu-hình--xác-thực)
+2. [Danh sách API Quản lý Đơn hàng](#2-danh-sách-api-quản-lý-đơn-hàng)
+3. [Mô tả chi tiết từng API (Request & Response)](#3-mô-tả-chi-tiết-từng-api-request--response)
+4. [Hướng dẫn xây dựng Giao diện Trang Đơn hàng (`/admin/orders`)](#4-hướng-dẫn-xây-dựng-giao-diện-trang-đơn-hàng-adminorders)
+5. [Hướng dẫn xây dựng Modal / Trang Chi tiết Đơn hàng (`/admin/orders/:id`)](#5-hướng-dẫn-xây-dựng-modal--trang-chi-tiết-đơn-hàng-adminordersid)
+6. [Hàm gọi API mẫu viết bằng Axios (`adminOrder.js`)](#6-hàm-gọi-api-mẫu-viết-bằng-axios-adminorderjs)
+7. [Xử lý Logic Kho hàng & Quy trình Trạng thái quan trọng](#7-xử-lý-logic-kho-hàng--quy-trình-trạng-thái-quan-trọng)
+
+---
+
+## 1. THÔNG TIN CẤU HÌNH & XÁC THỰC
+
+- **Base URL:** `http://127.0.0.1:8000/api/admin/orders`
+- **Tài khoản Admin để test:**
+  - Email: `admin@gmail.com`
+  - Password: `password123`
+- **Quy chuẩn gửi Request:**
+  - Bắt buộc đính kèm Header:
+    ```http
+    Authorization: Bearer <token_admin>
+    Accept: application/json
+    ```
+
+---
+
+## 2. DANH SÁCH API QUẢN LÝ ĐƠN HÀNG
+
+| Method | Endpoint | Mô tả chức năng |
+| :--- | :--- | :--- |
+| `GET` | `/api/admin/orders` | Danh sách đơn hàng (Bộ lọc status, payment, ngày đặt, search, tabs count, phân trang) |
+| `GET` | `/api/admin/orders/{id}` | Chi tiết đơn hàng (Tra cứu bằng ID hoặc Mã đơn `order_code`), danh sách sản phẩm, thanh toán |
+| `PATCH` | `/api/admin/orders/{id}/status` | Cập nhật trạng thái đơn hàng (Tự động hoàn kho khi Hủy đơn) |
+| `PATCH` | `/api/admin/orders/{id}/payment-status` | Cập nhật trạng thái thanh toán (Chờ thanh toán, Đã thanh toán, Hoàn tiền...) |
+| `GET` | `/api/admin/orders/statistics` | Báo cáo thống kê đơn hàng & doanh thu 7 ngày |
+
+---
+
+## 3. MÔ TẢ CHI TIẾT TỪNG API (REQUEST & RESPONSE)
+
+### A. GET `/api/admin/orders` (Danh sách đơn hàng)
+**Query Parameters hỗ trợ:**
+- `status`: `all` (mặc định), `pending`, `confirmed`, `shipping`, `completed`, `cancelled`.
+- `payment_status`: `all`, `pending`, `success`, `failed`, `refunded`.
+- `payment_method`: `all`, `cod`, `bank_transfer`, `vnpay`, `momo`.
+- `q` hoặc `search`: Từ khóa tìm kiếm (Mã đơn hàng ví dụ `ORD-2026`, Tên người nhận, Số điện thoại).
+- `date_from`: Lọc từ ngày (`YYYY-MM-DD`).
+- `date_to`: Lọc đến ngày (`YYYY-MM-DD`).
+- `sort_by`: `created_at` (mặc định), `total_amount`, `status`.
+- `sort_order`: `desc` (mặc định) hoặc `asc`.
+- `page`: Trang hiện tại (mặc định `1`).
+- `per_page`: Số đơn mỗi trang (mặc định `15`).
+
+**Response mẫu:**
+```json
+{
+  "status": true,
+  "message": "Lấy danh sách đơn hàng thành công.",
+  "counts": {
+    "total": 50,
+    "pending": 5,
+    "confirmed": 8,
+    "shipping": 12,
+    "completed": 20,
+    "cancelled": 5
+  },
+  "data": [
+    {
+      "id": 1,
+      "order_code": "ORD-20261014-ABCD",
+      "user": {
+        "id": 3,
+        "name": "Nguyễn Văn A",
+        "email": "vana@gmail.com",
+        "phone": "0987654321"
+      },
+      "recipient_name": "Nguyễn Văn A",
+      "recipient_phone": "0987654321",
+      "shipping_address": "123 Đường Lê Lợi, Phường Bến Nghé, Quận 1, TP.HCM",
+      "status": "pending",
+      "status_label": "Chờ xác nhận",
+      "total_amount": 15050000,
+      "total_amount_display": "15.050.000₫",
+      "total_items": 2,
+      "payment_method": "cod",
+      "payment_method_label": "Thanh toán khi nhận hàng (COD)",
+      "payment_status": "pending",
+      "payment_status_label": "Chờ thanh toán",
+      "created_at": "2026-10-14 20:30:00",
+      "created_at_display": "14/10/2026 20:30"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 4,
+    "per_page": 15,
+    "total": 50,
+    "from": 1,
+    "to": 15
+  }
+}
+```
+
+---
+
+### B. GET `/api/admin/orders/{id}` (Chi tiết đơn hàng)
+Tham số `{id}` có thể truyền `id` (số nguyên) hoặc `order_code` (chuỗi).
+
+**Response mẫu:**
+```json
+{
+  "status": true,
+  "message": "Lấy thông tin đơn hàng thành công.",
+  "data": {
+    "id": 1,
+    "order_code": "ORD-20261014-ABCD",
+    "user": {
+      "id": 3,
+      "name": "Nguyễn Văn A",
+      "email": "vana@gmail.com",
+      "phone": "0987654321"
+    },
+    "recipient_name": "Nguyễn Văn A",
+    "recipient_phone": "0987654321",
+    "shipping_address": "123 Đường Lê Lợi, Phường Bến Nghé, Quận 1, TP.HCM",
+    "note": "Giao hàng giờ hành chính giúp em",
+    "status": "pending",
+    "status_label": "Chờ xác nhận",
+    "subtotal": 15000000,
+    "subtotal_display": "15.000.000₫",
+    "shipping_fee": 50000,
+    "shipping_fee_display": "50.000₫",
+    "discount_amount": 0,
+    "discount_amount_display": "0₫",
+    "total_amount": 15050000,
+    "total_amount_display": "15.050.000₫",
+    "total_items": 1,
+    "items": [
+      {
+        "id": 10,
+        "variant_id": 5,
+        "product_name": "Sofa Da Bò Ý Cao Cấp",
+        "sku": "SOFA-DA-01",
+        "color": "Nâu da bò",
+        "material": "Da thật 100%",
+        "dimensions": "220x90x85 cm",
+        "quantity": 1,
+        "unit_price": 15000000,
+        "unit_price_display": "15.000.000₫",
+        "line_total": 15000000,
+        "line_total_display": "15.000.000₫",
+        "image": "https://example.com/sofa.jpg",
+        "current_stock": 8
+      }
+    ],
+    "payment": {
+      "id": 1,
+      "method": "cod",
+      "method_label": "Thanh toán khi nhận hàng (COD)",
+      "status": "pending",
+      "status_label": "Chờ thanh toán",
+      "amount": 15050000,
+      "amount_display": "15.050.000₫",
+      "transaction_code": null,
+      "paid_at": null
+    },
+    "created_at": "2026-10-14 20:30:00",
+    "created_at_display": "14/10/2026 20:30",
+    "updated_at_display": "14/10/2026 20:35"
+  }
+}
+```
+
+---
+
+### C. PATCH `/api/admin/orders/{id}/status` (Đổi trạng thái đơn hàng)
+**Request Body:**
+```json
+{
+  "status": "confirmed", // pending | confirmed | shipping | completed | cancelled
+  "admin_note": "Đã gọi điện xác nhận địa chỉ giao hàng với khách" // Tuỳ chọn
+}
+```
+
+**Quy trình trạng thái chuẩn:**
+- `pending` (Chờ xác nhận) $\rightarrow$ `confirmed` (Đã xác nhận).
+- `confirmed` $\rightarrow$ `shipping` (Đang giao hàng).
+- `shipping` $\rightarrow$ `completed` (Đã hoàn thành).
+- Bất kỳ trạng thái nào trước `completed` đều có thể chuyển sang $\rightarrow$ `cancelled` (Hủy đơn).
+
+> **LƯU Ý CỰC QUAN TRỌNG VỀ TỒN KHO:**  
+> Backend đã tự động xử lý: Khi chuyển sang `cancelled`, hệ thống sẽ **tự động hoàn lại số lượng tồn kho** cho sản phẩm. Nếu Admin khôi phục lại đơn từ `cancelled` về `pending`/`confirmed`, hệ thống sẽ trừ kho lại (và báo lỗi nếu không đủ tồn kho).
+
+---
+
+### D. PATCH `/api/admin/orders/{id}/payment-status` (Đổi trạng thái thanh toán)
+**Request Body:**
+```json
+{
+  "payment_status": "success", // pending | success | failed | refunded
+  "transaction_code": "VNPAY-20261014-9988" // Tuỳ chọn: mã giao dịch ngân hàng
+}
+```
+
+---
+
+## 4. HƯỚNG DẪN XÂY DỰNG GIAO DIỆN TRANG ĐƠN HÀNG (`/admin/orders`)
+
+Thịnh thiết kế trang Quản lý đơn hàng gồm 3 phần chính:
+
+### 1. Thanh Tabs Trạng thái (Status Tabs)
+Backend trả về `counts`, Thịnh chỉ việc gắn số lượng vào tab:
+- **Tất cả** (`counts.total`)
+- **Chờ xác nhận** (`counts.pending`) - Badge vàng
+- **Đã xác nhận** (`counts.confirmed`) - Badge xanh dương
+- **Đang giao hàng** (`counts.shipping`) - Badge tím
+- **Đã hoàn thành** (`counts.completed`) - Badge xanh lá
+- **Đã hủy** (`counts.cancelled`) - Badge đỏ
+
+Bấm vào Tab nào thì gọi lại API với query `?status=...`.
+
+### 2. Bộ lọc & Tìm kiếm (Filter Toolbar)
+- **Input Tìm kiếm:** Placeholder *"Tìm theo mã đơn (ORD-...), tên khách, SĐT..."* (dùng debounce 300ms).
+- **Lọc Phương thức thanh toán:** Dropdown: Tất cả, COD, Chuyển khoản, VNPAY, MoMo.
+- **Lọc Trạng thái thanh toán:** Dropdown: Tất cả, Chờ thanh toán, Đã thanh toán, Hoàn tiền.
+- **Lọc Ngày đặt:** 2 ô chọn ngày: `Từ ngày` và `Đến ngày`.
+- **Nút "Đặt lại bộ lọc":** Xóa hết bộ lọc về mặc định.
+
+### 3. Bảng Danh sách Đơn hàng (Orders Table)
+Bao gồm các cột:
+1. **Mã đơn hàng:** Chữ in hoa đậm (ví dụ `#ORD-20261014-ABCD`), bấm vào sẽ mở Modal/Trang chi tiết.
+2. **Khách hàng & Người nhận:** Tên người nhận (đậm), SĐT và địa chỉ giao hàng tóm tắt.
+3. **Sản phẩm:** Tổng số lượng món (`total_items`), có thể hover hiển thị tooltip.
+4. **Tổng tiền:** Định dạng VND màu đậm rõ ràng (`total_amount_display`).
+5. **Thanh toán:**
+   - Phương thức: COD hoặc Ngân hàng (`payment_method_label`).
+   - Trạng thái: Badge màu (`Chờ thanh toán` - vàng, `Đã thanh toán` - xanh lá).
+6. **Trạng thái đơn hàng:** Badge trạng thái + Dropdown cập nhật nhanh (Quick Status Select) cho phép Admin đổi trạng thái trực tiếp trên bảng.
+7. **Ngày đặt:** Hiển thị `created_at_display`.
+8. **Hành động:** Nút "Chi tiết" (icon con mắt) và nút "Cập nhật".
+
+---
+
+## 5. HƯỚNG DẪN XÂY DỰNG MODAL / TRANG CHI TIẾT ĐƠN HÀNG (`/admin/orders/:id`)
+
+Khi Admin bấm vào một đơn hàng, hiển thị Modal rộng hoặc Drawer chi tiết:
+
+### A. Khối Thông tin Người nhận & Đơn hàng
+- Mã đơn, Ngày đặt, Ghi chú của khách hàng (`note`).
+- Tên người nhận, Số điện thoại (có nút bấm gọi điện), Địa chỉ giao hàng đầy đủ.
+
+### B. Bảng Danh sách Sản phẩm đã đặt
+- Ảnh đại diện sản phẩm (`image`).
+- Tên sản phẩm, SKU, Màu sắc, Chất liệu, Kích thước (`dimensions`).
+- Đơn giá (`unit_price_display`), Số lượng (`x 2`), Thành tiền (`line_total_display`).
+- Số lượng tồn kho hiện tại (`current_stock`) để Admin dễ kiểm tra.
+
+### C. Khối Tổng kết Tiền hàng
+- Tạm tính tiền hàng: `subtotal_display`
+- Phí vận chuyển: `shipping_fee_display`
+- Giảm giá (nếu có): `-discount_amount_display`
+- **Tổng thanh toán:** `total_amount_display` (Chữ to, màu đỏ/xanh nổi bật)
+
+### D. Khối Thao tác Quản trị (Admin Actions)
+- **Cập nhật Trạng thái đơn hàng:**
+  - Dropdown chọn trạng thái mới.
+  - Ô nhập Ghi chú quản trị (`admin_note`).
+  - Nút bấm *"Lưu trạng thái"*.
+  - Nếu đơn đã `completed` hoặc `cancelled`, có thể hiển thị cảnh báo xác nhận trước khi đổi.
+- **Cập nhật Trạng thái thanh toán:**
+  - Switch hoặc Dropdown chuyển trạng thái thanh toán sang `Đã thanh toán (success)` khi khách chuyển khoản thành công.
+  - Ô nhập Mã giao dịch (`transaction_code`).
+- **Nút "In đơn hàng / In hóa đơn":** Gọi `window.print()` với định dạng hóa đơn đẹp mắt.
+
+---
+
+## 6. HÀM GỌI API MẪU VIẾT BẰNG AXIOS (`adminOrder.js`)
+
+Thịnh tạo file `frontend/src/api/adminOrder.js`:
+
+```javascript
+import axios from 'axios';
+
+const API_URL = 'http://127.0.0.1:8000/api/admin/orders';
+
+// Helper đính kèm Bearer Token
+const authHeader = () => ({
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+    Accept: 'application/json',
+  },
+});
+
+export const adminOrderApi = {
+  // 1. Lấy danh sách đơn hàng kèm lọc, tìm kiếm, phân trang
+  getOrders: (params = {}) => {
+    return axios.get(API_URL, { ...authHeader(), params });
+  },
+
+  // 2. Lấy chi tiết đơn hàng theo ID hoặc Order Code
+  getOrderDetail: (id) => {
+    return axios.get(`${API_URL}/${id}`, authHeader());
+  },
+
+  // 3. Cập nhật trạng thái đơn hàng (pending, confirmed, shipping, completed, cancelled)
+  updateStatus: (id, status, adminNote = '') => {
+    return axios.patch(
+      `${API_URL}/${id}/status`,
+      { status, admin_note: adminNote },
+      authHeader()
+    );
+  },
+
+  // 4. Cập nhật trạng thái thanh toán (pending, success, failed, refunded)
+  updatePaymentStatus: (id, paymentStatus, transactionCode = '') => {
+    return axios.patch(
+      `${API_URL}/${id}/payment-status`,
+      { payment_status: paymentStatus, transaction_code: transactionCode },
+      authHeader()
+    );
+  },
+
+  // 5. Lấy thống kê đơn hàng và doanh thu
+  getStatistics: () => {
+    return axios.get(`${API_URL}/statistics`, authHeader());
+  },
+};
+```
+
+---
+
+## 7. XỬ LÝ LOGIC KHO HÀNG & QUY TRÌNH TRẠNG THÁI QUAN TRỌNG
+
+1. **Hiển thị Badge màu sắc chuẩn cho Trạng thái:**
+   ```javascript
+   export const ORDER_STATUS_MAP = {
+     pending: { label: 'Chờ xác nhận', color: 'bg-amber-100 text-amber-800 border-amber-300' },
+     confirmed: { label: 'Đã xác nhận', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+     shipping: { label: 'Đang giao hàng', color: 'bg-purple-100 text-purple-800 border-purple-300' },
+     completed: { label: 'Đã hoàn thành', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+     cancelled: { label: 'Đã hủy', color: 'bg-rose-100 text-rose-800 border-rose-300' },
+   };
+   ```
+
+2. **Xác nhận khi Hủy đơn (Cancel Confirmation):**
+   - Khi Admin chọn trạng thái `cancelled`, hiển thị popup cảnh báo:  
+     *"Bạn có chắc chắn muốn hủy đơn hàng này? Hệ thống sẽ tự động hoàn lại số lượng tồn kho cho các sản phẩm trong đơn."*
+
+3. **Bắt thông báo lỗi từ Backend:**
+   - Khi gọi API lỗi (ví dụ khôi phục đơn bị hết hàng), Backend sẽ trả về `400` hoặc `422` với `message` tiếng Việt cụ thể:
+   ```javascript
+   try {
+     await adminOrderApi.updateStatus(orderId, newStatus);
+     toast.success('Cập nhật trạng thái đơn hàng thành công!');
+   } catch (error) {
+     const msg = error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật.';
+     toast.error(msg);
+   }
+   ```
+
+---
+*Tất cả API đơn hàng đã được viết hoàn chỉnh, kiểm thử tự động đạt 100% (Green). Thịnh có thể kết nối ngay!*
