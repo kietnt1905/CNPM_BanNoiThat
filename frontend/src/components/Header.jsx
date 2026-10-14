@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
     Phone,
     MapPin,
-    Heart,
     User,
     ShoppingBag,
     Search,
@@ -112,10 +111,9 @@ export default function Header() {
         }
     };
 
-    // Cart & Wishlist counts từ CartContext
+    // Cart count từ CartContext
     const { summary, setIsCartOpen } = useCart();
     const cartCount = summary?.total_items || 0;
-    const [wishlistCount] = useState(3);
 
     // Listen to scroll to adjust header elevation
     useEffect(() => {
@@ -538,20 +536,7 @@ export default function Header() {
                                 <Search className="w-5 h-5 stroke-[1.8]" />
                             </button>
 
-                            {/* Nút Yêu Thích - Đặt cạnh bên trái giỏ hàng */}
-                            <Link
-                                to="/yeu-thich"
-                                className="relative p-2 text-neutral-800 hover:text-neutral-950 transition-colors group"
-                                aria-label="Sản phẩm yêu thích"
-                                title="Danh sách yêu thích"
-                            >
-                                <Heart className="w-5 h-5 stroke-[1.8] group-hover:scale-105 transition-transform" />
-                                {wishlistCount > 0 && (
-                                    <span className="absolute top-0.5 right-0.5 bg-neutral-900 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold shadow-sm">
-                                        {wishlistCount}
-                                    </span>
-                                )}
-                            </Link>
+
 
                             {/* Nút Giỏ Hàng kèm Badge số lượng: Nhấp vào chuyển thẳng tới /gio-hang */}
                             <Link
@@ -631,15 +616,7 @@ export default function Header() {
                                                     <ShoppingBag className="w-4 h-4 text-stone-500" />
                                                     <span>Đơn hàng của tôi</span>
                                                 </Link>
-                                                <Link
-                                                    to="/yeu-thich"
-                                                    onClick={() => setUserMenuOpen(false)}
-                                                    className="flex items-center space-x-2.5 px-4 py-2 hover:bg-stone-50 hover:text-stone-900 transition-colors"
-                                                >
-                                                    <Heart className="w-4 h-4 text-stone-500" />
-                                                    <span>Danh sách yêu thích</span>
-                                                </Link>
-                                            </div>
+                                                </div>
 
                                             <div className="pt-1 border-t border-stone-100">
                                                 <button
@@ -872,14 +849,6 @@ export default function Header() {
                                         <span>Hệ thống Showroom TK House</span>
                                     </Link>
 
-                                    <Link
-                                        to="/yeu-thich"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center space-x-2 py-1 hover:text-neutral-900"
-                                    >
-                                        <Heart className="w-4 h-4 text-neutral-500" />
-                                        <span>Sản phẩm yêu thích ({wishlistCount})</span>
-                                    </Link>
 
                                     <Link
                                         to="/gio-hang"

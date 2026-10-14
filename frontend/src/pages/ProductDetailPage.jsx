@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
-  Heart,
   Share2,
   Eye,
   ShoppingBag,
@@ -467,7 +466,6 @@ export default function ProductDetailPage({ id: propId }) {
   const [quantity, setQuantity] = useState(1);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [activeTab, setActiveTab] = useState('specs');
-  const [isWishlist, setIsWishlist] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -640,14 +638,6 @@ export default function ProductDetailPage({ id: propId }) {
     }
   };
 
-  // Toggle yêu thích
-  const handleToggleWishlist = () => {
-    setIsWishlist((prev) => {
-      const next = !prev;
-      showToast(next ? `Đã lưu "${product.name}" vào danh sách yêu thích` : `Đã bỏ khỏi danh sách yêu thích`);
-      return next;
-    });
-  };
 
   // Chia sẻ link
   const handleShare = () => {
@@ -781,18 +771,7 @@ export default function ProductDetailPage({ id: propId }) {
               <Share2 className="w-3.5 h-3.5 text-[#8C6A48]" />
               <span className="hidden sm:inline">Chia sẻ</span>
             </button>
-            <button
-              type="button"
-              onClick={handleToggleWishlist}
-              className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full border border-[#E8E2D8] transition-colors text-[11px] ${
-                isWishlist
-                  ? 'bg-rose-50 text-rose-600 border-rose-200'
-                  : 'bg-white hover:bg-[#FAF6F0] text-neutral-700'
-              }`}
-            >
-              <Heart className={`w-3.5 h-3.5 ${isWishlist ? 'fill-rose-500 text-rose-500' : 'text-neutral-500'}`} />
-              <span className="hidden sm:inline">{isWishlist ? 'Đã lưu' : 'Lưu'}</span>
-            </button>
+
           </div>
         </div>
       </div>
@@ -1465,13 +1444,6 @@ export default function ProductDetailPage({ id: propId }) {
           <span className="font-mono text-base font-bold text-neutral-900">{currentPriceDisplay}</span>
         </div>
         <div className="flex items-center space-x-2">
-          <button
-            type="button"
-            onClick={handleToggleWishlist}
-            className="p-2.5 rounded-xl border border-[#E8E2D8] text-neutral-700 hover:bg-[#FAF6F0]"
-          >
-            <Heart className={`w-4 h-4 ${isWishlist ? 'fill-rose-500 text-rose-500' : ''}`} />
-          </button>
           <button
             type="button"
             onClick={handleAddToCart}

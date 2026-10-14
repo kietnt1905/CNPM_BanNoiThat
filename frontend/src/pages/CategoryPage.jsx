@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   SlidersHorizontal,
   ArrowUpDown,
-  Heart,
   Eye,
   ShoppingBag,
   Sparkles,
@@ -455,7 +454,6 @@ export default function CategoryPage({ categoryId }) {
   const [sortOption, setSortOption] = useState('featured');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [collectionOpen, setCollectionOpen] = useState(Boolean(activeCollection));
-  const [wishlist, setWishlist] = useState([]);
   const [toastMessage, setToastMessage] = useState(null);
 
   // Helper lấy cache key theo bộ lọc
@@ -686,19 +684,6 @@ export default function CategoryPage({ categoryId }) {
     }, 2800);
   };
 
-  // Toggle wishlist
-  const toggleWishlist = (product) => {
-    setWishlist((prev) => {
-      const exists = prev.includes(product.id);
-      if (exists) {
-        showToast(`Đã bỏ "${product.name}" khỏi danh sách yêu thích`);
-        return prev.filter((id) => id !== product.id);
-      } else {
-        showToast(`Đã thêm "${product.name}" vào danh sách yêu thích`);
-        return [...prev, product.id];
-      }
-    });
-  };
 
   // Thêm vào giỏ hàng nhanh từ danh mục (Không mở Drawer, thêm đúng 1 sản phẩm)
   const handleAddToCart = async (product) => {
@@ -1499,8 +1484,6 @@ export default function CategoryPage({ categoryId }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
 
                 {filteredProducts.map((prod) => {
-                  const isLiked = wishlist.includes(prod.id);
-
                   return (
                     <motion.div
                       key={prod.id}
@@ -1539,23 +1522,6 @@ export default function CategoryPage({ categoryId }) {
 
                         {/* Nút hành động nổi trên ảnh */}
                         <div className="absolute top-3 right-3 flex flex-col space-y-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              toggleWishlist(prod);
-                            }}
-                            className={`w-8 h-8 rounded-full backdrop-blur-md shadow-md flex items-center justify-center transition-all ${isLiked
-                                ? 'bg-rose-50 text-rose-500'
-                                : 'bg-white/90 hover:bg-white text-neutral-700 hover:text-rose-500'
-                              }`}
-                            title="Lưu yêu thích"
-                          >
-                            <Heart
-                              className={`w-4 h-4 ${isLiked ? 'fill-rose-500' : ''}`}
-                            />
-                          </button>
                           <Link
                             to={`/san-pham/${prod.id}`}
                             className="w-8 h-8 rounded-full backdrop-blur-md shadow-md flex items-center justify-center bg-white/90 hover:bg-[#8C6A48] text-neutral-700 hover:text-white transition-all cursor-pointer"

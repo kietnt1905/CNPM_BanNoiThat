@@ -330,7 +330,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                             <p className="text-stone-500 text-xs font-light mt-1 truncate">
                                 {isLogin
                                     ? 'Chào mừng Quý khách quay trở lại với không gian sống TK House.'
-                                    : 'Trở thành thành viên để lưu giữ thiết kế yêu thích và nhận tư vấn KTS.'}
+                                    : 'Trở thành thành viên để nhận tư vấn KTS và ưu đãi đặc quyền.'}
                             </p>
                         </div>
 

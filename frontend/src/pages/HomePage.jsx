@@ -10,7 +10,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Eye,
-  Heart,
   ShoppingBag,
   Star,
   Quote,
@@ -1275,13 +1274,6 @@ export default function HomePage() {
 
                         {/* Quick actions trên mặt kính mờ */}
                         <div className="absolute top-3 right-3 flex flex-col space-y-2 opacity-0 group-hover/card:opacity-100 transition-all duration-300">
-                          <button
-                            type="button"
-                            className="w-8 h-8 rounded-full backdrop-blur-md bg-white/90 text-neutral-800 hover:bg-[#8C5D3E] hover:text-white flex items-center justify-center shadow-md transition-colors border border-white/60"
-                            title="Thêm vào yêu thích"
-                          >
-                            <Heart className="w-3.5 h-3.5" />
-                          </button>
                           <Link
                             to={`/san-pham/${p.id}`}
                             className="w-8 h-8 rounded-full backdrop-blur-md bg-white/90 text-neutral-800 hover:bg-[#8C5D3E] hover:text-white flex items-center justify-center shadow-md transition-colors border border-white/60"
