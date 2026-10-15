@@ -60,8 +60,21 @@ use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    // 0. Quản lý sản phẩm (Admin Product CRUD)
+    Route::prefix('products')->group(function () {
+        Route::get('/', [AdminProductController::class, 'index']);
+        Route::post('/', [AdminProductController::class, 'store']);
+        Route::post('/upload-image', [AdminProductController::class, 'uploadImage']);
+        Route::get('/{id}', [AdminProductController::class, 'show']);
+        Route::put('/{id}', [AdminProductController::class, 'update']);
+        Route::patch('/{id}/status', [AdminProductController::class, 'updateStatus']);
+        Route::patch('/{productId}/variants/{variantId}/stock', [AdminProductController::class, 'updateVariantStock']);
+        Route::delete('/{id}', [AdminProductController::class, 'destroy']);
+    });
+
     // 0. Quản lý danh mục (Admin Category CRUD)
     Route::prefix('categories')->group(function () {
         Route::get('/', [AdminCategoryController::class, 'index']);
