@@ -52,9 +52,19 @@ class ProductController extends Controller
             // 1.5. Lọc theo bộ sưu tập (Collection)
             if ($request->filled('collection')) {
                 $collectionParam = mb_strtolower($request->query('collection'), 'UTF-8');
-                $query->where(function ($q) use ($collectionParam) {
+                $collectionKeywords = [
+                    'victoria' => ['victoria', 'hoang-gia', 'elegance', 'tuscany', 'soi'],
+                    'valencia' => ['valencia', 'calacatta', 'ceramic', 'marble', 'boucle', 'pvd', 'monaco'],
+                    'moretti' => ['moretti', 'artisan', 'oc-cho', 'atelier', 'pro-desk', 'rotunda', 'japandi'],
+                ];
+                $keywords = $collectionKeywords[$collectionParam] ?? [$collectionParam];
+                $query->where(function ($q) use ($keywords, $collectionParam) {
                     $q->where('name', 'like', "%{$collectionParam}%")
                       ->orWhere('slug', 'like', "%{$collectionParam}%");
+                    foreach ($keywords as $kw) {
+                        $q->orWhere('name', 'like', "%{$kw}%")
+                          ->orWhere('slug', 'like', "%{$kw}%");
+                    }
                 });
             }
 

@@ -59,7 +59,7 @@ class OrderController extends Controller
             'recipient_name' => 'required|string|max:100',
             'recipient_phone' => ['required', 'string', 'max:20', 'regex:/^[0-9+().\s-]{9,20}$/'],
             'shipping_address' => 'required|string|max:500',
-            'payment_method' => 'required|string|in:cod,bank_transfer,COD,bank,BANK_TRANSFER,chuyen_khoan,chuyenkhoan,Chuyển khoản',
+            'payment_method' => 'required|string|in:cod,bank_transfer,vnpay,momo,COD,bank,BANK_TRANSFER,chuyen_khoan,chuyenkhoan,Chuyển khoản,VNPAY,MOMO',
             'note' => 'nullable|string|max:1000',
             'shipping_fee' => 'nullable|numeric|min:0',
             'discount_amount' => 'nullable|numeric|min:0',
@@ -73,8 +73,8 @@ class OrderController extends Controller
             'recipient_phone.regex' => 'Số điện thoại không đúng định dạng.',
             'shipping_address.required' => 'Vui lòng cung cấp địa chỉ giao hàng và lắp đặt nội thất.',
             'shipping_address.max' => 'Địa chỉ không được vượt quá 500 ký tự.',
-            'payment_method.required' => 'Vui lòng chọn phương thức thanh toán (COD hoặc Chuyển khoản).',
-            'payment_method.in' => 'Phương thức thanh toán không hợp lệ (Chỉ hỗ trợ COD hoặc Chuyển khoản).',
+            'payment_method.required' => 'Vui lòng chọn phương thức thanh toán.',
+            'payment_method.in' => 'Phương thức thanh toán không hợp lệ (Hỗ trợ: COD, Chuyển khoản, VNPAY, MoMo).',
             'items.*.variant_id.exists' => 'Biến thể sản phẩm đã chọn không tồn tại.',
             'items.*.quantity.min' => 'Số lượng mỗi món phải lớn hơn hoặc bằng 1.',
         ]);
@@ -236,9 +236,15 @@ class OrderController extends Controller
 
             // 6. Tạo bản ghi thanh toán (Payment)
             $rawMethod = strtolower($request->payment_method);
-            $normalizedMethod = (in_array($rawMethod, ['cod']) || stripos($rawMethod, 'cod') !== false)
-                ? 'cod'
-                : 'bank_transfer';
+            if (in_array($rawMethod, ['cod']) || stripos($rawMethod, 'cod') !== false) {
+                $normalizedMethod = 'cod';
+            } elseif (in_array($rawMethod, ['vnpay']) || stripos($rawMethod, 'vnpay') !== false) {
+                $normalizedMethod = 'vnpay';
+            } elseif (in_array($rawMethod, ['momo']) || stripos($rawMethod, 'momo') !== false) {
+                $normalizedMethod = 'momo';
+            } else {
+                $normalizedMethod = 'bank_transfer';
+            }
 
             $totalAmount = max(0, ($subtotal + $shippingFee) - $discountAmount);
 

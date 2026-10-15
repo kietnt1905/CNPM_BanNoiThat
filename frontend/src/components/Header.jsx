@@ -600,6 +600,16 @@ export default function Header() {
                                             </div>
 
                                             <div className="py-1 text-xs text-stone-700">
+                                                {user?.role === 'admin' && (
+                                                    <Link
+                                                        to="/admin/orders"
+                                                        onClick={() => setUserMenuOpen(false)}
+                                                        className="flex items-center space-x-2.5 px-4 py-2 hover:bg-amber-50 text-amber-900 font-semibold transition-colors border-b border-stone-100"
+                                                    >
+                                                        <Sparkles className="w-4 h-4 text-[#8C6A48]" />
+                                                        <span>Quản Trị Đơn Hàng</span>
+                                                    </Link>
+                                                )}
                                                 <Link
                                                     to="/auth"
                                                     onClick={() => setUserMenuOpen(false)}
@@ -616,7 +626,7 @@ export default function Header() {
                                                     <ShoppingBag className="w-4 h-4 text-stone-500" />
                                                     <span>Đơn hàng của tôi</span>
                                                 </Link>
-                                                </div>
+                                            </div>
 
                                             <div className="pt-1 border-t border-stone-100">
                                                 <button

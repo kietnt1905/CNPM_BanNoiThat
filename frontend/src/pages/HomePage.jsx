@@ -21,6 +21,7 @@ import {
   ZoomIn,
   X
 } from 'lucide-react';
+import productApi from '../api/productApi';
 
 export default function HomePage() {
   const location = useLocation();
@@ -566,11 +567,59 @@ export default function HomePage() {
     },
   ];
 
+  // State nạp sản phẩm thật từ Backend API
+  const [liveProducts, setLiveProducts] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    productApi
+      .getFeatured()
+      .then((res) => {
+        if (!isMounted) return;
+        const data = res.data?.data || res.data || [];
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((item) => {
+            const catSlug = (item.category_slug || item.categorySlug || '').toLowerCase();
+            const isGhe =
+              catSlug.includes('sofa') ||
+              catSlug.includes('ghe') ||
+              item.group === 'sofa';
+            return {
+              id: item.id,
+              type: isGhe ? 'ghe' : 'ban',
+              name: item.name,
+              category: item.category_name || item.categoryName || 'Nội thất TK House',
+              price: item.price_display || item.priceDisplay || `${Number(item.price || 0).toLocaleString('vi-VN')}₫`,
+              oldPrice: item.old_price_display || item.oldPriceDisplay || '',
+              image: item.image || item.thumbnail || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+              secondaryImage: item.secondary_image || item.secondaryImage || item.image || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
+              tag: item.tag || (item.is_featured ? 'Nổi bật' : 'Mới ra mắt'),
+              dimensions: item.dimensions || 'Tiêu chuẩn cao cấp',
+              materialHighlight: item.material || 'Vật liệu tự nhiên cao cấp',
+              swatches: [
+                { name: 'Nâu Trầm Walnut', hex: '#523A28' },
+                { name: 'Gỗ Sồi Tự Nhiên', hex: '#DDCBB7' },
+                { name: 'Da Bò Cognac', hex: '#8C5D3E' },
+              ],
+            };
+          });
+          setLiveProducts(mapped);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const activeProductList = liveProducts.length > 0 ? liveProducts : featuredProducts;
+
   // Danh sách sản phẩm hiển thị theo tab lọc
   const filteredProducts =
     productFilter === 'all'
-      ? featuredProducts
-      : featuredProducts.filter((p) => p.type === productFilter);
+      ? activeProductList
+      : activeProductList.filter((p) => p.type === productFilter);
 
   // Dữ liệu 2 danh mục chủ đạo dạng Tạp chí Kiến trúc phi đối xứng
   const coreCategories = [
@@ -1256,12 +1305,18 @@ export default function HomePage() {
                         <img
                           src={p.image}
                           alt={p.name}
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80';
+                          }}
                           className="w-full h-full object-cover group-hover/card:scale-106 transition-all duration-700 ease-out"
                         />
                         {/* Secondary Image (Dual-photo swap) */}
                         <img
                           src={p.secondaryImage || p.image}
                           alt={`${p.name} phối cảnh không gian`}
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80';
+                          }}
                           className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover/card:opacity-100 group-hover/card:scale-106 transition-all duration-700 ease-in-out"
                         />
 

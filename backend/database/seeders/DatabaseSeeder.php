@@ -66,7 +66,7 @@ class DatabaseSeeder extends Seeder
                 'brand' => 'TK House',
                 'description' => 'Mặt đá Ceramic Nano tôi luyện nhiệt độ 1200°C chống xước vĩnh cửu và chân gỗ óc chó nguyên khối phong cách quý tộc.',
                 'warranty_months' => 36,
-                'price' => 36000,
+                'price' => 36000000,
                 'stock' => 10,
                 'sku' => 'BA-ELG-01',
                 'color' => 'Nâu óc chó & Trắng vân mây',
@@ -494,6 +494,99 @@ class DatabaseSeeder extends Seeder
                 'images' => [
                     'https://images.unsplash.com/photo-1505797149-43b0069ec26b?auto=format&fit=crop&w=800&q=80',
                     'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80',
+                ]
+            ],
+            // ==================== BÀN TRANG ĐIỂM (category: ban-trang-diem) ====================
+            [
+                'category_slug' => 'ban-trang-diem',
+                'name' => 'Bàn Trang Điểm Voile Gương Tròn Đèn LED Cảm Ứng',
+                'slug' => 'ban-trang-diem-voile-guong-tron-den-led-cam-ung',
+                'brand' => 'TK House',
+                'description' => 'Đường bo cong duyên dáng, gương Bỉ tráng bạc 8 lớp kèm đèn LED 3 chế độ sáng và ghế đôn nỉ êm ái.',
+                'warranty_months' => 24,
+                'price' => 14500000,
+                'stock' => 14,
+                'sku' => 'BTD-VOI-01',
+                'color' => 'Trắng kem & Chân inox mạ vàng champagne',
+                'material' => 'Gỗ MDF Kháng Ẩm Sơn 2K & Chân Inox PVD & Gương Bỉ',
+                'dimensions' => ['length' => 110, 'width' => 50, 'height' => 135, 'weight' => 45],
+                'images' => [
+                    'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80',
+                    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
+                ]
+            ],
+            // ==================== GIƯỜNG NGỦ (category: giuong-ngu) ====================
+            [
+                'category_slug' => 'giuong-ngu',
+                'name' => 'Giường Ngủ Master Victoria Gỗ Sồi Khối',
+                'slug' => 'giuong-ngu-master-victoria-go-soi-khoi',
+                'brand' => 'TK House',
+                'description' => 'Khung gỗ sồi tự nhiên Bắc Mỹ kết hợp đệm đầu giường bọc da Nappa êm ái, nâng niu từng giấc ngủ sâu an lành.',
+                'warranty_months' => 36,
+                'price' => 28500000,
+                'stock' => 8,
+                'sku' => 'GN-VIC-01',
+                'color' => 'Gỗ sồi ấm & Da bò kem',
+                'material' => 'Gỗ Sồi Khối FAS & Da Nappa Cao Cấp',
+                'dimensions' => ['length' => 210, 'width' => 190, 'height' => 105, 'weight' => 95],
+                'images' => [
+                    'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
+                    'https://images.unsplash.com/photo-1540518614846-7ede433c4ef0?auto=format&fit=crop&w=800&q=80',
+                ]
+            ],
+            [
+                'category_slug' => 'giuong-ngu',
+                'name' => 'Giường Ngủ Da Thật Hoàng Gia Tuscany King Size',
+                'slug' => 'giuong-ngu-da-that-hoang-gia-tuscany-king-size',
+                'brand' => 'TK House',
+                'description' => 'Thiết kế bề thế với phần tựa đầu giường bọc da bò thảo mộc Tuscany nhập khẩu Ý dập chỉ thủ công.',
+                'warranty_months' => 48,
+                'price' => 39000000,
+                'stock' => 5,
+                'sku' => 'GN-TUS-02',
+                'color' => 'Nâu Cognac & Khung Óc Chó',
+                'material' => 'Da Bò Thảo Mộc Tuscany & Gỗ Óc Chó FAS',
+                'dimensions' => ['length' => 220, 'width' => 205, 'height' => 120, 'weight' => 110],
+                'images' => [
+                    'https://images.unsplash.com/photo-1540518614846-7ede433c4ef0?auto=format&fit=crop&w=800&q=80',
+                    'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80',
+                ]
+            ],
+            // ==================== TAB & TỦ KỆ (category: tu-ke) ====================
+            [
+                'category_slug' => 'tu-ke',
+                'name' => 'Kệ Tivi Gỗ Óc Chó Cánh Kính Khói Atelier',
+                'slug' => 'ke-tivi-go-oc-cho-canh-kinh-khoi-atelier',
+                'brand' => 'TK House',
+                'description' => 'Hệ tủ kệ tivi cao cấp kết hợp gỗ óc chó Bắc Mỹ tự nhiên, cánh kính xám khói sang trọng và ray trượt giảm chấn Hafele.',
+                'warranty_months' => 24,
+                'price' => 16500000,
+                'stock' => 12,
+                'sku' => 'TK-TV-01',
+                'color' => 'Nâu óc chó & Kính khói',
+                'material' => 'Gỗ Óc Chó FAS & Kính Cường Lực Khói Hafele',
+                'dimensions' => ['length' => 200, 'width' => 45, 'height' => 48, 'weight' => 55],
+                'images' => [
+                    'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=800&q=80',
+                    'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=800&q=80',
+                ]
+            ],
+            [
+                'category_slug' => 'tu-ke',
+                'name' => 'Tủ Giày & Trang Trí Sảnh Vòm Valencia Mây Đan',
+                'slug' => 'tu-giay-trang-tri-sanh-vom-valencia-may-dan',
+                'brand' => 'TK House',
+                'description' => 'Thiết kế cửa vòm Địa Trung Hải mây mắt cáo kết hợp ngăn kéo chứa đồ tiện dụng cho sảnh vào tổ ấm.',
+                'warranty_months' => 24,
+                'price' => 13800000,
+                'stock' => 10,
+                'sku' => 'TK-VAL-02',
+                'color' => 'Gỗ sồi mộc & Mây tự nhiên',
+                'material' => 'Gỗ Sồi Khối & Mây Mắt Cáo Đan Tay',
+                'dimensions' => ['length' => 120, 'width' => 40, 'height' => 110, 'weight' => 42],
+                'images' => [
+                    'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=800&q=80',
+                    'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=800&q=80',
                 ]
             ],
         ];
