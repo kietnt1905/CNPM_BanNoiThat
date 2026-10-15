@@ -12,7 +12,8 @@ import {
     ChevronRight,
     ArrowRight,
     LogOut,
-    Sparkles
+    Sparkles,
+    LayoutDashboard
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
@@ -42,7 +43,7 @@ export default function Header() {
                 if (urlUser) {
                     try {
                         localStorage.setItem('user', decodeURIComponent(urlUser));
-                    } catch {}
+                    } catch { }
                 }
             }
 
@@ -326,22 +327,22 @@ export default function Header() {
                                                                 </h4>
                                                             </div>
                                                             <ul className="space-y-4 pt-4">
-                                                                    {item.subcategories[0].items.map((subItem, siIdx) => (
-                                                                        <li key={siIdx}>
-                                                                            <Link
-                                                                                to={subItem.path}
-                                                                                className="group/link block text-left"
-                                                                            >
-                                                                                <span className="text-[13.5px] font-medium text-neutral-800 group-hover/link:text-[#8C6A48] transition-colors duration-300 relative inline-block">
-                                                                                    {subItem.name}
-                                                                                    <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#8C6A48] transition-all duration-300 ease-out group-hover/link:w-full" />
-                                                                                </span>
-                                                                                <span className="block text-[11px] text-stone-500 font-light mt-0.5">
-                                                                                    {subItem.desc}
-                                                                                </span>
-                                                                            </Link>
-                                                                        </li>
-                                                                    ))}
+                                                                {item.subcategories[0].items.map((subItem, siIdx) => (
+                                                                    <li key={siIdx}>
+                                                                        <Link
+                                                                            to={subItem.path}
+                                                                            className="group/link block text-left"
+                                                                        >
+                                                                            <span className="text-[13.5px] font-medium text-neutral-800 group-hover/link:text-[#8C6A48] transition-colors duration-300 relative inline-block">
+                                                                                {subItem.name}
+                                                                                <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#8C6A48] transition-all duration-300 ease-out group-hover/link:w-full" />
+                                                                            </span>
+                                                                            <span className="block text-[11px] text-stone-500 font-light mt-0.5">
+                                                                                {subItem.desc}
+                                                                            </span>
+                                                                        </Link>
+                                                                    </li>
+                                                                ))}
                                                             </ul>
                                                         </div>
 
@@ -600,6 +601,16 @@ export default function Header() {
                                             </div>
 
                                             <div className="py-1 text-xs text-stone-700">
+                                                {user?.role === 'admin' && (
+                                                    <Link
+                                                        to="/admin"
+                                                        onClick={() => setUserMenuOpen(false)}
+                                                        className="flex items-center space-x-2.5 px-4 py-2 hover:bg-amber-50 text-amber-900 font-semibold transition-colors border-b border-stone-100"
+                                                    >
+                                                        <LayoutDashboard className="w-4 h-4 text-[#8C6A48]" />
+                                                        <span>Trang quản trị</span>
+                                                    </Link>
+                                                )}
                                                 <Link
                                                     to="/auth"
                                                     onClick={() => setUserMenuOpen(false)}
@@ -616,7 +627,7 @@ export default function Header() {
                                                     <ShoppingBag className="w-4 h-4 text-stone-500" />
                                                     <span>Đơn hàng của tôi</span>
                                                 </Link>
-                                                </div>
+                                            </div>
 
                                             <div className="pt-1 border-t border-stone-100">
                                                 <button

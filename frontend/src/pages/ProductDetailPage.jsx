@@ -625,7 +625,7 @@ export default function ProductDetailPage({ id: propId }) {
         setSelectedIds([Number(selectedVariant.id)]);
       }
       // Chuyển thẳng đến bước thanh toán (không qua trang giỏ hàng)
-      navigate('/thanh-toan', {
+      navigate('/checkout', {
         state: {
           buyNowVariantId: Number(selectedVariant.id),
           fromBuyNow: true,
