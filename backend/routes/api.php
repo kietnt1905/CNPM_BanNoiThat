@@ -59,8 +59,18 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    // 0. Quản lý danh mục (Admin Category CRUD)
+    Route::prefix('categories')->group(function () {
+        Route::get('/', [AdminCategoryController::class, 'index']);
+        Route::post('/', [AdminCategoryController::class, 'store']);
+        Route::get('/{id}', [AdminCategoryController::class, 'show']);
+        Route::put('/{id}', [AdminCategoryController::class, 'update']);
+        Route::patch('/{id}/status', [AdminCategoryController::class, 'updateStatus']);
+        Route::delete('/{id}', [AdminCategoryController::class, 'destroy']);
+    });
     // 1. Thống kê tổng quan Admin Dashboard
     Route::prefix('dashboard')->group(function () {
         Route::get('/overview', [AdminDashboardController::class, 'overview']);
