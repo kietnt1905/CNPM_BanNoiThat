@@ -20,4 +20,19 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      const hadToken = Boolean(localStorage.getItem('token'));
+      if (hadToken) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.dispatchEvent(new Event('auth-change'));
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosClient;

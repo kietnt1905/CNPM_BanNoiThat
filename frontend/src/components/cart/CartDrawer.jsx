@@ -61,7 +61,7 @@ export default function CartDrawer() {
   const handleCheckout = () => {
     if (selectedItems.length === 0) return;
     handleClose();
-    navigate('/thanh-toan');
+    navigate('/checkout');
   };
 
   return (

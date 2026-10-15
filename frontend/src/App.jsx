@@ -9,7 +9,13 @@ import CategoryPage, { PRODUCTS_CATALOG } from './pages/CategoryPage';
 import CollectionsPage from './pages/CollectionsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
 import { CartProvider } from './context/CartContext';
+import AdminLayout from './layouts/AdminLayout';
+import AdminRoute from './routes/AdminRoute';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import DashboardPage from './pages/admin/DashboardPage';
+import UsersPage from './pages/admin/UsersPage';
 
 const KNOWN_CATEGORY_SLUGS = [
   'ban-an',
@@ -108,13 +114,33 @@ function AnimatedRoutes() {
         <Route path="/dang-ky" element={<AuthPage defaultMode="register" />} />
         <Route path="/login" element={<AuthPage defaultMode="login" />} />
 
+        {/* Admin Management Routes (Protected by AdminRoute) */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="tong-quan" element={<DashboardPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="nguoi-dung" element={<UsersPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="orders/:id" element={<AdminOrdersPage />} />
+          <Route path="don-hang" element={<AdminOrdersPage />} />
+          <Route path="don-hang/:id" element={<AdminOrdersPage />} />
+        </Route>
+
         {/* Main Store Layout Routes */}
         <Route path="/" element={<MainLayout />}>
           <Route index element={<HomePage />} />
           <Route path="gio-hang" element={<CartPage />} />
           <Route path="cart" element={<CartPage />} />
-          <Route path="thanh-toan" element={<CartPage />} />
-          <Route path="checkout" element={<CartPage />} />
+          <Route path="thanh-toan" element={<CheckoutPage />} />
+          <Route path="checkout" element={<CheckoutPage />} />
 
           <Route path="sofa-ban-tra" element={<CategoryPage categoryId="02" />} />
           <Route path="phong-khach" element={<CategoryPage categoryId="02" />} />
@@ -127,6 +153,7 @@ function AnimatedRoutes() {
 
           {/* Đường dẫn sản phẩm */}
           <Route path="san-pham" element={<CategoryPage />} />
+          <Route path="san-pham-moi" element={<CategoryPage />} />
           <Route path="san pham" element={<CategoryPage />} />
           <Route path="san-pham/chi-tiet/:idOrSlug" element={<ProductDetailPage />} />
           <Route path="san-pham/chi-tiet/:id" element={<ProductDetailPage />} />
