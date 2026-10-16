@@ -26,6 +26,34 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        DB::table('users')->updateOrInsert(
+            ['email' => 'customer@gmail.com'],
+            [
+                'name' => 'Nguyễn Văn Khách',
+                'password' => Hash::make('password123'),
+                'role' => 'customer',
+                'phone' => '0912345678',
+                'is_active' => true,
+                'email_verified_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        DB::table('users')->updateOrInsert(
+            ['email' => 'thinh@gmail.com'],
+            [
+                'name' => 'Trần Thịnh Test',
+                'password' => Hash::make('password123'),
+                'role' => 'customer',
+                'phone' => '0987654321',
+                'is_active' => true,
+                'email_verified_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
         // 2. Tạo danh mục sản phẩm (Khớp với Frontend của Thịnh)
         $categories = [
             ['id' => 1, 'name' => 'Bàn ăn cao cấp', 'slug' => 'ban-an', 'description' => 'Mặt đá Ceramic chống ố, Gỗ óc chó FAS.'],
@@ -561,6 +589,173 @@ class DatabaseSeeder extends Seeder
                     'sort_order' => $index,
                     'created_at' => now(),
                     'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // 4. Tạo các đơn hàng mẫu để kiểm thử trang Quản lý đơn hàng & Thống kê Admin Dashboard
+        $customerUser = DB::table('users')->where('email', 'customer@gmail.com')->first();
+        $sampleVariants = DB::table('product_variants')
+            ->join('products', 'product_variants.product_id', '=', 'products.id')
+            ->select('product_variants.*', 'products.name as product_name')
+            ->limit(5)
+            ->get();
+
+        if ($customerUser && $sampleVariants->count() >= 2) {
+            $v1 = $sampleVariants[0];
+            $v2 = $sampleVariants[1];
+
+            $sampleOrders = [
+                [
+                    'order_code' => 'ORD-20261010-8801',
+                    'status' => 'completed',
+                    'recipient_name' => 'Nguyễn Văn Khách',
+                    'recipient_phone' => '0912345678',
+                    'shipping_address' => '120 Đường Hai Bà Trưng, Phường Đa Kao, Quận 1, TP.HCM',
+                    'note' => 'Giao hàng cẩn thận giúp em',
+                    'created_at' => now()->subDays(6),
+                    'payment_method' => 'cod',
+                    'payment_status' => 'success',
+                    'items' => [
+                        ['variant' => $v1, 'quantity' => 1],
+                    ],
+                ],
+                [
+                    'order_code' => 'ORD-20261012-8802',
+                    'status' => 'completed',
+                    'recipient_name' => 'Nguyễn Văn Khách',
+                    'recipient_phone' => '0912345678',
+                    'shipping_address' => 'Toà nhà Landmark 81, Vinhomes Central Park, Bình Thạnh, TP.HCM',
+                    'note' => 'Giao vào buổi sáng sau 9h',
+                    'created_at' => now()->subDays(4),
+                    'payment_method' => 'bank_transfer',
+                    'payment_status' => 'success',
+                    'items' => [
+                        ['variant' => $v2, 'quantity' => 1],
+                    ],
+                ],
+                [
+                    'order_code' => 'ORD-20261014-8803',
+                    'status' => 'shipping',
+                    'recipient_name' => 'Trần Thịnh Test',
+                    'recipient_phone' => '0987654321',
+                    'shipping_address' => '456 Đường Nguyễn Thị Minh Khai, Quận 3, TP.HCM',
+                    'note' => 'Gọi trước khi giao 15 phút',
+                    'created_at' => now()->subDays(2),
+                    'payment_method' => 'cod',
+                    'payment_status' => 'pending',
+                    'items' => [
+                        ['variant' => $v1, 'quantity' => 2],
+                    ],
+                ],
+                [
+                    'order_code' => 'ORD-20261015-8804',
+                    'status' => 'confirmed',
+                    'recipient_name' => 'Lê Hoàng Long',
+                    'recipient_phone' => '0933445566',
+                    'shipping_address' => '789 Đường Võ Văn Tần, Phường 6, Quận 3, TP.HCM',
+                    'note' => 'Hàng mẫu cho phòng khách căn hộ',
+                    'created_at' => now()->subDay(),
+                    'payment_method' => 'vnpay',
+                    'payment_status' => 'success',
+                    'items' => [
+                        ['variant' => $v2, 'quantity' => 1],
+                    ],
+                ],
+                [
+                    'order_code' => 'ORD-20261016-8805',
+                    'status' => 'pending',
+                    'recipient_name' => 'Phạm Thu Trang',
+                    'recipient_phone' => '0977889900',
+                    'shipping_address' => '12 Đường Thảo Điền, TP. Thủ Đức, TP.HCM',
+                    'note' => 'Kiểm tra kỹ chân bàn trước khi giao',
+                    'created_at' => now(),
+                    'payment_method' => 'cod',
+                    'payment_status' => 'pending',
+                    'items' => [
+                        ['variant' => $v1, 'quantity' => 1],
+                        ['variant' => $v2, 'quantity' => 1],
+                    ],
+                ],
+            ];
+
+            foreach ($sampleOrders as $ord) {
+                // Tính subtotal từ các item
+                $subtotal = 0;
+                foreach ($ord['items'] as $it) {
+                    $subtotal += ((float) $it['variant']->price) * $it['quantity'];
+                }
+                $shippingFee = 50000;
+                $discountAmount = 0;
+
+                // Thêm hoặc cập nhật đơn hàng
+                $existingOrder = DB::table('orders')->where('order_code', $ord['order_code'])->first();
+                $orderId = null;
+
+                if ($existingOrder) {
+                    $orderId = $existingOrder->id;
+                    DB::table('orders')->where('id', $orderId)->update([
+                        'user_id' => $customerUser->id,
+                        'recipient_name' => $ord['recipient_name'],
+                        'recipient_phone' => $ord['recipient_phone'],
+                        'shipping_address' => $ord['shipping_address'],
+                        'status' => $ord['status'],
+                        'subtotal' => $subtotal,
+                        'shipping_fee' => $shippingFee,
+                        'discount_amount' => $discountAmount,
+                        'note' => $ord['note'],
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    $orderId = DB::table('orders')->insertGetId([
+                        'order_code' => $ord['order_code'],
+                        'user_id' => $customerUser->id,
+                        'recipient_name' => $ord['recipient_name'],
+                        'recipient_phone' => $ord['recipient_phone'],
+                        'shipping_address' => $ord['shipping_address'],
+                        'status' => $ord['status'],
+                        'subtotal' => $subtotal,
+                        'shipping_fee' => $shippingFee,
+                        'discount_amount' => $discountAmount,
+                        'note' => $ord['note'],
+                        'created_at' => $ord['created_at'],
+                        'updated_at' => $ord['created_at'],
+                    ]);
+                }
+
+                // Thêm order_items
+                DB::table('order_items')->where('order_id', $orderId)->delete();
+                foreach ($ord['items'] as $it) {
+                    $v = $it['variant'];
+                    DB::table('order_items')->insert([
+                        'order_id' => $orderId,
+                        'variant_id' => $v->id,
+                        'product_name' => $v->product_name,
+                        'sku' => $v->sku,
+                        'color' => $v->color,
+                        'material' => $v->material,
+                        'dimensions_snapshot' => ($v->length_cm && $v->width_cm && $v->height_cm)
+                            ? "{$v->length_cm}x{$v->width_cm}x{$v->height_cm} cm"
+                            : null,
+                        'quantity' => $it['quantity'],
+                        'unit_price' => $v->price,
+                        'created_at' => $ord['created_at'],
+                        'updated_at' => $ord['created_at'],
+                    ]);
+                }
+
+                // Thêm payment
+                $totalAmount = $subtotal + $shippingFee - $discountAmount;
+                DB::table('payments')->where('order_id', $orderId)->delete();
+                DB::table('payments')->insert([
+                    'order_id' => $orderId,
+                    'method' => $ord['payment_method'],
+                    'status' => $ord['payment_status'],
+                    'amount' => $totalAmount,
+                    'transaction_code' => $ord['payment_status'] === 'success' ? 'TXN-' . strtoupper(Str::random(10)) : null,
+                    'paid_at' => $ord['payment_status'] === 'success' ? $ord['created_at'] : null,
+                    'created_at' => $ord['created_at'],
+                    'updated_at' => $ord['created_at'],
                 ]);
             }
         }
