@@ -80,6 +80,12 @@ export default function AdminLayout() {
       match: ['/admin', '/admin/dashboard'],
     },
     {
+      label: 'Quản Lý Danh Mục',
+      path: '/admin/categories',
+      icon: Layers,
+      match: ['/admin/categories', '/admin/danh-muc'],
+    },
+    {
       label: 'Người Dùng & Phân Quyền',
       path: '/admin/users',
       icon: Users,
@@ -237,9 +243,17 @@ export default function AdminLayout() {
 
             {/* Breadcrumbs */}
             <div className="hidden sm:flex items-center space-x-2 text-xs text-stone-500 font-light">
-              <Link to="/admin/orders" className="hover:text-stone-800">Admin</Link>
+              <Link to="/admin/dashboard" className="hover:text-stone-800">Admin</Link>
               <span>/</span>
-              <span className="text-stone-800 font-medium">Quản lý đơn hàng</span>
+              <span className="text-stone-800 font-medium">
+                {location.pathname.includes('/categories') || location.pathname.includes('/danh-muc')
+                  ? 'Quản lý danh mục'
+                  : location.pathname.includes('/users') || location.pathname.includes('/nguoi-dung')
+                  ? 'Người dùng & Phân quyền'
+                  : location.pathname.includes('/orders') || location.pathname.includes('/don-hang')
+                  ? 'Quản lý đơn hàng'
+                  : 'Tổng quan'}
+              </span>
             </div>
           </div>
 
