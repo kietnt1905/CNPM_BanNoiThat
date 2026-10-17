@@ -23,6 +23,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import adminCategoryApi from '../../api/adminCategoryApi';
 import CategoryModal from '../../components/admin/CategoryModal';
+import cacheHelper from '../../utils/cache';
 
 // ==========================================
 // TOAST NOTIFICATION COMPONENT
@@ -205,6 +206,13 @@ export default function CategoriesPage() {
           )
         );
 
+        // Xóa cache danh mục và bắn event đồng bộ toàn app (Header, CategoryPage, ...)
+        cacheHelper.remove('categories');
+        window.dispatchEvent(new Event('categories-updated'));
+        try {
+          localStorage.setItem('tk_categories_updated_at', Date.now().toString());
+        } catch {}
+
         // Cập nhật bộ đếm counts
         setCounts((prev) => ({
           ...prev,
@@ -245,6 +253,11 @@ export default function CategoriesPage() {
       if (res.data?.status) {
         showToast(res.data.message || `Xóa danh mục "${deleteConfirmCategory.name}" thành công!`);
         setDeleteConfirmCategory(null);
+        cacheHelper.remove('categories');
+        window.dispatchEvent(new Event('categories-updated'));
+        try {
+          localStorage.setItem('tk_categories_updated_at', Date.now().toString());
+        } catch {}
         fetchCategories();
       }
     } catch (err) {
@@ -295,7 +308,7 @@ export default function CategoriesPage() {
           className="inline-flex items-center justify-center space-x-2 px-5 py-2.5 bg-[#2C241E] hover:bg-[#8C6A48] text-white text-xs font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 group self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4 transition-transform group-hover:scale-110" />
-          <span>+ Thêm danh mục mới</span>
+          <span>Thêm danh mục mới</span>
         </button>
       </div>
 
@@ -651,6 +664,11 @@ export default function CategoriesPage() {
           showToast(msg);
           setCategoryModalOpen(false);
           setEditingCategory(null);
+          cacheHelper.remove('categories');
+          window.dispatchEvent(new Event('categories-updated'));
+          try {
+            localStorage.setItem('tk_categories_updated_at', Date.now().toString());
+          } catch {}
           fetchCategories();
         }}
       />

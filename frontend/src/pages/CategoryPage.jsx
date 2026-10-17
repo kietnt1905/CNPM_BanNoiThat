@@ -509,8 +509,27 @@ export default function CategoryPage({ categoryId }) {
         if (isMounted) setCategoriesLoading(false);
       });
 
+    const handleCategorySync = () => {
+      categoryApi
+        .getAll()
+        .then((res) => {
+          if (!isMounted) return;
+          const data = res.data?.data || res.data || [];
+          if (Array.isArray(data)) {
+            setCategories(data);
+            cacheHelper.set('categories', data, 15);
+          }
+        })
+        .catch(() => {});
+    };
+
+    window.addEventListener('categories-updated', handleCategorySync);
+    window.addEventListener('storage', handleCategorySync);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('categories-updated', handleCategorySync);
+      window.removeEventListener('storage', handleCategorySync);
     };
   }, []);
 
@@ -526,6 +545,8 @@ export default function CategoryPage({ categoryId }) {
     const otherItems = [];
 
     categories.forEach((cat) => {
+      if (!cat) return;
+      if (cat.is_active === false || cat.is_active === 0 || cat.is_active === '0') return;
       const slug = cat.slug || '';
       const item = {
         id: cat.id,

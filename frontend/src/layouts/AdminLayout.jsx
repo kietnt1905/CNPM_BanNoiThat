@@ -17,7 +17,8 @@ import {
   Shield,
   Sparkles,
   ArrowLeft,
-  Search
+  Search,
+  Armchair
 } from 'lucide-react';
 import authApi from '../api/authApi';
 
@@ -86,6 +87,12 @@ export default function AdminLayout() {
       match: ['/admin/categories', '/admin/danh-muc'],
     },
     {
+      label: 'Quản Lý Sản Phẩm',
+      path: '/admin/products',
+      icon: Armchair,
+      match: ['/admin/products', '/admin/san-pham'],
+    },
+    {
       label: 'Người Dùng & Phân Quyền',
       path: '/admin/users',
       icon: Users,
@@ -117,9 +124,8 @@ export default function AdminLayout() {
 
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 w-64 bg-[#1B1816] text-[#E8E2D8] flex flex-col z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } border-r border-[#2E2824]`}
+        className={`fixed top-0 bottom-0 left-0 w-64 bg-[#1B1816] text-[#E8E2D8] flex flex-col z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } border-r border-[#2E2824]`}
       >
         {/* Brand Header */}
         <div className="p-6 border-b border-[#2E2824] flex items-center justify-between">
@@ -166,20 +172,18 @@ export default function AdminLayout() {
                 key={item.path}
                 to={item.path}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                  isMatch
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${isMatch
                     ? 'bg-[#8C6A48] text-white shadow-sm font-semibold'
                     : 'text-stone-300 hover:bg-[#2A2420] hover:text-white'
-                }`}
+                  }`}
               >
                 <div className="flex items-center space-x-3">
                   <Icon className={`w-4 h-4 ${isMatch ? 'text-white' : 'text-stone-400'}`} />
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                    isMatch ? 'bg-white/20 text-white' : 'bg-stone-800 text-stone-300'
-                  }`}>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isMatch ? 'bg-white/20 text-white' : 'bg-stone-800 text-stone-300'
+                    }`}>
                     {item.badge}
                   </span>
                 )}
@@ -246,7 +250,9 @@ export default function AdminLayout() {
               <Link to="/admin/dashboard" className="hover:text-stone-800">Admin</Link>
               <span>/</span>
               <span className="text-stone-800 font-medium">
-                {location.pathname.includes('/categories') || location.pathname.includes('/danh-muc')
+                {location.pathname.includes('/products') || location.pathname.includes('/san-pham')
+                  ? 'Quản lý sản phẩm'
+                  : location.pathname.includes('/categories') || location.pathname.includes('/danh-muc')
                   ? 'Quản lý danh mục'
                   : location.pathname.includes('/users') || location.pathname.includes('/nguoi-dung')
                   ? 'Người dùng & Phân quyền'

@@ -17,6 +17,7 @@ import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import DashboardPage from './pages/admin/DashboardPage';
 import UsersPage from './pages/admin/UsersPage';
 import CategoriesPage from './pages/admin/CategoriesPage';
+import ProductsPage from './pages/admin/ProductsPage';
 
 const KNOWN_CATEGORY_SLUGS = [
   'ban-an',
@@ -129,6 +130,8 @@ function AnimatedRoutes() {
           <Route path="tong-quan" element={<DashboardPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="danh-muc" element={<CategoriesPage />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="san-pham" element={<ProductsPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="nguoi-dung" element={<UsersPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />

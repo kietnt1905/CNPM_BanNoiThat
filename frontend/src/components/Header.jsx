@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
     Phone,
@@ -16,6 +16,8 @@ import {
     LayoutDashboard
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import categoryApi from '../api/categoryApi';
+import cacheHelper from '../utils/cache';
 
 export default function Header() {
     const navigate = useNavigate();
@@ -137,6 +139,158 @@ export default function Header() {
         }
     };
 
+    // Dynamic categories state: Khởi tạo từ cache (nếu có) để không bị nhấp nháy UI
+    const [categories, setCategories] = useState(() => {
+        return cacheHelper.get('categories') || null;
+    });
+
+    const fetchHeaderCategories = async () => {
+        try {
+            const res = await categoryApi.getAll();
+            const data = res.data?.data || res.data || [];
+            if (Array.isArray(data)) {
+                setCategories(data);
+                cacheHelper.set('categories', data, 15);
+            }
+        } catch (err) {
+            console.error('[Header] Lỗi khi tải danh mục từ API:', err);
+        }
+    };
+
+    useEffect(() => {
+        fetchHeaderCategories();
+
+        // Lắng nghe sự kiện đồng bộ khi Admin bật/tắt/sửa danh mục
+        const handleSync = () => {
+            cacheHelper.remove('categories');
+            fetchHeaderCategories();
+        };
+
+        const handleStorageSync = (e) => {
+            if (e.key === 'tk_categories_updated_at' || e.key === 'tk_cache_categories' || !e.key) {
+                cacheHelper.remove('categories');
+                fetchHeaderCategories();
+            }
+        };
+
+        window.addEventListener('categories-updated', handleSync);
+        window.addEventListener('storage', handleStorageSync);
+
+        return () => {
+            window.removeEventListener('categories-updated', handleSync);
+            window.removeEventListener('storage', handleStorageSync);
+        };
+    }, []);
+
+    // Tạo cấu trúc cây danh mục động, lọc chặt chẽ is_active === true hoặc 1
+    const dynamicSubcategories = useMemo(() => {
+        const defaultDescriptions = {
+            'ban-an': 'Mặt đá Ceramic chống ố, Gỗ óc chó FAS',
+            'ban-tra': 'Đá Marble Calacatta & Gỗ sồi tự nhiên',
+            'ban-lam-viec': 'Gỗ óc chó Bắc Mỹ & Công thái học',
+            'ban-trang-diem': 'Đường nét uốn cong nhẹ nhàng duyên dáng',
+            'sofa-da': 'Da bò Ý thuộc thảo mộc tự nhiên 100%',
+            'sofa-vai': 'Vải dệt cao cấp êm ái thoáng mát',
+            'ghe-thu-gian': 'Mây đan mắt cáo & Nâng niu an yên',
+            'ghe-an': 'Da Nappa cao cấp, tựa cong duyên dáng',
+            'giuong-ngu': 'Gỗ sồi khối nâng niu giấc ngủ',
+            'tu-ke': 'Cánh kính khói & Phụ kiện cao cấp',
+        };
+
+        // Nếu chưa nạp xong danh mục và cache chưa có, chỉ hiển thị danh mục mặc định đang hoạt động
+        if (!categories) {
+            return [
+                {
+                    group: 'BÀN',
+                    viewAllPath: '/san-pham?category=ban',
+                    viewAllLabel: 'Xem tất cả mẫu Bàn',
+                    items: [
+                        { name: 'Bàn ăn cao cấp', path: '/san-pham?category=ban-an', desc: defaultDescriptions['ban-an'] },
+                        { name: 'Bàn trà - Sofa', path: '/san-pham?category=ban-tra', desc: defaultDescriptions['ban-tra'] },
+                        { name: 'Bàn làm việc', path: '/san-pham?category=ban-lam-viec', desc: defaultDescriptions['ban-lam-viec'] },
+                        { name: 'Bàn trang điểm', path: '/san-pham?category=ban-trang-diem', desc: defaultDescriptions['ban-trang-diem'] },
+                    ],
+                },
+                {
+                    group: 'GHẾ & SOFA',
+                    viewAllPath: '/san-pham?category=sofa',
+                    viewAllLabel: 'Xem tất cả Ghế & Sofa',
+                    items: [
+                        { name: 'Sofa da thật', path: '/san-pham?category=sofa-da', desc: defaultDescriptions['sofa-da'] },
+                        { name: 'Ghế Armchair thư giãn', path: '/san-pham?category=ghe-thu-gian', desc: defaultDescriptions['ghe-thu-gian'] },
+                        { name: 'Ghế ăn sang trọng', path: '/san-pham?category=ghe-an', desc: defaultDescriptions['ghe-an'] },
+                    ],
+                },
+            ];
+        }
+
+        // LỌC CHẶT CHẼ: Chỉ giữ lại các danh mục có is_active !== false && is_active !== 0
+        const activeList = categories.filter((cat) => {
+            if (!cat) return false;
+            if (cat.is_active === false || cat.is_active === 0 || cat.is_active === '0') {
+                return false;
+            }
+            return true;
+        });
+
+        const banItems = [];
+        const sofaItems = [];
+        const otherItems = [];
+
+        activeList.forEach((cat) => {
+            const slug = (cat.slug || '').toLowerCase();
+            const name = (cat.name || '').toLowerCase();
+            const item = {
+                id: cat.id,
+                name: cat.name,
+                path: `/san-pham?category=${cat.slug}`,
+                desc: cat.description || defaultDescriptions[cat.slug] || 'Nội thất thiết kế cao cấp',
+                slug: cat.slug,
+            };
+
+            if (slug.startsWith('ban-') || slug === 'ban' || slug.includes('ban') || name.startsWith('bàn')) {
+                banItems.push(item);
+            } else if (
+                slug.startsWith('sofa-') ||
+                slug.startsWith('ghe-') ||
+                slug.includes('sofa') ||
+                slug.includes('ghe') ||
+                name.includes('sofa') ||
+                name.includes('ghế')
+            ) {
+                sofaItems.push(item);
+            } else {
+                otherItems.push(item);
+            }
+        });
+
+        const groups = [
+            {
+                group: 'BÀN',
+                viewAllPath: '/san-pham?category=ban',
+                viewAllLabel: 'Xem tất cả mẫu Bàn',
+                items: banItems,
+            },
+            {
+                group: 'GHẾ & SOFA',
+                viewAllPath: '/san-pham?category=sofa',
+                viewAllLabel: 'Xem tất cả Ghế & Sofa',
+                items: sofaItems,
+            },
+        ];
+
+        if (otherItems.length > 0) {
+            groups.push({
+                group: 'KHÁC',
+                viewAllPath: '/san-pham',
+                viewAllLabel: 'Xem tất cả sản phẩm',
+                items: otherItems,
+            });
+        }
+
+        return groups;
+    }, [categories]);
+
     const navMenuItems = [
         {
             title: 'SẢN PHẨM MỚI',
@@ -147,26 +301,7 @@ export default function Header() {
             title: 'SẢN PHẨM',
             path: '/san-pham',
             hasDropdown: true,
-            subcategories: [
-                {
-                    group: 'BÀN',
-                    items: [
-                        { name: 'Bàn ăn cao cấp', path: '/san-pham?category=ban-an', desc: 'Mặt đá Ceramic chống ố' },
-                        { name: 'Bàn trà - Sofa', path: '/san-pham?category=ban-tra', desc: 'Đá Marble & Gỗ sồi tự nhiên' },
-                        { name: 'Bàn làm việc', path: '/san-pham?category=ban-lam-viec', desc: 'Thiết kế công thái học hiện đại' },
-                        { name: 'Bàn trang điểm', path: '/san-pham?category=ban-trang-diem', desc: 'Đường nét uốn cong nhẹ nhàng' },
-                    ],
-                },
-                {
-                    group: 'GHẾ & SOFA',
-                    items: [
-                        { name: 'Sofa da thật', path: '/san-pham?category=sofa-da', desc: 'Da bò thảo mộc tự nhiên 100%' },
-                        { name: 'Sofa vải nỉ', path: '/san-pham?category=sofa-vai', desc: 'Vải dệt cao cấp êm ái thoáng mát' },
-                        { name: 'Ghế Armchair thư giãn', path: '/san-pham?category=ghe-thu-gian', desc: 'Nâng niu từng phút giây an yên' },
-                        { name: 'Ghế ăn sang trọng', path: '/san-pham?category=ghe-an', desc: 'Đệm ngồi êm dịu, tựa cong duyên dáng' },
-                    ],
-                },
-            ],
+            subcategories: dynamicSubcategories,
             featuredLookbook: {
                 badge: 'LOOKBOOK 2026',
                 title: 'BST Bàn & Ghế 2026 - Thanh lịch & Êm ái',
@@ -285,7 +420,14 @@ export default function Header() {
                                 <div
                                     key={index}
                                     className="relative group whitespace-nowrap flex-shrink-0 py-2"
-                                    onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.title)}
+                                    onMouseEnter={() => {
+                                        if (item.hasDropdown) {
+                                            setActiveDropdown(item.title);
+                                            if (item.title === 'SẢN PHẨM') {
+                                                fetchHeaderCategories();
+                                            }
+                                        }
+                                    }}
                                     onMouseLeave={() => item.hasDropdown && setActiveDropdown(null)}
                                 >
                                     <Link
@@ -323,12 +465,12 @@ export default function Header() {
                                                         <div>
                                                             <div className="pb-3 border-b border-[#E8E2D8]">
                                                                 <h4 className="font-serif text-[15px] font-normal tracking-[0.18em] text-neutral-900 uppercase">
-                                                                    {item.subcategories[0].group}
+                                                                    {item.subcategories?.[0]?.group || 'BÀN'}
                                                                 </h4>
                                                             </div>
                                                             <ul className="space-y-4 pt-4">
-                                                                {item.subcategories[0].items.map((subItem, siIdx) => (
-                                                                    <li key={siIdx}>
+                                                                {item.subcategories?.[0]?.items?.map((subItem, siIdx) => (
+                                                                    <li key={subItem.id || siIdx}>
                                                                         <Link
                                                                             to={subItem.path}
                                                                             className="group/link block text-left"
@@ -348,10 +490,10 @@ export default function Header() {
 
                                                         <div className="pt-4 mt-4 border-t border-stone-100">
                                                             <Link
-                                                                to="/san-pham?category=ban"
+                                                                to={item.subcategories?.[0]?.viewAllPath || "/san-pham?category=ban"}
                                                                 className="inline-flex items-center space-x-1.5 text-xs text-[#8C6A48] hover:text-neutral-900 font-medium tracking-wide transition-colors"
                                                             >
-                                                                <span>Xem tất cả mẫu Bàn</span>
+                                                                <span>{item.subcategories?.[0]?.viewAllLabel || "Xem tất cả mẫu Bàn"}</span>
                                                                 <ArrowRight className="w-3.5 h-3.5" />
                                                             </Link>
                                                         </div>
@@ -362,12 +504,12 @@ export default function Header() {
                                                         <div>
                                                             <div className="pb-3 border-b border-[#E8E2D8]">
                                                                 <h4 className="font-serif text-[15px] font-normal tracking-[0.18em] text-neutral-900 uppercase">
-                                                                    {item.subcategories[1].group}
+                                                                    {item.subcategories?.[1]?.group || 'GHẾ & SOFA'}
                                                                 </h4>
                                                             </div>
                                                             <ul className="space-y-4 pt-4">
-                                                                {item.subcategories[1].items.map((subItem, siIdx) => (
-                                                                    <li key={siIdx}>
+                                                                {item.subcategories?.[1]?.items?.map((subItem, siIdx) => (
+                                                                    <li key={subItem.id || siIdx}>
                                                                         <Link
                                                                             to={subItem.path}
                                                                             className="group/link block text-left"
@@ -387,10 +529,10 @@ export default function Header() {
 
                                                         <div className="pt-4 mt-4 border-t border-stone-100">
                                                             <Link
-                                                                to="/san-pham?category=sofa"
+                                                                to={item.subcategories?.[1]?.viewAllPath || "/san-pham?category=sofa"}
                                                                 className="inline-flex items-center space-x-1.5 text-xs text-[#8C6A48] hover:text-neutral-900 font-medium tracking-wide transition-colors"
                                                             >
-                                                                <span>Xem tất cả Ghế & Sofa</span>
+                                                                <span>{item.subcategories?.[1]?.viewAllLabel || "Xem tất cả Ghế & Sofa"}</span>
                                                                 <ArrowRight className="w-3.5 h-3.5" />
                                                             </Link>
                                                         </div>
@@ -577,14 +719,9 @@ export default function Header() {
                                                 <span>{user.name ? user.name.trim().charAt(0).toUpperCase() : 'TK'}</span>
                                             )}
                                         </div>
-                                        <div className="hidden sm:flex flex-col text-left">
-                                            <span className="text-xs font-semibold text-neutral-900 group-hover:text-[#8C6A48] transition-colors leading-tight max-w-[110px] truncate">
-                                                {user.name || 'Thành viên'}
-                                            </span>
-                                            <span className="text-[10px] text-stone-500 font-light leading-none">
-                                                TK Atelier Member
-                                            </span>
-                                        </div>
+                                        <span className="hidden sm:inline-block text-xs font-semibold text-neutral-900 group-hover:text-[#8C6A48] transition-colors leading-tight max-w-[110px] truncate">
+                                            {user.name || 'Thành viên'}
+                                        </span>
                                         <ChevronDown className={`w-3.5 h-3.5 text-stone-400 group-hover:text-stone-700 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
                                     </button>
 
@@ -794,9 +931,9 @@ export default function Header() {
                                                                     {sub.group}
                                                                 </span>
                                                                 <div className="space-y-1.5 pl-2">
-                                                                    {sub.items.map((subI, siIdx) => (
+                                                                    {sub.items?.map((subI, siIdx) => (
                                                                         <Link
-                                                                            key={siIdx}
+                                                                            key={subI.id || siIdx}
                                                                             to={subI.path}
                                                                             onClick={() => setMobileMenuOpen(false)}
                                                                             className="block hover:text-neutral-900 py-0.5"
