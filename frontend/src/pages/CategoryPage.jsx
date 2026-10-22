@@ -423,7 +423,8 @@ export default function CategoryPage({ categoryId }) {
   const { addToCart } = useCart();
   const [addingProductId, setAddingProductId] = useState(null);
 
-  // 1. Xác định query category và collection từ URL
+  // 1. Xác định query category, collection và search query từ URL
+  const searchQuery = (searchParams.get('q') || searchParams.get('search') || '').trim();
   const activeCollection = (searchParams.get('collection') || '').toLowerCase().trim();
   const collectionMeta = activeCollection ? COLLECTIONS_META[activeCollection] : null;
 
@@ -456,9 +457,9 @@ export default function CategoryPage({ categoryId }) {
   const [collectionOpen, setCollectionOpen] = useState(Boolean(activeCollection));
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Helper lấy cache key theo bộ lọc
-  const getProductCacheKey = (cat, col, price, sort) => {
-    return `products_${cat}_${col || 'none'}_${price}_${sort}`;
+  // Helper lấy cache key theo bộ lọc (bao gồm cả từ khóa tìm kiếm)
+  const getProductCacheKey = (cat, col, price, sort, search) => {
+    return `products_${cat}_${col || 'none'}_${price}_${sort}_${search || 'all'}`;
   };
 
   // State lưu danh mục từ Backend API (ưu tiên nạp từ cache)
@@ -468,7 +469,7 @@ export default function CategoryPage({ categoryId }) {
   const [categoriesLoading, setCategoriesLoading] = useState(false);
 
   // State lưu danh sách sản phẩm lấy từ Backend API (nạp tức thì từ cache nếu có)
-  const initialCacheKey = getProductCacheKey(activeCategory, activeCollection, selectedPriceRange, sortOption);
+  const initialCacheKey = getProductCacheKey(activeCategory, activeCollection, selectedPriceRange, sortOption, searchQuery);
   const initialCached = cacheHelper.get(initialCacheKey);
 
   const [products, setProducts] = useState(() => {
@@ -603,7 +604,7 @@ export default function CategoryPage({ categoryId }) {
   // 3. Gọi API lấy danh sách sản phẩm thật từ Backend với các bộ lọc (Stale-While-Revalidate)
   useEffect(() => {
     let isMounted = true;
-    const cacheKey = getProductCacheKey(activeCategory, activeCollection, selectedPriceRange, sortOption);
+    const cacheKey = getProductCacheKey(activeCategory, activeCollection, selectedPriceRange, sortOption, searchQuery);
     const cachedItems = cacheHelper.get(cacheKey);
 
     // Nếu đã có sẵn cache: Hiển thị ngay tức thì, KHÔNG bật spinner che màn hình
@@ -618,6 +619,11 @@ export default function CategoryPage({ categoryId }) {
     const params = {
       per_page: 100,
     };
+
+    // Tìm kiếm từ khóa đa trường từ backend nếu có query
+    if (searchQuery) {
+      params.q = searchQuery;
+    }
 
     // Lọc theo Category
     if (activeCategory && activeCategory !== 'all') {
@@ -687,7 +693,7 @@ export default function CategoryPage({ categoryId }) {
     return () => {
       isMounted = false;
     };
-  }, [activeCategory, activeCollection, selectedPriceRange, sortOption, retryCount]);
+  }, [activeCategory, activeCollection, selectedPriceRange, sortOption, searchQuery, retryCount]);
 
 
   // Tự động mở danh mục nhỏ bộ sưu tập khi có activeCollection
@@ -791,6 +797,8 @@ export default function CategoryPage({ categoryId }) {
     nextParams.delete('category');
     nextParams.delete('danh-muc');
     nextParams.delete('collection');
+    nextParams.delete('q');
+    nextParams.delete('search');
     setSearchParams(nextParams);
     setSelectedPriceRange('all');
     setSelectedMaterial('all');
@@ -798,9 +806,18 @@ export default function CategoryPage({ categoryId }) {
     setMobileFilterOpen(false);
   };
 
+  // Chọn từ khóa thịnh hành gợi ý khi tìm kiếm
+  const handleSelectTrendingKeyword = (kw) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('q', kw);
+    nextParams.delete('search');
+    setSearchParams(nextParams);
+  };
+
   // Kiểm tra có bộ lọc đang hoạt động hay không
   const isFiltered =
     Boolean(activeCollection) ||
+    Boolean(searchQuery) ||
     activeCategory !== 'all' ||
     selectedPriceRange !== 'all' ||
     selectedMaterial !== 'all';
@@ -997,6 +1014,14 @@ export default function CategoryPage({ categoryId }) {
                 </span>
               </>
             )}
+            {searchQuery && (
+              <>
+                <span className="text-neutral-400">/</span>
+                <span className="font-semibold text-[#8C6A48]">
+                  Tìm kiếm: &ldquo;{searchQuery}&rdquo;
+                </span>
+              </>
+            )}
           </div>
 
           <div className="flex items-center space-x-3">
@@ -1018,33 +1043,62 @@ export default function CategoryPage({ categoryId }) {
         </div>
       </div>
 
-      {/* 2. HERO BANNER KIẾN TRÚC (THIẾT KẾ THU GỌN TINH TẾ) */}
+      {/* 2. SEARCH BANNER HOẶC HERO BANNER KIẾN TRÚC */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-5">
-        <div className="relative rounded-2xl overflow-hidden border border-[#E8E2D8] shadow-sm min-h-[140px] sm:min-h-[170px] lg:min-h-[190px] bg-stone-900 flex flex-col justify-end p-5 sm:p-7 lg:p-8 text-white">
-          <img
-            src={meta.image}
-            alt={meta.title}
-            className="absolute inset-0 w-full h-full object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
-
-          {/* Top category stamp */}
-          <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 flex items-center space-x-2">
-            <span className="bg-black/60 text-white text-[10px] font-sans tracking-[0.25em] px-3 py-1 rounded-full border border-white/30 uppercase shadow-sm font-semibold">
-              {meta.id || 'TK'} • {meta.tag || 'BỘ SƯU TẬP'}
-            </span>
+        {searchQuery ? (
+          <div className="p-6 bg-[#FAF7F2] rounded-2xl border border-[#E8E2D8] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in duration-200">
+            <div>
+              <span className="text-xs uppercase tracking-widest text-[#8C6A48] font-semibold">
+                Kết quả tìm kiếm
+              </span>
+              <h2 className="font-serif text-2xl text-neutral-900 mt-1">
+                Từ khóa: &ldquo;<span className="text-[#8C6A48]">{searchQuery}</span>&rdquo;
+              </h2>
+              <p className="text-sm text-stone-500 mt-1">
+                Tìm thấy <strong className="text-neutral-800">{filteredProducts.length}</strong> sản phẩm phù hợp
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const next = new URLSearchParams(searchParams);
+                next.delete('q');
+                next.delete('search');
+                setSearchParams(next);
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-neutral-700 bg-white border border-stone-200 rounded-lg hover:bg-neutral-50 hover:text-neutral-950 transition-colors shadow-sm cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+              <span>Xóa tìm kiếm</span>
+            </button>
           </div>
+        ) : (
+          <div className="relative rounded-2xl overflow-hidden border border-[#E8E2D8] shadow-sm min-h-[140px] sm:min-h-[170px] lg:min-h-[190px] bg-stone-900 flex flex-col justify-end p-5 sm:p-7 lg:p-8 text-white">
+            <img
+              src={meta.image}
+              alt={meta.title}
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
 
-          {/* Hero text */}
-          <div className="relative z-10 max-w-2xl space-y-1 sm:space-y-2">
-            <h1 className="font-serif text-xl sm:text-3xl lg:text-4xl font-normal text-white italic drop-shadow-md">
-              {meta.title}
-            </h1>
-            <p className="text-xs sm:text-sm text-neutral-200 font-light leading-relaxed drop-shadow line-clamp-2">
-              {meta.description}
-            </p>
+            {/* Top category stamp */}
+            <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 flex items-center space-x-2">
+              <span className="bg-black/60 text-white text-[10px] font-sans tracking-[0.25em] px-3 py-1 rounded-full border border-white/30 uppercase shadow-sm font-semibold">
+                {meta.id || 'TK'} • {meta.tag || 'BỘ SƯU TẬP'}
+              </span>
+            </div>
+
+            {/* Hero text */}
+            <div className="relative z-10 max-w-2xl space-y-1 sm:space-y-2">
+              <h1 className="font-serif text-xl sm:text-3xl lg:text-4xl font-normal text-white italic drop-shadow-md">
+                {meta.title}
+              </h1>
+              <p className="text-xs sm:text-sm text-neutral-200 font-light leading-relaxed drop-shadow line-clamp-2">
+                {meta.description}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* 3. PRODUCT LIST SECTION */}
@@ -1625,24 +1679,56 @@ export default function CategoryPage({ categoryId }) {
               </div>
             ) : (
               /* TRẠNG THÁI RỖNG (EMPTY STATE) */
-              <div className="bg-white rounded-2xl border border-[#E8E2D8] p-12 text-center space-y-4">
-                <div className="w-14 h-14 mx-auto rounded-full bg-[#FAF6F0] border border-[#E5DACD] flex items-center justify-center text-[#8C6A48]">
-                  <Search className="w-6 h-6" />
+              <div className="bg-white rounded-2xl border border-[#E8E2D8] p-8 sm:p-12 text-center space-y-5 shadow-sm">
+                <div className="w-16 h-16 mx-auto rounded-full bg-[#FAF6F0] border border-[#E5DACD] flex items-center justify-center text-[#8C6A48]">
+                  <Search className="w-7 h-7" />
                 </div>
-                <h3 className="font-serif text-xl font-normal text-neutral-900">
-                  Không tìm thấy sản phẩm phù hợp
-                </h3>
-                <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto font-light leading-relaxed">
-                  Hiện chưa có sản phẩm nào thuộc bộ lọc bạn đã chọn. Vui lòng mở rộng khoảng giá hoặc chọn danh mục khác.
-                </p>
-                <div className="pt-2 flex items-center justify-center space-x-3 flex-wrap gap-y-2">
+                <div className="space-y-1.5 max-w-lg mx-auto">
+                  <h3 className="font-serif text-xl sm:text-2xl font-normal text-neutral-900">
+                    {searchQuery
+                      ? `Rất tiếc, không tìm thấy sản phẩm nào phù hợp với từ khóa "${searchQuery}"`
+                      : 'Không tìm thấy sản phẩm phù hợp'}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-neutral-500 font-light leading-relaxed">
+                    {searchQuery
+                      ? 'Hãy thử kiểm tra lại chính tả hoặc tham khảo các gợi ý tìm kiếm thịnh hành bên dưới.'
+                      : 'Hiện chưa có sản phẩm nào thuộc bộ lọc bạn đã chọn. Vui lòng mở rộng khoảng giá hoặc chọn danh mục khác.'}
+                  </p>
+                </div>
+
+                {/* Gợi ý từ khóa thịnh hành */}
+                <div className="pt-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-3">
+                    GỢI Ý TỪ KHÓA NỘI THẤT THỊNH HÀNH
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto">
+                    {[
+                      'Bàn ăn tròn',
+                      'Sofa góc da Ý',
+                      'Bàn trà đôi ceramic',
+                      'Ghế thư giãn gỗ sồi',
+                      'Giường ngủ bọc nỉ',
+                    ].map((kw, kwIdx) => (
+                      <button
+                        key={kwIdx}
+                        type="button"
+                        onClick={() => handleSelectTrendingKeyword(kw)}
+                        className="px-3.5 py-1.5 bg-[#FAF7F2] hover:bg-[#8C6A48] text-stone-700 hover:text-white rounded-full text-xs font-medium border border-stone-200/80 transition-colors shadow-xs cursor-pointer"
+                      >
+                        ✦ {kw}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-3 flex items-center justify-center space-x-3 flex-wrap gap-y-2">
                   <button
                     type="button"
                     onClick={handleResetFilters}
-                    className="px-6 py-2.5 rounded-full bg-[#8C6A48] hover:bg-[#734b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center space-x-2 shadow-sm"
+                    className="px-6 py-2.5 rounded-full bg-[#8C6A48] hover:bg-[#734b2f] text-white text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center space-x-2 shadow-sm cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Xem tất cả sản phẩm</span>
+                    <span>Khám phá tất cả sản phẩm</span>
                   </button>
                 </div>
               </div>

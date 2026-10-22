@@ -159,6 +159,8 @@ function AnimatedRoutes() {
 
           {/* Đường dẫn sản phẩm */}
           <Route path="san-pham" element={<CategoryPage />} />
+          <Route path="tim-kiem" element={<CategoryPage />} />
+          <Route path="search" element={<CategoryPage />} />
           <Route path="san-pham-moi" element={<CategoryPage />} />
           <Route path="san pham" element={<CategoryPage />} />
           <Route path="san-pham/chi-tiet/:idOrSlug" element={<ProductDetailPage />} />

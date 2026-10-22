@@ -13,10 +13,12 @@ import {
     ArrowRight,
     LogOut,
     Sparkles,
-    LayoutDashboard
+    LayoutDashboard,
+    Loader2
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import categoryApi from '../api/categoryApi';
+import productApi from '../api/productApi';
 import cacheHelper from '../utils/cache';
 
 export default function Header() {
@@ -27,6 +29,14 @@ export default function Header() {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeDropdown, setActiveDropdown] = useState(null);
     const [mobileExpandedSection, setMobileExpandedSection] = useState(null);
+
+    // Live search autocomplete states
+    const [suggestions, setSuggestions] = useState([]);
+    const [isSuggestLoading, setIsSuggestLoading] = useState(false);
+    const [showDesktopDropdown, setShowDesktopDropdown] = useState(false);
+    const [showMobileDropdown, setShowMobileDropdown] = useState(false);
+    const desktopSearchRef = useRef(null);
+    const mobileSearchRef = useRef(null);
 
     // User authentication state
     const [user, setUser] = useState(null);
@@ -131,12 +141,86 @@ export default function Header() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    const handleSearchSubmit = (e) => {
-        e.preventDefault();
-        if (searchQuery.trim()) {
-            navigate(`/tim-kiem?q=${encodeURIComponent(searchQuery.trim())}`);
-            setMobileMenuOpen(false);
+    // Debounce gọi gợi ý tìm kiếm (250ms khi gõ >= 2 ký tự)
+    useEffect(() => {
+        const query = searchQuery.trim();
+        if (query.length < 2) {
+            setSuggestions([]);
+            setShowDesktopDropdown(false);
+            setShowMobileDropdown(false);
+            return;
         }
+
+        setIsSuggestLoading(true);
+        const timer = setTimeout(() => {
+            productApi.getSearchSuggestions(query, 6)
+                .then((res) => {
+                    const list = res.data?.data || res.data || [];
+                    setSuggestions(Array.isArray(list) ? list : []);
+                    setShowDesktopDropdown(true);
+                    setShowMobileDropdown(true);
+                })
+                .catch((err) => {
+                    console.error('Lỗi khi lấy search suggestions:', err);
+                })
+                .finally(() => {
+                    setIsSuggestLoading(false);
+                });
+        }, 250);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Xử lý đóng dropdown khi click ra ngoài hoặc bấm Escape
+    useEffect(() => {
+        const handleOutsideClick = (e) => {
+            if (desktopSearchRef.current && !desktopSearchRef.current.contains(e.target)) {
+                setShowDesktopDropdown(false);
+            }
+            if (mobileSearchRef.current && !mobileSearchRef.current.contains(e.target)) {
+                setShowMobileDropdown(false);
+            }
+        };
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setShowDesktopDropdown(false);
+                setShowMobileDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleOutsideClick);
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, []);
+
+    const handleSearchSubmit = (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        const trimmed = searchQuery.trim();
+        if (trimmed) {
+            setShowDesktopDropdown(false);
+            setShowMobileDropdown(false);
+            setMobileMenuOpen(false);
+            navigate(`/tim-kiem?q=${encodeURIComponent(trimmed)}`);
+        }
+    };
+
+    const handleSelectSuggestion = (slugOrId) => {
+        setShowDesktopDropdown(false);
+        setShowMobileDropdown(false);
+        setMobileMenuOpen(false);
+        navigate(`/san-pham/${slugOrId}`);
+    };
+
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        setSuggestions([]);
+        setShowDesktopDropdown(false);
+        setShowMobileDropdown(false);
     };
 
     // Dynamic categories state: Khởi tạo từ cache (nếu có) để không bị nhấp nháy UI
@@ -651,23 +735,118 @@ export default function Header() {
 
                         {/* Right: Search Bar & Actions */}
                         <div className="flex items-center space-x-2.5 sm:space-x-3.5 lg:space-x-4 flex-shrink-0">
-                            {/* Thanh tìm kiếm bo tròn tinh tế kèm kính lúp */}
-                            <form onSubmit={handleSearchSubmit} className="relative hidden md:block">
-                                <input
-                                    type="text"
-                                    placeholder="Tìm sản phẩm..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-44 lg:w-52 xl:w-60 2xl:w-64 pl-4 pr-9 py-1.5 text-xs text-neutral-800 placeholder-neutral-400 bg-neutral-100/90 rounded-full border border-transparent focus:border-neutral-800 focus:bg-white focus:outline-none transition-all duration-200"
-                                />
-                                <button
-                                    type="submit"
-                                    aria-label="Tìm kiếm"
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-900 transition-colors"
-                                >
-                                    <Search className="w-4 h-4 stroke-[1.8]" />
-                                </button>
-                            </form>
+                            {/* Thanh tìm kiếm bo tròn tinh tế kèm Live Autocomplete Dropdown (Desktop) */}
+                            <div ref={desktopSearchRef} className="relative hidden md:block">
+                                <form onSubmit={handleSearchSubmit} className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Tìm bàn, sofa, da bò, gỗ sồi..."
+                                        value={searchQuery}
+                                        onFocus={() => {
+                                            if (searchQuery.trim().length >= 2 && suggestions.length > 0) {
+                                                setShowDesktopDropdown(true);
+                                            }
+                                        }}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-48 lg:w-60 xl:w-72 2xl:w-80 pl-4 pr-16 py-2 text-xs text-neutral-800 placeholder-neutral-400 bg-neutral-100/90 rounded-full border border-transparent focus:border-[#8C6A48] focus:bg-white focus:outline-none transition-all duration-200"
+                                    />
+
+                                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+                                        {isSuggestLoading ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#8C6A48]" />
+                                        ) : searchQuery ? (
+                                            <button
+                                                type="button"
+                                                onClick={handleClearSearch}
+                                                className="p-1 text-neutral-400 hover:text-neutral-700 transition-colors cursor-pointer"
+                                                title="Xóa từ khóa"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        ) : null}
+
+                                        <button
+                                            type="submit"
+                                            aria-label="Tìm kiếm"
+                                            className="p-1 text-neutral-500 hover:text-[#8C6A48] transition-colors cursor-pointer"
+                                        >
+                                            <Search className="w-4 h-4 stroke-[1.8]" />
+                                        </button>
+                                    </div>
+                                </form>
+
+                                {/* Dropdown gợi ý nổi sang trọng chuẩn TK House Luxury */}
+                                {showDesktopDropdown && searchQuery.trim().length >= 2 && (
+                                    <div className="absolute right-0 top-full mt-2 w-[380px] bg-white rounded-2xl border border-stone-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.12)] p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
+                                        <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-stone-100">
+                                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8C6A48]">
+                                                Gợi ý sản phẩm ({suggestions.length})
+                                            </span>
+                                            {isSuggestLoading && (
+                                                <span className="text-[10px] text-stone-400 flex items-center gap-1">
+                                                    <Loader2 className="w-3 h-3 animate-spin text-[#8C6A48]" />
+                                                    Đang tìm...
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {suggestions.length > 0 ? (
+                                            <div className="space-y-1 max-h-[360px] overflow-y-auto custom-scrollbar">
+                                                {suggestions.map((item) => (
+                                                    <div
+                                                        key={item.id}
+                                                        onClick={() => handleSelectSuggestion(item.slug || item.id)}
+                                                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#FAF7F2] transition-colors group cursor-pointer"
+                                                    >
+                                                        <img
+                                                            src={item.thumbnail || '/images/placeholder.jpg'}
+                                                            alt={item.name}
+                                                            onError={(e) => { e.currentTarget.src = '/images/placeholder.jpg'; }}
+                                                            className="w-12 h-12 rounded-lg object-cover bg-stone-100 flex-shrink-0 border border-stone-200/60"
+                                                        />
+                                                        <div className="flex-1 min-w-0">
+                                                            <h5 className="text-xs font-semibold text-neutral-900 group-hover:text-[#8C6A48] transition-colors truncate">
+                                                                {item.name}
+                                                            </h5>
+                                                            <p className="text-[11px] text-stone-500 font-light truncate">
+                                                                {item.category_name || item.material || item.brand || 'Nội thất TK House'}
+                                                            </p>
+                                                            <div className="flex items-center justify-between mt-0.5">
+                                                                <span className="text-xs font-mono font-bold text-[#8C6A48]">
+                                                                    {item.price_display}
+                                                                </span>
+                                                                {item.color && (
+                                                                    <span className="text-[10px] text-stone-400 truncate max-w-[100px]">
+                                                                        {item.color}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : !isSuggestLoading ? (
+                                            <div className="py-6 px-4 text-center">
+                                                <p className="text-xs text-stone-500">
+                                                    Không tìm thấy sản phẩm gợi ý nào cho &ldquo;<span className="text-stone-800 font-medium">{searchQuery}</span>&rdquo;
+                                                </p>
+                                            </div>
+                                        ) : null}
+
+                                        {/* Chân dropdown: Nút xem tất cả kết quả */}
+                                        <div className="pt-2 mt-1 border-t border-stone-100">
+                                            <button
+                                                type="button"
+                                                onClick={handleSearchSubmit}
+                                                className="w-full py-2 px-3 rounded-lg text-xs font-medium text-[#8C6A48] hover:bg-[#FAF7F2] hover:text-neutral-950 flex items-center justify-between transition-colors group cursor-pointer"
+                                            >
+                                                <span>Xem tất cả kết quả cho &ldquo;{searchQuery}&rdquo;</span>
+                                                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Mobile Search Icon */}
                             <button
@@ -840,22 +1019,107 @@ export default function Header() {
 
                             {/* Drawer Content */}
                             <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                                {/* Search Bar in Drawer */}
-                                <form onSubmit={handleSearchSubmit} className="relative">
-                                    <input
-                                        type="text"
-                                        placeholder="Tìm kiếm sản phẩm, bộ sưu tập..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full pl-4 pr-10 py-2.5 text-sm bg-neutral-100 rounded-full border border-transparent focus:border-neutral-800 focus:bg-white focus:outline-none"
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-900"
-                                    >
-                                        <Search className="w-4 h-4" />
-                                    </button>
-                                </form>
+                                {/* Search Bar in Drawer with Live Suggestions */}
+                                <div ref={mobileSearchRef} className="relative">
+                                    <form onSubmit={handleSearchSubmit} className="relative">
+                                        <input
+                                            type="text"
+                                            placeholder="Tìm sản phẩm, chất liệu, màu sắc..."
+                                            value={searchQuery}
+                                            onFocus={() => {
+                                                if (searchQuery.trim().length >= 2 && suggestions.length > 0) {
+                                                    setShowMobileDropdown(true);
+                                                }
+                                            }}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="w-full pl-4 pr-16 py-2.5 text-sm bg-neutral-100 rounded-full border border-transparent focus:border-[#8C6A48] focus:bg-white focus:outline-none transition-all"
+                                        />
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+                                            {isSuggestLoading ? (
+                                                <Loader2 className="w-4 h-4 animate-spin text-[#8C6A48]" />
+                                            ) : searchQuery ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleClearSearch}
+                                                    className="p-1 text-neutral-400 hover:text-neutral-700"
+                                                    title="Xóa từ khóa"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            ) : null}
+                                            <button
+                                                type="submit"
+                                                className="p-1 text-neutral-500 hover:text-[#8C6A48]"
+                                            >
+                                                <Search className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    {/* Mobile Search Suggestions Dropdown */}
+                                    {showMobileDropdown && searchQuery.trim().length >= 2 && (
+                                        <div className="mt-2 w-full bg-white rounded-2xl border border-stone-200 shadow-xl p-3 z-50">
+                                            <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-stone-100">
+                                                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8C6A48]">
+                                                    Gợi ý sản phẩm ({suggestions.length})
+                                                </span>
+                                                {isSuggestLoading && (
+                                                    <span className="text-[10px] text-stone-400 flex items-center gap-1">
+                                                        <Loader2 className="w-3 h-3 animate-spin text-[#8C6A48]" />
+                                                        Đang tìm...
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {suggestions.length > 0 ? (
+                                                <div className="space-y-1.5 max-h-[280px] overflow-y-auto custom-scrollbar">
+                                                    {suggestions.map((item) => (
+                                                        <div
+                                                            key={item.id}
+                                                            onClick={() => handleSelectSuggestion(item.slug || item.id)}
+                                                            className="flex items-center gap-3 p-2 rounded-xl hover:bg-[#FAF7F2] transition-colors group cursor-pointer"
+                                                        >
+                                                            <img
+                                                                src={item.thumbnail || '/images/placeholder.jpg'}
+                                                                alt={item.name}
+                                                                onError={(e) => { e.currentTarget.src = '/images/placeholder.jpg'; }}
+                                                                className="w-12 h-12 rounded-lg object-cover bg-stone-100 flex-shrink-0 border border-stone-200/60"
+                                                            />
+                                                            <div className="flex-1 min-w-0">
+                                                                <h5 className="text-xs font-semibold text-neutral-900 group-hover:text-[#8C6A48] transition-colors truncate">
+                                                                    {item.name}
+                                                                </h5>
+                                                                <p className="text-[11px] text-stone-500 font-light truncate">
+                                                                    {item.category_name || item.material || item.brand || 'Nội thất TK House'}
+                                                                </p>
+                                                                <span className="text-xs font-mono font-bold text-[#8C6A48]">
+                                                                    {item.price_display}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : !isSuggestLoading ? (
+                                                <div className="py-4 px-2 text-center">
+                                                    <p className="text-xs text-stone-500">
+                                                        Không tìm thấy gợi ý nào cho &ldquo;<span className="text-stone-800 font-medium">{searchQuery}</span>&rdquo;
+                                                    </p>
+                                                </div>
+                                            ) : null}
+
+                                            <div className="pt-2 mt-1 border-t border-stone-100">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSearchSubmit}
+                                                    className="w-full py-2 px-3 rounded-lg text-xs font-medium text-[#8C6A48] hover:bg-[#FAF7F2] hover:text-neutral-950 flex items-center justify-between transition-colors group"
+                                                >
+                                                    <span>Xem tất cả kết quả cho &ldquo;{searchQuery}&rdquo;</span>
+                                                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Categories List */}
                                 <div className="space-y-1">
