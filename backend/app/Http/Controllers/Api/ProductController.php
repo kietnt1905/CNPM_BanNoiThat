@@ -58,12 +58,23 @@ class ProductController extends Controller
                 });
             }
 
-            // 2. Tìm kiếm theo tên hoặc mô tả
-            if ($request->filled('search')) {
-                $search = $request->query('search');
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
+            // 2. Tìm kiếm thông minh đa trường (hỗ trợ cả 'q' và 'search'): tên, slug, thương hiệu, mô tả, danh mục, chất liệu, màu sắc, SKU
+            $keyword = trim((string) $request->query('q', $request->query('search', '')));
+            if ($keyword !== '') {
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('name', 'like', "%{$keyword}%")
+                      ->orWhere('slug', 'like', "%{$keyword}%")
+                      ->orWhere('brand', 'like', "%{$keyword}%")
+                      ->orWhere('description', 'like', "%{$keyword}%")
+                      ->orWhereHas('category', function ($catQ) use ($keyword) {
+                          $catQ->where('name', 'like', "%{$keyword}%")
+                               ->orWhere('slug', 'like', "%{$keyword}%");
+                      })
+                      ->orWhereHas('variants', function ($varQ) use ($keyword) {
+                          $varQ->where('material', 'like', "%{$keyword}%")
+                               ->orWhere('color', 'like', "%{$keyword}%")
+                               ->orWhere('sku', 'like', "%{$keyword}%");
+                      });
                 });
             }
 
@@ -403,6 +414,72 @@ class ProductController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Lỗi: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * GET /api/products/search-suggestions
+     * Gợi ý tìm kiếm nhanh (Live Search) siêu nhẹ cho Header / Thanh tìm kiếm
+     */
+    public function suggestions(Request $request)
+    {
+        try {
+            $keyword = trim((string) $request->query('q', $request->query('search', '')));
+
+            if (mb_strlen($keyword) < 1) {
+                return response()->json([
+                    'status' => true,
+                    'data' => [],
+                ]);
+            }
+
+            $products = Product::where('is_active', true)
+                ->with(['category', 'images', 'variants'])
+                ->where(function ($q) use ($keyword) {
+                    $q->where('name', 'like', "%{$keyword}%")
+                      ->orWhere('slug', 'like', "%{$keyword}%")
+                      ->orWhere('brand', 'like', "%{$keyword}%")
+                      ->orWhereHas('category', function ($catQ) use ($keyword) {
+                          $catQ->where('name', 'like', "%{$keyword}%")
+                               ->orWhere('slug', 'like', "%{$keyword}%");
+                      })
+                      ->orWhereHas('variants', function ($varQ) use ($keyword) {
+                          $varQ->where('material', 'like', "%{$keyword}%")
+                               ->orWhere('color', 'like', "%{$keyword}%")
+                               ->orWhere('sku', 'like', "%{$keyword}%");
+                      });
+                })
+                ->limit(6)
+                ->get()
+                ->map(function ($product) {
+                    $firstVariant = $product->variants->where('is_active', true)->first() ?? $product->variants->first();
+                    $minPrice = $product->variants->where('is_active', true)->min('price') ?? ($product->variants->min('price') ?? 0);
+                    $firstImage = $product->images->first()?->image_url ?? '/images/placeholder.jpg';
+
+                    return [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'slug' => $product->slug,
+                        'brand' => $product->brand,
+                        'category_name' => $product->category?->name ?? 'Nội thất TK House',
+                        'category_slug' => $product->category?->slug,
+                        'price' => (float) $minPrice,
+                        'price_display' => number_format((float) $minPrice, 0, ',', '.') . '₫',
+                        'thumbnail' => $firstImage,
+                        'material' => $firstVariant?->material,
+                        'color' => $firstVariant?->color,
+                    ];
+                });
+
+            return response()->json([
+                'status' => true,
+                'data' => $products,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Lỗi khi lấy gợi ý tìm kiếm: ' . $e->getMessage(),
             ], 500);
         }
     }
