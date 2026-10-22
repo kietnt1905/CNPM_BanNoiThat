@@ -17,10 +17,25 @@ const productApi = {
   },
 
   /**
+   * Lấy gợi ý tìm kiếm tức thì (Live Autocomplete Dropdown)
+   * @param {string} query
+   * @param {number} limit
+   */
+  getSearchSuggestions: (query, limit = 6) => {
+    return axiosClient.get('/products/search-suggestions', {
+      params: { q: query, limit },
+    });
+  },
+
+  /**
    * Lấy chi tiết sản phẩm theo ID hoặc Slug
    * @param {string|number} idOrSlug
    */
   getByIdOrSlug: (idOrSlug) => {
+    return axiosClient.get(`/products/${idOrSlug}`);
+  },
+
+  getById: (idOrSlug) => {
     return axiosClient.get(`/products/${idOrSlug}`);
   },
 };
