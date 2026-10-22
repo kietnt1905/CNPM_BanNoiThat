@@ -205,4 +205,73 @@ class ProductSearchTest extends TestCase
         $suggestionResponse->assertStatus(200);
         $this->assertCount(0, $suggestionResponse->json('data'));
     }
+
+    /**
+     * Test: Hỗ trợ tìm kiếm Unicode Tổ Hợp (NFD) từ các bộ gõ Unikey / Telex
+     */
+    public function test_supports_unicode_nfd_input()
+    {
+        $p = Product::create([
+            'category_id' => $this->category->id,
+            'name' => 'Bàn Gỗ Sồi Bắc Âu',
+            'slug' => 'ban-go-soi-bac-au',
+            'brand' => 'TK House',
+            'is_active' => true,
+        ]);
+
+        ProductVariant::create([
+            'product_id' => $p->id,
+            'sku' => 'SKU-GO',
+            'color' => 'Nâu',
+            'material' => 'Gỗ sồi',
+            'price' => 5000000,
+            'stock_quantity' => 5,
+            'is_active' => true,
+        ]);
+
+        // Gõ "gỗ" bằng NFD (Unicode tổ hợp)
+        $nfdQuery = \Normalizer::normalize('gỗ', \Normalizer::FORM_D);
+
+        $response = $this->getJson('/api/products?q=' . urlencode($nfdQuery));
+        $response->assertStatus(200);
+        $this->assertCount(1, $response->json('data'));
+
+        $sugResponse = $this->getJson('/api/products/search-suggestions?q=' . urlencode($nfdQuery));
+        $sugResponse->assertStatus(200);
+        $this->assertCount(1, $sugResponse->json('data'));
+    }
+
+    /**
+     * Test: Tìm kiếm linh hoạt đa từ khóa không liền nhau (ví dụ: "bàn sồi")
+     */
+    public function test_flexible_multi_word_search()
+    {
+        $p = Product::create([
+            'category_id' => $this->category->id,
+            'name' => 'Bàn Tròn Cao Cấp Gỗ Sồi',
+            'slug' => 'ban-tron-cao-cap-go-soi',
+            'brand' => 'TK House',
+            'is_active' => true,
+        ]);
+
+        ProductVariant::create([
+            'product_id' => $p->id,
+            'sku' => 'SKU-MULTI',
+            'color' => 'Nâu',
+            'material' => 'Gỗ tự nhiên',
+            'price' => 7000000,
+            'stock_quantity' => 3,
+            'is_active' => true,
+        ]);
+
+        // Từ "bàn" và "sồi" không đứng liền nhau trong tên
+        $response = $this->getJson('/api/products?q=bàn sồi');
+        $response->assertStatus(200);
+        $this->assertCount(1, $response->json('data'));
+
+        // Không dấu: "ban soi"
+        $responseUnaccented = $this->getJson('/api/products?q=ban soi');
+        $responseUnaccented->assertStatus(200);
+        $this->assertCount(1, $responseUnaccented->json('data'));
+    }
 }

@@ -85,13 +85,13 @@ export const buildCatalogProductDetail = (catalogItem) => {
     const isSingleChair = name.toLowerCase().includes('armchair') || name.toLowerCase().includes('ghế');
     const dimList = isSingleChair
       ? [
-          { key: 'Tiêu chuẩn', detail: 'D85 × R80 × C90 cm', priceAdj: 0 },
-          { key: 'Mở rộng Grand', detail: 'D95 × R88 × C95 cm', priceAdj: 1500000 },
-        ]
+        { key: 'Tiêu chuẩn', detail: 'D85 × R80 × C90 cm', priceAdj: 0 },
+        { key: 'Mở rộng Grand', detail: 'D95 × R88 × C95 cm', priceAdj: 1500000 },
+      ]
       : [
-          { key: '2m2', detail: 'D220 × R95 × C75 cm (Phù hợp căn hộ 70-100m²)', priceAdj: 0 },
-          { key: '2m6', detail: 'D260 × R95 × C75 cm (Phù hợp biệt thự, penthouse)', priceAdj: 4500000 },
-        ];
+        { key: '2m2', detail: 'D220 × R95 × C75 cm (Phù hợp căn hộ 70-100m²)', priceAdj: 0 },
+        { key: '2m6', detail: 'D260 × R95 × C75 cm (Phù hợp biệt thự, penthouse)', priceAdj: 4500000 },
+      ];
 
     const colors = [
       { name: 'Nâu Cognac', code: '#8C5D3E' },
@@ -128,13 +128,13 @@ export const buildCatalogProductDetail = (catalogItem) => {
     const isDining = name.toLowerCase().includes('bàn ăn');
     const dimList = isDining
       ? [
-          { key: '1m8 (6-8 người)', detail: 'D180 × R90 × C75 cm', priceAdj: 0 },
-          { key: '2m2 (8-10 người)', detail: 'D220 × R100 × C75 cm', priceAdj: 3500000 },
-        ]
+        { key: '1m8 (6-8 người)', detail: 'D180 × R90 × C75 cm', priceAdj: 0 },
+        { key: '2m2 (8-10 người)', detail: 'D220 × R100 × C75 cm', priceAdj: 3500000 },
+      ]
       : [
-          { key: 'Tiêu chuẩn', detail: catalogItem.dimensions || 'D80 × R80 × C45 cm', priceAdj: 0 },
-          { key: 'Bản lớn Grand', detail: 'D100 × R100 × C45 cm', priceAdj: 2200000 },
-        ];
+        { key: 'Tiêu chuẩn', detail: catalogItem.dimensions || 'D80 × R80 × C45 cm', priceAdj: 0 },
+        { key: 'Bản lớn Grand', detail: 'D100 × R100 × C45 cm', priceAdj: 2200000 },
+      ];
 
     const colors = [
       { name: 'Trắng Calacatta', code: '#F5F5F0' },
@@ -170,13 +170,13 @@ export const buildCatalogProductDetail = (catalogItem) => {
     const isBed = name.toLowerCase().includes('giường');
     const dimList = isBed
       ? [
-          { key: '1m8 × 2m', detail: 'D200 × R180 × C100 cm', priceAdj: 0 },
-          { key: '2m × 2m2', detail: 'D220 × R200 × C100 cm', priceAdj: 3000000 },
-        ]
+        { key: '1m8 × 2m', detail: 'D200 × R180 × C100 cm', priceAdj: 0 },
+        { key: '2m × 2m2', detail: 'D220 × R200 × C100 cm', priceAdj: 3000000 },
+      ]
       : [
-          { key: 'Tiêu chuẩn 4 cánh', detail: 'D240 × R60 × C260 cm', priceAdj: 0 },
-          { key: 'May đo 6 cánh', detail: 'D320 × R60 × C260 cm', priceAdj: 8500000 },
-        ];
+        { key: 'Tiêu chuẩn 4 cánh', detail: 'D240 × R60 × C260 cm', priceAdj: 0 },
+        { key: 'May đo 6 cánh', detail: 'D320 × R60 × C260 cm', priceAdj: 8500000 },
+      ];
 
     const colors = [
       { name: 'Gỗ Óc Chó Tự Nhiên', code: '#4A3525' },
@@ -361,7 +361,7 @@ export default function ProductDetailPage({ id: propId }) {
             setDynamicRelated(items.filter((p) => p.id !== apiProduct.id).slice(0, 4));
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
     return () => {
       isMounted = false;
@@ -779,7 +779,7 @@ export default function ProductDetailPage({ id: propId }) {
       {/* 2. KHỐI TRÌNH DIỄN CHÍNH (HERO PRODUCT SHOWCASE) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          
+
           {/* CỘT TRÁI: BỘ SƯU TẬP ẢNH TƯƠNG TÁC (INTERACTIVE GALLERY) */}
           <div className="lg:col-span-7 space-y-4">
             {/* Khung ảnh chính */}
@@ -819,7 +819,6 @@ export default function ProductDetailPage({ id: propId }) {
 
               {/* Nhãn xem chi tiết góc dưới */}
               <div className="absolute bottom-4 left-4 bg-black/55 backdrop-blur-md text-white rounded-xl px-3 py-1.5 text-[11px] font-mono tracking-wide flex items-center space-x-2 border border-white/20">
-                <Sparkle className="w-3 h-3 text-[#E6C280]" />
                 <span>Góc nhìn {activeImageIdx + 1} / {galleryImages.length}</span>
               </div>
             </div>
@@ -831,11 +830,10 @@ export default function ProductDetailPage({ id: propId }) {
                   key={idx}
                   type="button"
                   onClick={() => setActiveImageIdx(idx)}
-                  className={`relative flex-shrink-0 w-20 h-16 sm:w-24 sm:h-20 rounded-2xl overflow-hidden border-2 transition-all duration-200 ${
-                    activeImageIdx === idx
-                      ? 'border-[#8C6A48] ring-2 ring-[#8C6A48]/30 scale-102 shadow-sm'
-                      : 'border-[#E8E2D8] hover:border-neutral-400 opacity-75 hover:opacity-100'
-                  }`}
+                  className={`relative flex-shrink-0 w-20 h-16 sm:w-24 sm:h-20 rounded-2xl overflow-hidden border-2 transition-all duration-200 ${activeImageIdx === idx
+                    ? 'border-[#8C6A48] ring-2 ring-[#8C6A48]/30 scale-102 shadow-sm'
+                    : 'border-[#E8E2D8] hover:border-neutral-400 opacity-75 hover:opacity-100'
+                    }`}
                 >
                   <img
                     src={imgUrl}
@@ -888,7 +886,7 @@ export default function ProductDetailPage({ id: propId }) {
 
           {/* CỘT PHẢI: BẢNG TÙY CHỈNH & ĐẶT MUA (PURCHASE DOSSIER) */}
           <div className="lg:col-span-5 bg-white rounded-3xl border border-[#E8E2D8] p-6 sm:p-8 shadow-sm space-y-6">
-            
+
             {/* Header thông tin sản phẩm */}
             <div className="space-y-2 border-b border-[#F0EBE1] pb-5">
               <div className="flex items-center justify-between">
@@ -952,11 +950,10 @@ export default function ProductDetailPage({ id: propId }) {
                         key={mat}
                         type="button"
                         onClick={() => setSelectedMaterial(mat)}
-                        className={`p-3 rounded-2xl border text-xs text-left transition-all flex items-center justify-between ${
-                          isSelected
-                            ? 'border-[#8C6A48] bg-[#FAF6F0] text-[#8C6A48] font-semibold ring-1 ring-[#8C6A48] shadow-xs'
-                            : 'border-[#E8E2D8] hover:bg-[#FAF8F5] text-neutral-700'
-                        }`}
+                        className={`p-3 rounded-2xl border text-xs text-left transition-all flex items-center justify-between ${isSelected
+                          ? 'border-[#8C6A48] bg-[#FAF6F0] text-[#8C6A48] font-semibold ring-1 ring-[#8C6A48] shadow-xs'
+                          : 'border-[#E8E2D8] hover:bg-[#FAF8F5] text-neutral-700'
+                          }`}
                       >
                         <div className="flex items-center space-x-2">
                           <Layers className={`w-3.5 h-3.5 ${isSelected ? 'text-[#8C6A48]' : 'text-neutral-400'}`} />
@@ -991,11 +988,10 @@ export default function ProductDetailPage({ id: propId }) {
                         key={colorName}
                         type="button"
                         onClick={() => setSelectedColor(colorName)}
-                        className={`relative group flex items-center space-x-2 px-3 py-1.5 rounded-full border transition-all ${
-                          isSelected
-                            ? 'border-[#8C6A48] bg-[#FAF6F0] ring-1 ring-[#8C6A48] shadow-xs'
-                            : 'border-[#E8E2D8] hover:border-neutral-400 bg-white'
-                        }`}
+                        className={`relative group flex items-center space-x-2 px-3 py-1.5 rounded-full border transition-all ${isSelected
+                          ? 'border-[#8C6A48] bg-[#FAF6F0] ring-1 ring-[#8C6A48] shadow-xs'
+                          : 'border-[#E8E2D8] hover:border-neutral-400 bg-white'
+                          }`}
                       >
                         <span
                           className="w-4 h-4 rounded-full border border-black/10 inline-block shadow-inner"
@@ -1032,11 +1028,10 @@ export default function ProductDetailPage({ id: propId }) {
                         key={dim.key}
                         type="button"
                         onClick={() => setSelectedDimension(dim.key)}
-                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-xs text-left transition-all ${
-                          isSelected
-                            ? 'border-[#8C6A48] bg-[#FAF6F0] text-[#8C6A48] font-semibold ring-1 ring-[#8C6A48] shadow-xs'
-                            : 'border-[#E8E2D8] hover:bg-[#FAF8F5] text-neutral-700'
-                        }`}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border text-xs text-left transition-all ${isSelected
+                          ? 'border-[#8C6A48] bg-[#FAF6F0] text-[#8C6A48] font-semibold ring-1 ring-[#8C6A48] shadow-xs'
+                          : 'border-[#E8E2D8] hover:bg-[#FAF8F5] text-neutral-700'
+                          }`}
                       >
                         <div className="flex items-center space-x-2">
                           <span className="font-mono font-bold tracking-tight">{dim.key}</span>
@@ -1152,11 +1147,10 @@ export default function ProductDetailPage({ id: propId }) {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`text-xs sm:text-sm uppercase tracking-wider pb-3 transition-colors relative whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'text-[#8C6A48] font-bold'
-                    : 'text-neutral-500 hover:text-neutral-900 font-medium'
-                }`}
+                className={`text-xs sm:text-sm uppercase tracking-wider pb-3 transition-colors relative whitespace-nowrap ${activeTab === tab.id
+                  ? 'text-[#8C6A48] font-bold'
+                  : 'text-neutral-500 hover:text-neutral-900 font-medium'
+                  }`}
               >
                 <span>{tab.label}</span>
                 {activeTab === tab.id && (

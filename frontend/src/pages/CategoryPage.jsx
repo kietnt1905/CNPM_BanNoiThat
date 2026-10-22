@@ -424,7 +424,7 @@ export default function CategoryPage({ categoryId }) {
   const [addingProductId, setAddingProductId] = useState(null);
 
   // 1. Xác định query category, collection và search query từ URL
-  const searchQuery = (searchParams.get('q') || searchParams.get('search') || '').trim();
+  const searchQuery = (searchParams.get('q') || searchParams.get('search') || '').trim().normalize('NFC');
   const activeCollection = (searchParams.get('collection') || '').toLowerCase().trim();
   const collectionMeta = activeCollection ? COLLECTIONS_META[activeCollection] : null;
 

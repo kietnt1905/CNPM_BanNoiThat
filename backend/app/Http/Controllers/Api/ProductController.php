@@ -58,24 +58,28 @@ class ProductController extends Controller
                 });
             }
 
-            // 2. Tìm kiếm thông minh đa trường (hỗ trợ cả 'q' và 'search'): tên, slug, thương hiệu, mô tả, danh mục, chất liệu, màu sắc, SKU
-            $keyword = trim((string) $request->query('q', $request->query('search', '')));
-            if ($keyword !== '') {
-                $query->where(function ($q) use ($keyword) {
-                    $q->where('name', 'like', "%{$keyword}%")
-                      ->orWhere('slug', 'like', "%{$keyword}%")
-                      ->orWhere('brand', 'like', "%{$keyword}%")
-                      ->orWhere('description', 'like', "%{$keyword}%")
-                      ->orWhereHas('category', function ($catQ) use ($keyword) {
-                          $catQ->where('name', 'like', "%{$keyword}%")
-                               ->orWhere('slug', 'like', "%{$keyword}%");
-                      })
-                      ->orWhereHas('variants', function ($varQ) use ($keyword) {
-                          $varQ->where('material', 'like', "%{$keyword}%")
-                               ->orWhere('color', 'like', "%{$keyword}%")
-                               ->orWhere('sku', 'like', "%{$keyword}%");
-                      });
-                });
+            // 2. Tìm kiếm tự nhiên đa trường và sắp xếp theo độ phù hợp (Relevance Ranking)
+            $keyword = (string) $request->query('q', $request->query('search', ''));
+            if (trim($keyword) !== '') {
+                $rankedIds = $this->getNaturalSearchRankedIds($keyword);
+                if (empty($rankedIds)) {
+                    $query->whereRaw('1 = 0');
+                } else {
+                    $query->whereIn('products.id', $rankedIds);
+                    $sort = $request->query('sort', 'newest');
+                    if ($sort === 'newest') {
+                        $driver = \Illuminate\Support\Facades\DB::getDriverName();
+                        if ($driver === 'mysql') {
+                            $query->orderByRaw("FIELD(products.id, " . implode(',', $rankedIds) . ")");
+                        } else {
+                            $cases = [];
+                            foreach ($rankedIds as $orderIdx => $pId) {
+                                $cases[] = "WHEN id = {$pId} THEN {$orderIdx}";
+                            }
+                            $query->orderByRaw("CASE " . implode(' ', $cases) . " ELSE 9999 END");
+                        }
+                    }
+                }
             }
 
             // 3. Lọc theo khoảng giá (dựa trên giá variant)
@@ -419,13 +423,154 @@ class ProductController extends Controller
     }
 
     /**
+     * Tìm kiếm tự nhiên và chấm điểm độ liên quan (Natural Language Relevance Scoring)
+     * Trả về danh sách Product ID theo thứ tự phù hợp nhất, loại trừ triệt để kết quả sai (như tìm ghế ra bàn)
+     */
+    private function getNaturalSearchRankedIds(string $rawKeyword): array
+    {
+        $keyword = class_exists(\Normalizer::class)
+            ? \Normalizer::normalize(trim($rawKeyword), \Normalizer::FORM_C)
+            : trim($rawKeyword);
+
+        if ($keyword === '') {
+            return [];
+        }
+
+        $searchLower = mb_strtolower($keyword, 'UTF-8');
+        $unaccentedSearch = \Illuminate\Support\Str::slug($keyword, ' ');
+        $words = array_values(array_filter(explode(' ', $searchLower)));
+        $unaccentedWords = array_values(array_filter(explode(' ', $unaccentedSearch)));
+
+        $candidates = Product::where('is_active', true)
+            ->select(['id', 'category_id', 'name', 'slug', 'brand'])
+            ->with([
+                'category:id,name,slug',
+                'variants:id,product_id,material,color,price,is_active'
+            ])
+            ->get();
+
+        $scored = [];
+
+        foreach ($candidates as $p) {
+            $nameLower = mb_strtolower($p->name, 'UTF-8');
+            $catNameLower = mb_strtolower($p->category?->name ?? '', 'UTF-8');
+            $catSlugLower = str_replace('-', ' ', mb_strtolower($p->category?->slug ?? '', 'UTF-8'));
+            $materialsLower = mb_strtolower($p->variants->pluck('material')->implode(' '), 'UTF-8');
+            $colorsLower = mb_strtolower($p->variants->pluck('color')->implode(' '), 'UTF-8');
+
+            $nameUnaccented = \Illuminate\Support\Str::slug($p->name, ' ');
+
+            // Tách các từ riêng rẽ bằng Regex Unicode
+            preg_match_all('/[\p{L}\p{N}]+/u', $nameLower, $nameMatches);
+            $nameWords = $nameMatches[0] ?? [];
+
+            preg_match_all('/[\p{L}\p{N}]+/u', $nameUnaccented, $nameUnaccentedMatches);
+            $nameUnaccentedWords = $nameUnaccentedMatches[0] ?? [];
+
+            preg_match_all('/[\p{L}\p{N}]+/u', $catNameLower . ' ' . $catSlugLower, $catMatches);
+            $catWords = $catMatches[0] ?? [];
+
+            preg_match_all('/[\p{L}\p{N}]+/u', $materialsLower, $matMatches);
+            $matWords = $matMatches[0] ?? [];
+
+            preg_match_all('/[\p{L}\p{N}]+/u', $colorsLower, $colorMatches);
+            $colorWords = $colorMatches[0] ?? [];
+
+            $score = 0;
+            $matchedAllWords = true;
+
+            // 1. Điểm thưởng lớn nếu tên chứa chính xác cả cụm tìm kiếm
+            if (str_contains($nameLower, $searchLower) || str_contains($nameUnaccented, $unaccentedSearch)) {
+                $score += 500;
+            }
+
+            // 1.1. Điểm thưởng nếu tên bắt đầu bằng chuỗi tìm kiếm (ví dụ gõ "b", "ba", "so", "gh")
+            if (str_starts_with($nameLower, $searchLower) || str_starts_with($nameUnaccented, $unaccentedSearch)) {
+                $score += 400;
+            }
+
+            // 2. Điểm thưởng ưu tiên sản phẩm bắt đầu bằng từ khóa loại hình (ví dụ: gõ "ghế ..." -> ưu tiên Ghế)
+            if (!empty($words) && !empty($nameWords)) {
+                if ($nameWords[0] === $words[0] || (isset($unaccentedWords[0], $nameUnaccentedWords[0]) && $nameUnaccentedWords[0] === $unaccentedWords[0])) {
+                    $score += 300;
+                }
+            }
+
+            // 3. Kiểm tra từng từ: BẮT BUỘC tất cả các từ trong query phải xuất hiện
+            foreach ($words as $idx => $w) {
+                $uW = $unaccentedWords[$idx] ?? $w;
+
+                $inName = in_array($w, $nameWords, true) || in_array($uW, $nameUnaccentedWords, true);
+                $inCat = in_array($w, $catWords, true);
+                $inMat = in_array($w, $matWords, true);
+                $inColor = in_array($w, $colorWords, true);
+
+                if ($inName) {
+                    $score += 200;
+                } elseif ($inCat) {
+                    $score += 90;
+                } elseif ($inMat) {
+                    $score += 60;
+                } elseif ($inColor) {
+                    $score += 50;
+                } else {
+                    // Kiểm tra tiền tố từ (prefix) trong cả từ có dấu và không dấu (hỗ trợ gõ 1-2 chữ như "ba", "gh", "so")
+                    $hasPrefix = false;
+                    foreach ($nameWords as $nw) {
+                        if (str_starts_with($nw, $w)) {
+                            $score += 80;
+                            $hasPrefix = true;
+                            break;
+                        }
+                    }
+                    if (!$hasPrefix) {
+                        foreach ($nameUnaccentedWords as $nuw) {
+                            if (str_starts_with($nuw, $uW)) {
+                                $score += 70;
+                                $hasPrefix = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!$hasPrefix) {
+                        foreach ($catWords as $cw) {
+                            if (str_starts_with($cw, $w) || str_starts_with($cw, $uW)) {
+                                $score += 50;
+                                $hasPrefix = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!$hasPrefix) {
+                        $matchedAllWords = false;
+                        break;
+                    }
+                }
+            }
+
+            if ($matchedAllWords && $score > 0) {
+                $scored[] = [
+                    'id' => $p->id,
+                    'score' => $score,
+                ];
+            }
+        }
+
+        usort($scored, fn($a, $b) => $b['score'] <=> $a['score']);
+        return array_column($scored, 'id');
+    }
+
+    /**
      * GET /api/products/search-suggestions
-     * Gợi ý tìm kiếm nhanh (Live Search) siêu nhẹ cho Header / Thanh tìm kiếm
+     * Gợi ý tìm kiếm nhanh (Live Search) tự nhiên chuẩn xác và siêu tốc với Cache
      */
     public function suggestions(Request $request)
     {
         try {
-            $keyword = trim((string) $request->query('q', $request->query('search', '')));
+            $rawKeyword = (string) $request->query('q', $request->query('search', ''));
+            $keyword = class_exists(\Normalizer::class)
+                ? \Normalizer::normalize(trim($rawKeyword), \Normalizer::FORM_C)
+                : trim($rawKeyword);
 
             if (mb_strlen($keyword) < 1) {
                 return response()->json([
@@ -434,30 +579,38 @@ class ProductController extends Controller
                 ]);
             }
 
-            $products = Product::where('is_active', true)
-                ->with(['category', 'images', 'variants'])
-                ->where(function ($q) use ($keyword) {
-                    $q->where('name', 'like', "%{$keyword}%")
-                      ->orWhere('slug', 'like', "%{$keyword}%")
-                      ->orWhere('brand', 'like', "%{$keyword}%")
-                      ->orWhereHas('category', function ($catQ) use ($keyword) {
-                          $catQ->where('name', 'like', "%{$keyword}%")
-                               ->orWhere('slug', 'like', "%{$keyword}%");
-                      })
-                      ->orWhereHas('variants', function ($varQ) use ($keyword) {
-                          $varQ->where('material', 'like', "%{$keyword}%")
-                               ->orWhere('color', 'like', "%{$keyword}%")
-                               ->orWhere('sku', 'like', "%{$keyword}%");
-                      });
-                })
-                ->limit(6)
-                ->get()
-                ->map(function ($product) {
-                    $firstVariant = $product->variants->where('is_active', true)->first() ?? $product->variants->first();
-                    $minPrice = $product->variants->where('is_active', true)->min('price') ?? ($product->variants->min('price') ?? 0);
+            $limit = min((int) $request->query('limit', 6), 15);
+            $cacheKey = 'search_sug_nat_' . md5($keyword) . '_' . $limit;
+
+            $products = \Illuminate\Support\Facades\Cache::remember($cacheKey, 60, function () use ($keyword, $limit) {
+                $rankedIds = $this->getNaturalSearchRankedIds($keyword);
+
+                if (empty($rankedIds)) {
+                    return [];
+                }
+
+                $topIds = array_slice($rankedIds, 0, $limit);
+
+                $productModels = Product::whereIn('id', $topIds)
+                    ->with([
+                        'category:id,name,slug',
+                        'images:id,product_id,image_url',
+                        'variants:id,product_id,material,color,price,is_active'
+                    ])
+                    ->get()
+                    ->keyBy('id');
+
+                $result = [];
+                foreach ($topIds as $id) {
+                    if (!isset($productModels[$id])) continue;
+                    $product = $productModels[$id];
+
+                    $activeVariants = $product->variants->where('is_active', true);
+                    $firstVariant = $activeVariants->first() ?? $product->variants->first();
+                    $minPrice = $activeVariants->min('price') ?? ($product->variants->min('price') ?? 0);
                     $firstImage = $product->images->first()?->image_url ?? '/images/placeholder.jpg';
 
-                    return [
+                    $result[] = [
                         'id' => $product->id,
                         'name' => $product->name,
                         'slug' => $product->slug,
@@ -470,7 +623,10 @@ class ProductController extends Controller
                         'material' => $firstVariant?->material,
                         'color' => $firstVariant?->color,
                     ];
-                });
+                }
+
+                return $result;
+            });
 
             return response()->json([
                 'status' => true,

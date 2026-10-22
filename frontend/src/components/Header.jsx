@@ -37,6 +37,8 @@ export default function Header() {
     const [showMobileDropdown, setShowMobileDropdown] = useState(false);
     const desktopSearchRef = useRef(null);
     const mobileSearchRef = useRef(null);
+    const activeSearchRequestRef = useRef(0);
+    const suggestionCacheRef = useRef(new Map());
 
     // User authentication state
     const [user, setUser] = useState(null);
@@ -141,32 +143,53 @@ export default function Header() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Debounce gọi gợi ý tìm kiếm (250ms khi gõ >= 2 ký tự)
+    // Debounce và cache gợi ý tìm kiếm siêu tốc (180ms khi gõ >= 2 ký tự)
     useEffect(() => {
-        const query = searchQuery.trim();
-        if (query.length < 2) {
+        const raw = searchQuery.trim();
+        const query = raw.normalize('NFC');
+
+        if (query.length < 1) {
             setSuggestions([]);
             setShowDesktopDropdown(false);
             setShowMobileDropdown(false);
+            setIsSuggestLoading(false);
+            return;
+        }
+
+        // 1. Nếu từ khóa đã có trong cache in-memory: Hiển thị ngay tức thì (0ms)
+        if (suggestionCacheRef.current.has(query)) {
+            setSuggestions(suggestionCacheRef.current.get(query));
+            setShowDesktopDropdown(true);
+            setShowMobileDropdown(true);
+            setIsSuggestLoading(false);
             return;
         }
 
         setIsSuggestLoading(true);
+        const currentReqId = ++activeSearchRequestRef.current;
+
         const timer = setTimeout(() => {
             productApi.getSearchSuggestions(query, 6)
                 .then((res) => {
+                    // Ngăn chặn race condition: chỉ xử lý nếu đây là request mới nhất
+                    if (currentReqId !== activeSearchRequestRef.current) return;
                     const list = res.data?.data || res.data || [];
-                    setSuggestions(Array.isArray(list) ? list : []);
+                    const normalizedList = Array.isArray(list) ? list : [];
+                    suggestionCacheRef.current.set(query, normalizedList);
+                    setSuggestions(normalizedList);
                     setShowDesktopDropdown(true);
                     setShowMobileDropdown(true);
                 })
                 .catch((err) => {
+                    if (currentReqId !== activeSearchRequestRef.current) return;
                     console.error('Lỗi khi lấy search suggestions:', err);
                 })
                 .finally(() => {
-                    setIsSuggestLoading(false);
+                    if (currentReqId === activeSearchRequestRef.current) {
+                        setIsSuggestLoading(false);
+                    }
                 });
-        }, 250);
+        }, 180);
 
         return () => clearTimeout(timer);
     }, [searchQuery]);
@@ -200,7 +223,7 @@ export default function Header() {
 
     const handleSearchSubmit = (e) => {
         if (e && e.preventDefault) e.preventDefault();
-        const trimmed = searchQuery.trim();
+        const trimmed = searchQuery.trim().normalize('NFC');
         if (trimmed) {
             setShowDesktopDropdown(false);
             setShowMobileDropdown(false);
@@ -743,7 +766,7 @@ export default function Header() {
                                         placeholder="Tìm bàn, sofa, da bò, gỗ sồi..."
                                         value={searchQuery}
                                         onFocus={() => {
-                                            if (searchQuery.trim().length >= 2 && suggestions.length > 0) {
+                                            if (searchQuery.trim().length >= 1 && suggestions.length > 0) {
                                                 setShowDesktopDropdown(true);
                                             }
                                         }}
@@ -776,7 +799,7 @@ export default function Header() {
                                 </form>
 
                                 {/* Dropdown gợi ý nổi sang trọng chuẩn TK House Luxury */}
-                                {showDesktopDropdown && searchQuery.trim().length >= 2 && (
+                                {showDesktopDropdown && searchQuery.trim().length >= 1 && (
                                     <div className="absolute right-0 top-full mt-2 w-[380px] bg-white rounded-2xl border border-stone-200/90 shadow-[0_20px_50px_rgba(0,0,0,0.12)] p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
                                         <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-stone-100">
                                             <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8C6A48]">
@@ -1027,7 +1050,7 @@ export default function Header() {
                                             placeholder="Tìm sản phẩm, chất liệu, màu sắc..."
                                             value={searchQuery}
                                             onFocus={() => {
-                                                if (searchQuery.trim().length >= 2 && suggestions.length > 0) {
+                                                if (searchQuery.trim().length >= 1 && suggestions.length > 0) {
                                                     setShowMobileDropdown(true);
                                                 }
                                             }}
@@ -1057,7 +1080,7 @@ export default function Header() {
                                     </form>
 
                                     {/* Mobile Search Suggestions Dropdown */}
-                                    {showMobileDropdown && searchQuery.trim().length >= 2 && (
+                                    {showMobileDropdown && searchQuery.trim().length >= 1 && (
                                         <div className="mt-2 w-full bg-white rounded-2xl border border-stone-200 shadow-xl p-3 z-50">
                                             <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-stone-100">
                                                 <span className="text-[10px] font-semibold uppercase tracking-wider text-[#8C6A48]">
