@@ -7,6 +7,13 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentController;
+
+// Public routes - Payment Gateway (VNPAY)
+Route::prefix('payment/vnpay')->group(function () {
+    Route::get('/callback', [PaymentController::class, 'vnpayCallback']);
+    Route::get('/ipn', [PaymentController::class, 'vnpayIpn']);
+});
 
 // Public routes - Auth
 Route::post('/register', [AuthController::class, 'register']);

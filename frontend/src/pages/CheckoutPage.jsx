@@ -231,9 +231,23 @@ export default function CheckoutPage() {
       const res = await orderApi.createOrder(payload);
 
       if (res.data?.status && res.data?.data) {
-        setOrderSuccess(res.data.data);
+        const paymentUrl = res.data.payment_url || res.data.data.payment_url;
         const purchasedVariantIds = selectedItems.map((item) => Number(item.variant_id));
         await removePurchasedItems(purchasedVariantIds);
+
+        // Nếu là phương thức VNPay và có link thanh toán, chuyển hướng sang cổng VNPay
+        if (form.payment_method === 'vnpay' && paymentUrl) {
+          localStorage.setItem('vnpay_pending_order', JSON.stringify({
+            order_code: res.data.data.order_code,
+            order_id: res.data.data.id,
+            total_amount: res.data.data.total_amount,
+            timestamp: Date.now(),
+          }));
+          window.location.href = paymentUrl;
+          return;
+        }
+
+        setOrderSuccess(res.data.data);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         showToast(res.data?.message || 'Có lỗi xảy ra khi tạo đơn hàng.');
@@ -673,14 +687,35 @@ export default function CheckoutPage() {
                       className="mt-1 accent-[#8C6A48] cursor-pointer"
                     />
                     <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs font-bold text-neutral-900">
-                          Ví điện tử VNPAY (ATM, Visa/Master, QR Pay)
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-bold text-neutral-900">
+                            Cổng thanh toán VNPAY (QR Pay, Thẻ ATM, Visa/Master)
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full">
+                          VNPAY Sandbox
                         </span>
                       </div>
-                      <p className="text-[11px] text-neutral-500 mt-0.5 leading-relaxed">
-                        Hỗ trợ quét mã VNPAY-QR qua ứng dụng ngân hàng hoặc thẻ thanh toán quốc tế an toàn.
+                      <p className="text-[11px] text-neutral-500 mt-1 leading-relaxed">
+                        Chuyển hướng an toàn sang cổng VNPAY. Hỗ trợ quét mã VNPAY-QR từ hơn 30+ app ngân hàng, thẻ ATM nội địa hoặc thẻ quốc tế.
                       </p>
+
+                      {/* Thông tin hỗ trợ khi chọn VNPAY */}
+                      {form.payment_method === 'vnpay' && (
+                        <div className="mt-3 p-3 bg-white/90 rounded-xl border border-stone-200 text-[11px] text-stone-700 space-y-1.5">
+                          <div className="flex items-center space-x-1.5 text-blue-700 font-semibold">
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span>Thông tin thẻ ATM Test NCB (Môi trường thử nghiệm):</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 text-[11px] text-stone-600 bg-stone-50 p-2 rounded-lg">
+                            <div>Ngân hàng: <strong>NCB</strong></div>
+                            <div>Số thẻ: <strong className="font-mono text-[#8C6A48]">9704198526191432198</strong></div>
+                            <div>Tên chủ thẻ: <strong>NGUYEN VAN A</strong></div>
+                            <div>Ngày phát hành: <strong>07/15</strong> (OTP: <strong>123456</strong>)</div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </label>
 

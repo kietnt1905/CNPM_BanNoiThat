@@ -10,6 +10,7 @@ import CollectionsPage from './pages/CollectionsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
+import VNPayReturnPage from './pages/VNPayReturnPage';
 import { CartProvider } from './context/CartContext';
 import AdminLayout from './layouts/AdminLayout';
 import AdminRoute from './routes/AdminRoute';
@@ -147,6 +148,8 @@ function AnimatedRoutes() {
           <Route path="cart" element={<CartPage />} />
           <Route path="thanh-toan" element={<CheckoutPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
+          <Route path="thanh-toan/vnpay-return" element={<VNPayReturnPage />} />
+          <Route path="vnpay-return" element={<VNPayReturnPage />} />
 
           <Route path="sofa-ban-tra" element={<CategoryPage categoryId="02" />} />
           <Route path="phong-khach" element={<CategoryPage categoryId="02" />} />
