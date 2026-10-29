@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\ProfileController;
 
 // Public routes - Payment Gateway (VNPAY)
 Route::prefix('payment/vnpay')->group(function () {
@@ -34,7 +35,10 @@ Route::post('/cart/guest-preview', [CartController::class, 'guestPreview']);
 
 // Protected routes (yêu cầu gửi kèm Token)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/profile', [AuthController::class, 'profile']);
+    // Profile & Account routes
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::put('/profile', [ProfileController::class, 'update']);
+    Route::put('/profile/change-password', [ProfileController::class, 'changePassword']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Cart routes (Người dùng đã đăng nhập)
@@ -48,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     // Order routes (Đơn hàng)
     Route::prefix('orders')->group(function () {
+        Route::get('/counts', [OrderController::class, 'counts']);
         Route::get('/', [OrderController::class, 'index']);
         Route::post('/', [OrderController::class, 'store']);
         Route::get('/{id}', [OrderController::class, 'show']);
