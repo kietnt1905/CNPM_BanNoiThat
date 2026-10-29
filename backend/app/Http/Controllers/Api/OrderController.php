@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\ProductVariant;
+use App\Services\VNPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -59,7 +60,7 @@ class OrderController extends Controller
             'recipient_name' => 'required|string|max:100',
             'recipient_phone' => ['required', 'string', 'max:20', 'regex:/^[0-9+().\s-]{9,20}$/'],
             'shipping_address' => 'required|string|max:500',
-            'payment_method' => 'required|string|in:cod,bank_transfer,COD,bank,BANK_TRANSFER,chuyen_khoan,chuyenkhoan,Chuyển khoản',
+            'payment_method' => 'required|string|in:cod,bank_transfer,COD,bank,BANK_TRANSFER,chuyen_khoan,chuyenkhoan,Chuyển khoản,vnpay,VNPAY,vn_pay',
             'note' => 'nullable|string|max:1000',
             'shipping_fee' => 'nullable|numeric|min:0',
             'discount_amount' => 'nullable|numeric|min:0',
@@ -73,8 +74,8 @@ class OrderController extends Controller
             'recipient_phone.regex' => 'Số điện thoại không đúng định dạng.',
             'shipping_address.required' => 'Vui lòng cung cấp địa chỉ giao hàng và lắp đặt nội thất.',
             'shipping_address.max' => 'Địa chỉ không được vượt quá 500 ký tự.',
-            'payment_method.required' => 'Vui lòng chọn phương thức thanh toán (COD hoặc Chuyển khoản).',
-            'payment_method.in' => 'Phương thức thanh toán không hợp lệ (Chỉ hỗ trợ COD hoặc Chuyển khoản).',
+            'payment_method.required' => 'Vui lòng chọn phương thức thanh toán (COD, Chuyển khoản hoặc VNPAY).',
+            'payment_method.in' => 'Phương thức thanh toán không hợp lệ (Hỗ trợ COD, Chuyển khoản hoặc VNPAY).',
             'items.*.variant_id.exists' => 'Biến thể sản phẩm đã chọn không tồn tại.',
             'items.*.quantity.min' => 'Số lượng mỗi món phải lớn hơn hoặc bằng 1.',
         ]);
@@ -236,9 +237,13 @@ class OrderController extends Controller
 
             // 6. Tạo bản ghi thanh toán (Payment)
             $rawMethod = strtolower($request->payment_method);
-            $normalizedMethod = (in_array($rawMethod, ['cod']) || stripos($rawMethod, 'cod') !== false)
-                ? 'cod'
-                : 'bank_transfer';
+            if (in_array($rawMethod, ['cod']) || stripos($rawMethod, 'cod') !== false) {
+                $normalizedMethod = 'cod';
+            } elseif (in_array($rawMethod, ['vnpay', 'vn_pay']) || stripos($rawMethod, 'vnpay') !== false) {
+                $normalizedMethod = 'vnpay';
+            } else {
+                $normalizedMethod = 'bank_transfer';
+            }
 
             $totalAmount = max(0, ($subtotal + $shippingFee) - $discountAmount);
 
@@ -267,10 +272,24 @@ class OrderController extends Controller
             $order->refresh();
             $order->load(['items.variant.product.images', 'payment']);
 
+            $responseData = $this->formatOrderResponse($order);
+            $paymentUrl = null;
+
+            if ($normalizedMethod === 'vnpay') {
+                try {
+                    $vnpayService = app(VNPayService::class);
+                    $paymentUrl = $vnpayService->createPaymentUrl($order, $request->ip());
+                    $responseData['payment_url'] = $paymentUrl;
+                } catch (\Exception $vnpEx) {
+                    \Log::error('VNPay URL Generation Error: ' . $vnpEx->getMessage());
+                }
+            }
+
             return response()->json([
                 'status' => true,
                 'message' => 'Đặt hàng thành công!',
-                'data' => $this->formatOrderResponse($order),
+                'payment_url' => $paymentUrl,
+                'data' => $responseData,
             ], 201);
 
         } catch (\Exception $e) {
