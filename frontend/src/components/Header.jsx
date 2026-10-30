@@ -951,7 +951,7 @@ export default function Header() {
                                                     </Link>
                                                 )}
                                                 <Link
-                                                    to="/auth"
+                                                    to="/tai-khoan?tab=profile"
                                                     onClick={() => setUserMenuOpen(false)}
                                                     className="flex items-center space-x-2.5 px-4 py-2 hover:bg-stone-50 hover:text-stone-900 transition-colors"
                                                 >
@@ -959,7 +959,7 @@ export default function Header() {
                                                     <span>Hồ sơ tài khoản</span>
                                                 </Link>
                                                 <Link
-                                                    to="/gio-hang"
+                                                    to="/don-hang"
                                                     onClick={() => setUserMenuOpen(false)}
                                                     className="flex items-center space-x-2.5 px-4 py-2 hover:bg-stone-50 hover:text-stone-900 transition-colors"
                                                 >
@@ -1295,37 +1295,61 @@ export default function Header() {
                                     </Link>
 
                                     {user ? (
-                                        <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 flex items-center justify-between">
-                                            <div className="flex items-center space-x-3">
-                                                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#8C6A48] to-[#C9A982] text-white flex items-center justify-center font-serif text-sm font-semibold shadow-sm overflow-hidden flex-shrink-0">
-                                                    {user.avatar && !avatarError ? (
-                                                        <img
-                                                            src={user.avatar}
-                                                            alt={user.name || 'User'}
-                                                            referrerPolicy="no-referrer"
-                                                            onError={() => setAvatarError(true)}
-                                                            className="w-full h-full rounded-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <span>{user.name ? user.name.trim().charAt(0).toUpperCase() : 'TK'}</span>
-                                                    )}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-semibold text-stone-900 truncate">{user.name}</p>
-                                                    <p className="text-[10.5px] text-stone-500 truncate">{user.email || 'Thành viên TK House'}</p>
-                                                </div>
+                                        <div className="space-y-2">
+                                            <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 flex items-center justify-between">
+                                                <Link
+                                                    to="/tai-khoan?tab=profile"
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                    className="flex items-center space-x-3 min-w-0 flex-1 hover:opacity-85 transition-opacity"
+                                                >
+                                                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#8C6A48] to-[#C9A982] text-white flex items-center justify-center font-serif text-sm font-semibold shadow-sm overflow-hidden flex-shrink-0">
+                                                        {user.avatar && !avatarError ? (
+                                                            <img
+                                                                src={user.avatar}
+                                                                alt={user.name || 'User'}
+                                                                referrerPolicy="no-referrer"
+                                                                onError={() => setAvatarError(true)}
+                                                                className="w-full h-full rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <span>{user.name ? user.name.trim().charAt(0).toUpperCase() : 'TK'}</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-semibold text-stone-900 truncate">{user.name}</p>
+                                                        <p className="text-[10.5px] text-stone-500 truncate">{user.email || 'Thành viên TK House'}</p>
+                                                    </div>
+                                                </Link>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setMobileMenuOpen(false);
+                                                        handleLogout();
+                                                    }}
+                                                    className="p-1.5 text-rose-600 hover:bg-rose-100 rounded-lg text-xs transition-colors cursor-pointer"
+                                                    title="Đăng xuất"
+                                                >
+                                                    <LogOut className="w-4 h-4" />
+                                                </button>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setMobileMenuOpen(false);
-                                                    handleLogout();
-                                                }}
-                                                className="p-1.5 text-rose-600 hover:bg-rose-100 rounded-lg text-xs transition-colors cursor-pointer"
-                                                title="Đăng xuất"
-                                            >
-                                                <LogOut className="w-4 h-4" />
-                                            </button>
+                                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                                <Link
+                                                    to="/tai-khoan?tab=profile"
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                    className="flex items-center justify-center space-x-1.5 py-2 px-3 bg-stone-100 hover:bg-stone-200/70 rounded-xl font-medium text-stone-700 transition-colors"
+                                                >
+                                                    <User className="w-3.5 h-3.5 text-[#8C6A48]" />
+                                                    <span>Hồ sơ</span>
+                                                </Link>
+                                                <Link
+                                                    to="/don-hang"
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                    className="flex items-center justify-center space-x-1.5 py-2 px-3 bg-stone-100 hover:bg-stone-200/70 rounded-xl font-medium text-stone-700 transition-colors"
+                                                >
+                                                    <ShoppingBag className="w-3.5 h-3.5 text-[#8C6A48]" />
+                                                    <span>Đơn hàng</span>
+                                                </Link>
+                                            </div>
                                         </div>
                                     ) : (
                                         <Link
