@@ -38,6 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Profile & Account routes
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar']);
     Route::put('/profile/change-password', [ProfileController::class, 'changePassword']);
     Route::post('/logout', [AuthController::class, 'logout']);
 

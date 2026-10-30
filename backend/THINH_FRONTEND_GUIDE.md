@@ -95,7 +95,42 @@
 
 ---
 
-### 2.3. Đổi mật khẩu
+### 2.3. Tải lên ảnh đại diện (Upload Avatar)
+- **Endpoint:** `POST /api/profile/avatar`
+- **Headers:** 
+  - `Authorization: Bearer <token>`
+  - `Content-Type: multipart/form-data`
+- **Request Body (FormData):**
+  - `avatar`: Tệp hình ảnh (hỗ trợ jpeg, png, jpg, webp, gif; dung lượng tối đa 5MB).
+- **Response thành công (200):**
+```json
+{
+  "status": true,
+  "message": "Cập nhật ảnh đại diện thành công!",
+  "data": {
+    "id": 1,
+    "name": "Nguyễn Tuấn Kiệt",
+    "email": "kietnt1905@gmail.com",
+    "phone": "0987654321",
+    "address": "456 Lê Lợi, Phường Bến Nghé, Quận 1, TP.HCM",
+    "avatar": "/uploads/avatars/avatar_1_1730263940_a1b2c3.jpg",
+    "avatar_url": "http://127.0.0.1:8000/uploads/avatars/avatar_1_1730263940_a1b2c3.jpg",
+    "role": "customer",
+    "email_verified": true,
+    "has_password": true,
+    "created_at_display": "01/10/2026"
+  }
+}
+```
+
+### 2.4. Xóa ảnh đại diện (Khôi phục avatar mặc định)
+- **Endpoint:** `DELETE /api/profile/avatar`
+- **Headers:** `Authorization: Bearer <token>`
+- **Response thành công (200):** Trả về `avatar: null`, `avatar_url: null`.
+
+---
+
+### 2.5. Đổi mật khẩu
 - **Endpoint:** `PUT /api/profile/change-password`
 - **Headers:** `Authorization: Bearer <token>`
 - **Request Body (JSON):**
@@ -285,7 +320,7 @@
 > **Yêu cầu chi tiết:**
 > 1. Tạo component trang chính `AccountPage.jsx` tại route `/tai-khoan` (phong cách sang trọng tối giản của TK House: tone màu `#FAF8F5`, `#8C6A48`, `#2C241E`).
 > 2. Có Sidebar điều hướng dạng Tab:
->    - **Tab 1 - Hồ sơ cá nhân:** Xem/sửa Họ tên, SĐT, Địa chỉ nhận hàng (`GET /api/profile` và `PUT /api/profile`).
+>    - **Tab 1 - Hồ sơ cá nhân:** Xem/sửa Họ tên, SĐT, Địa chỉ nhận hàng (`GET /api/profile` và `PUT /api/profile`). Cho phép bấm vào Avatar để chọn ảnh tải lên thay đổi ảnh đại diện (`POST /api/profile/avatar`) hoặc xóa avatar (`DELETE /api/profile/avatar`).
 >    - **Tab 2 - Đơn hàng của tôi:** Gọi `GET /api/orders/counts` để hiển thị số lượng trên các tab trạng thái (*Tất cả*, *Chờ xác nhận*, *Đang giao*, *Hoàn thành*, *Đã hủy*). Gọi `GET /api/orders` hỗ trợ phân trang và tìm kiếm theo mã đơn / tên sản phẩm. Cho phép bấm **Hủy đơn** khi `can_cancel: true` (`PATCH /api/orders/:id/cancel`) và popup xem chi tiết đơn hàng.
 >    - **Tab 3 - Bảo mật:** Đổi mật khẩu (`PUT /api/profile/change-password`).
 > 3. Cập nhật route alias `/don-hang` trong `App.jsx` để mở thẳng tab Đơn hàng.

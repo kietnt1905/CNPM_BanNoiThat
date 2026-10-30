@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
@@ -26,7 +28,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Cập nhật thông tin cá nhân (Họ tên, SĐT, Địa chỉ)
+     * Cập nhật thông tin cá nhân (Họ tên, SĐT, Địa chỉ, Avatar)
      * PUT /api/profile
      */
     public function update(Request $request): JsonResponse
@@ -37,6 +39,7 @@ class ProfileController extends Controller
             'name' => 'required|string|max:100',
             'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+().\s-]{9,20}$/'],
             'address' => 'nullable|string|max:500',
+            'avatar' => 'nullable|string|max:1000',
         ], [
             'name.required' => 'Họ và tên không được để trống.',
             'name.max' => 'Họ và tên không được vượt quá 100 ký tự.',
@@ -63,11 +66,103 @@ class ProfileController extends Controller
             $user->address = $request->filled('address') ? trim($request->address) : null;
         }
 
+        if ($request->has('avatar')) {
+            $user->avatar = $request->filled('avatar') ? trim($request->avatar) : null;
+        }
+
         $user->save();
 
         return response()->json([
             'status' => true,
             'message' => 'Cập nhật thông tin hồ sơ thành công!',
+            'data' => $this->formatUserProfile($user),
+        ]);
+    }
+
+    /**
+     * Tải lên hoặc thay đổi ảnh đại diện (Avatar)
+     * POST /api/profile/avatar
+     */
+    public function uploadAvatar(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,webp,gif|max:5120',
+        ], [
+            'avatar.required' => 'Vui lòng chọn tệp hình ảnh đại diện.',
+            'avatar.image' => 'Tệp tải lên phải là hình ảnh hợp lệ.',
+            'avatar.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, webp, gif.',
+            'avatar.max' => 'Dung lượng hình ảnh không được vượt quá 5MB.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tệp hình ảnh đại diện không hợp lệ.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $file = $request->file('avatar');
+            $extension = $file->getClientOriginalExtension() ?: 'jpg';
+            $fileName = 'avatar_' . $user->id . '_' . time() . '_' . Str::random(6) . '.' . $extension;
+
+            $destinationPath = public_path('uploads/avatars');
+            if (!File::isDirectory($destinationPath)) {
+                File::makeDirectory($destinationPath, 0755, true, true);
+            }
+
+            // Xóa file avatar cũ nếu đã từng tải lên local
+            if ($user->avatar && str_starts_with($user->avatar, '/uploads/avatars/')) {
+                $oldFilePath = public_path(ltrim($user->avatar, '/'));
+                if (File::exists($oldFilePath)) {
+                    File::delete($oldFilePath);
+                }
+            }
+
+            $file->move($destinationPath, $fileName);
+
+            $relativePath = '/uploads/avatars/' . $fileName;
+            $user->avatar = $relativePath;
+            $user->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Cập nhật ảnh đại diện thành công!',
+                'data' => $this->formatUserProfile($user),
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Lỗi trong quá trình tải lên hình ảnh: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Xóa ảnh đại diện (khôi phục avatar mặc định)
+     * DELETE /api/profile/avatar
+     */
+    public function deleteAvatar(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->avatar && str_starts_with($user->avatar, '/uploads/avatars/')) {
+            $oldFilePath = public_path(ltrim($user->avatar, '/'));
+            if (File::exists($oldFilePath)) {
+                File::delete($oldFilePath);
+            }
+        }
+
+        $user->avatar = null;
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Đã xóa ảnh đại diện thành công.',
             'data' => $this->formatUserProfile($user),
         ]);
     }
@@ -133,13 +228,21 @@ class ProfileController extends Controller
      */
     private function formatUserProfile($user): array
     {
+        $avatarPath = $user->avatar;
+        $fullAvatarUrl = null;
+
+        if ($avatarPath) {
+            $fullAvatarUrl = str_starts_with($avatarPath, 'http') ? $avatarPath : url($avatarPath);
+        }
+
         return [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
             'address' => $user->address,
-            'avatar' => $user->avatar,
+            'avatar' => $avatarPath,
+            'avatar_url' => $fullAvatarUrl,
             'role' => $user->role ?? 'customer',
             'email_verified' => !empty($user->email_verified_at),
             'has_password' => !empty($user->password),

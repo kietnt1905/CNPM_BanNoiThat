@@ -164,4 +164,68 @@ class ProfileApiTest extends TestCase
             ->assertJsonPath('status', false)
             ->assertJsonValidationErrors(['new_password']);
     }
+
+    /**
+     * Test upload ảnh đại diện thành công
+     */
+    public function test_can_upload_avatar_successfully(): void
+    {
+        Sanctum::actingAs($this->user);
+
+        $fakeFile = \Illuminate\Http\UploadedFile::fake()->image('my_avatar.jpg', 300, 300);
+
+        $response = $this->postJson('/api/profile/avatar', [
+            'avatar' => $fakeFile,
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('status', true)
+            ->assertJsonPath('message', 'Cập nhật ảnh đại diện thành công!');
+
+        $this->user->refresh();
+        $this->assertNotNull($this->user->avatar);
+        $this->assertStringContainsString('/uploads/avatars/', $this->user->avatar);
+
+        // Dọn dẹp file test
+        $createdFile = public_path(ltrim($this->user->avatar, '/'));
+        if (\Illuminate\Support\Facades\File::exists($createdFile)) {
+            \Illuminate\Support\Facades\File::delete($createdFile);
+        }
+    }
+
+    /**
+     * Test upload avatar báo lỗi khi tệp không phải là ảnh
+     */
+    public function test_upload_avatar_fails_for_invalid_file_type(): void
+    {
+        Sanctum::actingAs($this->user);
+
+        $fakeFile = \Illuminate\Http\UploadedFile::fake()->create('document.pdf', 100);
+
+        $response = $this->postJson('/api/profile/avatar', [
+            'avatar' => $fakeFile,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('status', false)
+            ->assertJsonValidationErrors(['avatar']);
+    }
+
+    /**
+     * Test xóa ảnh đại diện thành công
+     */
+    public function test_can_delete_avatar_successfully(): void
+    {
+        $this->user->update(['avatar' => '/uploads/avatars/test_old.jpg']);
+        Sanctum::actingAs($this->user);
+
+        $response = $this->deleteJson('/api/profile/avatar');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('status', true)
+            ->assertJsonPath('data.avatar', null);
+
+        $this->user->refresh();
+        $this->assertNull($this->user->avatar);
+    }
 }
