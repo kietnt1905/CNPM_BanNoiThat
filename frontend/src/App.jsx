@@ -11,6 +11,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import VNPayReturnPage from './pages/VNPayReturnPage';
+import AccountPage from './pages/AccountPage';
 import { CartProvider } from './context/CartContext';
 import AdminLayout from './layouts/AdminLayout';
 import AdminRoute from './routes/AdminRoute';
@@ -150,6 +151,11 @@ function AnimatedRoutes() {
           <Route path="checkout" element={<CheckoutPage />} />
           <Route path="thanh-toan/vnpay-return" element={<VNPayReturnPage />} />
           <Route path="vnpay-return" element={<VNPayReturnPage />} />
+
+          {/* Quản lý Hồ sơ tài khoản & Đơn hàng của tôi */}
+          <Route path="tai-khoan" element={<AccountPage />} />
+          <Route path="don-hang" element={<AccountPage defaultTab="orders" />} />
+          <Route path="profile" element={<AccountPage defaultTab="profile" />} />
 
           <Route path="sofa-ban-tra" element={<CategoryPage categoryId="02" />} />
           <Route path="phong-khach" element={<CategoryPage categoryId="02" />} />
