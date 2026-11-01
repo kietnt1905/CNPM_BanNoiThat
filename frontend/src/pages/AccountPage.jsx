@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -32,7 +32,8 @@ import {
   Headphones,
   RefreshCw,
   Info,
-  Award
+  Award,
+  Camera
 } from 'lucide-react';
 import profileApi from '../api/profileApi';
 import orderApi from '../api/orderApi';
@@ -156,6 +157,8 @@ export default function AccountPage({ defaultTab }) {
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileUpdating, setProfileUpdating] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const fileInputRef = useRef(null);
   const [profileForm, setProfileForm] = useState({
     name: '',
     phone: '',
@@ -177,12 +180,18 @@ export default function AccountPage({ defaultTab }) {
           address: u.address || '',
         });
         // Cập nhật lại user trong localStorage cho đồng bộ
+        const syncedUser = {
+          ...u,
+          avatar_url: u.avatar_url || u.avatar || null,
+          avatar: u.avatar_url || u.avatar || null,
+        };
         try {
           const currentStored = JSON.parse(localStorage.getItem('user') || '{}');
-          localStorage.setItem('user', JSON.stringify({ ...currentStored, ...u }));
+          localStorage.setItem('user', JSON.stringify({ ...currentStored, ...syncedUser }));
         } catch {
-          localStorage.setItem('user', JSON.stringify(u));
+          localStorage.setItem('user', JSON.stringify(syncedUser));
         }
+        window.dispatchEvent(new Event('auth-change'));
       }
     } catch (err) {
       console.error('Lỗi khi tải thông tin hồ sơ:', err);
@@ -241,6 +250,115 @@ export default function AccountPage({ defaultTab }) {
       }
     } finally {
       setProfileUpdating(false);
+    }
+  };
+
+  // Xử lý tải lên ảnh đại diện mới
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Reset input để có thể chọn lại cùng 1 file nếu cần
+    e.target.value = '';
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Chỉ chấp nhận định dạng ảnh JPEG, PNG, JPG hoặc WEBP!', 'error');
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      showToast('Dung lượng ảnh tối đa là 5MB!', 'error');
+      return;
+    }
+
+    try {
+      setAvatarLoading(true);
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const res = await profileApi.uploadAvatar(formData);
+      if (res.data?.status !== false) {
+        const resData = res.data?.data || res.data || {};
+        const newAvatarUrl =
+          resData.avatar_url ||
+          resData.avatar ||
+          res.data?.avatar_url ||
+          res.data?.avatar ||
+          null;
+
+        setProfile((prev) => {
+          const updated = {
+            ...(prev || {}),
+            ...(typeof resData === 'object' ? resData : {}),
+            avatar_url: newAvatarUrl,
+            avatar: newAvatarUrl,
+          };
+          try {
+            const currentStored = JSON.parse(localStorage.getItem('user') || '{}');
+            localStorage.setItem('user', JSON.stringify({ ...currentStored, ...updated }));
+          } catch {
+            localStorage.setItem('user', JSON.stringify(updated));
+          }
+          return updated;
+        });
+
+        window.dispatchEvent(new Event('auth-change'));
+        showToast(res.data?.message || 'Cập nhật ảnh đại diện thành công!', 'success');
+      } else {
+        showToast(res.data?.message || 'Không thể tải lên ảnh đại diện', 'error');
+      }
+    } catch (err) {
+      console.error('Lỗi tải lên ảnh đại diện:', err);
+      const errorMsg =
+        err.response?.data?.errors?.avatar?.[0] ||
+        err.response?.data?.message ||
+        'Không thể cập nhật ảnh đại diện lúc này';
+      showToast(errorMsg, 'error');
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
+
+  // Xử lý xóa ảnh đại diện
+  const handleDeleteAvatar = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại không?')) {
+      return;
+    }
+
+    try {
+      setAvatarLoading(true);
+      const res = await profileApi.deleteAvatar();
+      if (res.data?.status !== false) {
+        setProfile((prev) => {
+          const updated = {
+            ...(prev || {}),
+            avatar_url: null,
+            avatar: null,
+          };
+          try {
+            const currentStored = JSON.parse(localStorage.getItem('user') || '{}');
+            localStorage.setItem(
+              'user',
+              JSON.stringify({ ...currentStored, ...updated, avatar_url: null, avatar: null })
+            );
+          } catch {
+            localStorage.setItem('user', JSON.stringify(updated));
+          }
+          return updated;
+        });
+
+        window.dispatchEvent(new Event('auth-change'));
+        showToast(res.data?.message || 'Đã xóa ảnh đại diện thành công!', 'success');
+      } else {
+        showToast(res.data?.message || 'Không thể xóa ảnh đại diện', 'error');
+      }
+    } catch (err) {
+      console.error('Lỗi xóa ảnh đại diện:', err);
+      showToast(err.response?.data?.message || 'Không thể xóa ảnh đại diện lúc này', 'error');
+    } finally {
+      setAvatarLoading(false);
     }
   };
 
@@ -528,11 +646,10 @@ export default function AccountPage({ defaultTab }) {
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className={`fixed top-6 right-6 z-50 flex items-center space-x-3 px-4 py-3 rounded-xl shadow-2xl border text-xs font-medium backdrop-blur-md ${
-              toast.type === 'success'
+            className={`fixed top-6 right-6 z-50 flex items-center space-x-3 px-4 py-3 rounded-xl shadow-2xl border text-xs font-medium backdrop-blur-md ${toast.type === 'success'
                 ? 'bg-emerald-950/90 text-emerald-100 border-emerald-700/50'
                 : 'bg-rose-950/90 text-rose-100 border-rose-700/50'
-            }`}
+              }`}
           >
             {toast.type === 'success' ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -591,24 +708,57 @@ export default function AccountPage({ defaultTab }) {
             {/* 1. Card Thông tin & Avatar Profile Nổi bật */}
             <div className="bg-white rounded-2xl border border-[#EAE4DC] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 text-center">
               {/* Avatar tròn to bo viền đôi sang trọng */}
-              <div className="relative inline-block mx-auto mb-4">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#8C6A48] to-[#C8A97E] text-white font-serif text-3xl font-bold shadow-lg ring-4 ring-[#F2ECE4] flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-105">
-                  {profile?.avatar ? (
-                    <img
-                      src={profile.avatar}
-                      alt={profile.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span>{profile?.name ? profile.name.trim().charAt(0).toUpperCase() : 'TK'}</span>
-                  )}
+              <div className="flex flex-col items-center mb-4">
+                <div className="relative inline-block">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#8C6A48] to-[#C8A97E] text-white font-serif text-3xl font-bold shadow-lg ring-4 ring-[#F2ECE4] flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-105">
+                    {profile?.avatar_url || profile?.avatar ? (
+                      <img
+                        src={profile.avatar_url || profile.avatar}
+                        alt={profile.name || 'Avatar'}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <span>{profile?.name ? profile.name.trim().charAt(0).toUpperCase() : 'TK'}</span>
+                    )}
+                    {avatarLoading && (
+                      <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Nút Camera góc dưới bên phải */}
+                  <button
+                    type="button"
+                    disabled={avatarLoading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 bg-[#2C241E] text-white p-2 rounded-full shadow hover:bg-[#8C6A48] transition cursor-pointer disabled:opacity-60"
+                    title="Đổi ảnh đại diện"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* Input chọn file ảnh ẩn */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg,image/webp"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
                 </div>
-                <div
-                  className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-white shadow-xs"
-                  title="Tài khoản đang hoạt động"
-                >
-                  <Check className="w-3.5 h-3.5 stroke-[3]" />
-                </div>
+
+                {/* Nút xóa ảnh đại diện khi có avatar */}
+                {(profile?.avatar_url || profile?.avatar) && (
+                  <button
+                    type="button"
+                    disabled={avatarLoading}
+                    onClick={handleDeleteAvatar}
+                    className="text-xs text-red-500 hover:underline cursor-pointer mt-2 text-center disabled:opacity-50"
+                  >
+                    Xóa ảnh đại diện
+                  </button>
+                )}
               </div>
 
               <h2 className="font-serif font-bold text-lg text-[#2C241E] truncate">
@@ -631,26 +781,23 @@ export default function AccountPage({ defaultTab }) {
               <button
                 type="button"
                 onClick={() => handleTabChange('profile')}
-                className={`w-full flex items-center justify-between p-3.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                  activeTab === 'profile'
+                className={`w-full flex items-center justify-between p-3.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${activeTab === 'profile'
                     ? 'bg-[#2C241E] text-white shadow-md'
                     : 'text-[#554D45] hover:bg-[#F5F0E8] hover:text-[#2C241E]'
-                }`}
+                  }`}
               >
                 <div className="flex items-center space-x-3">
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                      activeTab === 'profile' ? 'bg-white/10 text-white' : 'bg-[#FAF7F2] text-[#8C6A48]'
-                    }`}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${activeTab === 'profile' ? 'bg-white/10 text-white' : 'bg-[#FAF7F2] text-[#8C6A48]'
+                      }`}
                   >
                     <User className="w-4 h-4" />
                   </div>
                   <span>Hồ sơ cá nhân</span>
                 </div>
                 <ChevronRight
-                  className={`w-4 h-4 transition-transform ${
-                    activeTab === 'profile' ? 'rotate-90 text-white/70' : 'text-stone-400'
-                  }`}
+                  className={`w-4 h-4 transition-transform ${activeTab === 'profile' ? 'rotate-90 text-white/70' : 'text-stone-400'
+                    }`}
                 />
               </button>
 
@@ -658,17 +805,15 @@ export default function AccountPage({ defaultTab }) {
               <button
                 type="button"
                 onClick={() => handleTabChange('orders')}
-                className={`w-full flex items-center justify-between p-3.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                  activeTab === 'orders'
+                className={`w-full flex items-center justify-between p-3.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${activeTab === 'orders'
                     ? 'bg-[#2C241E] text-white shadow-md'
                     : 'text-[#554D45] hover:bg-[#F5F0E8] hover:text-[#2C241E]'
-                }`}
+                  }`}
               >
                 <div className="flex items-center space-x-3">
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                      activeTab === 'orders' ? 'bg-white/10 text-white' : 'bg-[#FAF7F2] text-[#8C6A48]'
-                    }`}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${activeTab === 'orders' ? 'bg-white/10 text-white' : 'bg-[#FAF7F2] text-[#8C6A48]'
+                      }`}
                   >
                     <Package className="w-4 h-4" />
                   </div>
@@ -677,19 +822,17 @@ export default function AccountPage({ defaultTab }) {
                 <div className="flex items-center space-x-2">
                   {orderCounts.all > 0 && (
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
-                        activeTab === 'orders'
+                      className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${activeTab === 'orders'
                           ? 'bg-[#8C6A48] text-white'
                           : 'bg-[#FAF3E8] text-[#8C6A48] border border-[#E5D5BC]'
-                      }`}
+                        }`}
                     >
                       {orderCounts.all}
                     </span>
                   )}
                   <ChevronRight
-                    className={`w-4 h-4 transition-transform ${
-                      activeTab === 'orders' ? 'rotate-90 text-white/70' : 'text-stone-400'
-                    }`}
+                    className={`w-4 h-4 transition-transform ${activeTab === 'orders' ? 'rotate-90 text-white/70' : 'text-stone-400'
+                      }`}
                   />
                 </div>
               </button>
@@ -698,26 +841,23 @@ export default function AccountPage({ defaultTab }) {
               <button
                 type="button"
                 onClick={() => handleTabChange('password')}
-                className={`w-full flex items-center justify-between p-3.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                  activeTab === 'password'
+                className={`w-full flex items-center justify-between p-3.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${activeTab === 'password'
                     ? 'bg-[#2C241E] text-white shadow-md'
                     : 'text-[#554D45] hover:bg-[#F5F0E8] hover:text-[#2C241E]'
-                }`}
+                  }`}
               >
                 <div className="flex items-center space-x-3">
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                      activeTab === 'password' ? 'bg-white/10 text-white' : 'bg-[#FAF7F2] text-[#8C6A48]'
-                    }`}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${activeTab === 'password' ? 'bg-white/10 text-white' : 'bg-[#FAF7F2] text-[#8C6A48]'
+                      }`}
                   >
                     <KeyRound className="w-4 h-4" />
                   </div>
                   <span>Bảo mật & Đổi mật khẩu</span>
                 </div>
                 <ChevronRight
-                  className={`w-4 h-4 transition-transform ${
-                    activeTab === 'password' ? 'rotate-90 text-white/70' : 'text-stone-400'
-                  }`}
+                  className={`w-4 h-4 transition-transform ${activeTab === 'password' ? 'rotate-90 text-white/70' : 'text-stone-400'
+                    }`}
                 />
               </button>
 
@@ -844,11 +984,10 @@ export default function AccountPage({ defaultTab }) {
                               if (profileErrors.name) setProfileErrors({ ...profileErrors, name: '' });
                             }}
                             placeholder="Nguyễn Tuấn Kiệt"
-                            className={`w-full pl-10 pr-4 py-3 rounded-xl text-xs bg-[#FCFBF9] border transition-all duration-200 ${
-                              profileErrors.name
+                            className={`w-full pl-10 pr-4 py-3 rounded-xl text-xs bg-[#FCFBF9] border transition-all duration-200 ${profileErrors.name
                                 ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
                                 : 'border-[#E5DFD7] focus:border-[#8C6A48] focus:ring-2 focus:ring-[#8C6A48]/15 focus:bg-white focus:outline-none'
-                            }`}
+                              }`}
                           />
                         </div>
                         {profileErrors.name && (
@@ -891,11 +1030,10 @@ export default function AccountPage({ defaultTab }) {
                               if (profileErrors.phone) setProfileErrors({ ...profileErrors, phone: '' });
                             }}
                             placeholder="Ví dụ: 0912345678"
-                            className={`w-full pl-10 pr-4 py-3 rounded-xl text-xs bg-[#FCFBF9] border transition-all duration-200 ${
-                              profileErrors.phone
+                            className={`w-full pl-10 pr-4 py-3 rounded-xl text-xs bg-[#FCFBF9] border transition-all duration-200 ${profileErrors.phone
                                 ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
                                 : 'border-[#E5DFD7] focus:border-[#8C6A48] focus:ring-2 focus:ring-[#8C6A48]/15 focus:bg-white focus:outline-none'
-                            }`}
+                              }`}
                           />
                         </div>
                         {profileErrors.phone && (
@@ -1015,19 +1153,17 @@ export default function AccountPage({ defaultTab }) {
                           key={tab.key}
                           type="button"
                           onClick={() => setOrderStatusFilter(tab.key)}
-                          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
-                            isActive
+                          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${isActive
                               ? 'bg-[#2C241E] text-white shadow-md'
                               : 'bg-[#FAF7F2] hover:bg-[#F5F0E8] text-[#554D45] border border-[#ECE5DA]'
-                          }`}
+                            }`}
                         >
                           <span>{tab.label}</span>
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              isActive
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive
                                 ? 'bg-[#8C6A48] text-white'
                                 : 'bg-white text-[#8C6A48] border border-[#E5DFD7]'
-                            }`}
+                              }`}
                           >
                             {tab.count}
                           </span>
@@ -1249,13 +1385,12 @@ export default function AccountPage({ defaultTab }) {
                                 </span>
                               </div>
                               <span
-                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                                  order.payment?.status === 'paid'
+                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${order.payment?.status === 'paid'
                                     ? 'bg-emerald-100 text-emerald-800'
                                     : order.payment?.status === 'failed'
-                                    ? 'bg-rose-100 text-rose-800'
-                                    : 'bg-amber-100 text-amber-800'
-                                }`}
+                                      ? 'bg-rose-100 text-rose-800'
+                                      : 'bg-amber-100 text-amber-800'
+                                  }`}
                               >
                                 {order.payment?.status_label || (order.payment?.status === 'paid' ? 'Đã thanh toán' : 'Chờ thanh toán')}
                               </span>
@@ -1316,11 +1451,10 @@ export default function AccountPage({ defaultTab }) {
                             key={p}
                             type="button"
                             onClick={() => fetchOrders(p)}
-                            className={`w-9 h-9 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                              p === orderPagination.current_page
+                            className={`w-9 h-9 rounded-xl text-xs font-semibold transition-all cursor-pointer ${p === orderPagination.current_page
                                 ? 'bg-[#2C241E] text-white shadow-sm'
                                 : 'bg-white border border-[#ECE5DA] text-stone-700 hover:bg-[#FAF7F2]'
-                            }`}
+                              }`}
                           >
                             {p}
                           </button>
@@ -1387,11 +1521,10 @@ export default function AccountPage({ defaultTab }) {
                             }
                           }}
                           placeholder="Nhập mật khẩu hiện tại"
-                          className={`w-full pl-10 pr-10 py-3.5 rounded-xl text-xs bg-[#FCFBF9] border transition-all duration-200 ${
-                            passwordErrors.current_password
+                          className={`w-full pl-10 pr-10 py-3.5 rounded-xl text-xs bg-[#FCFBF9] border transition-all duration-200 ${passwordErrors.current_password
                               ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
                               : 'border-[#E5DFD7] focus:border-[#8C6A48] focus:ring-2 focus:ring-[#8C6A48]/15 focus:bg-white focus:outline-none'
-                          }`}
+                            }`}
                         />
                         <button
                           type="button"
@@ -1427,11 +1560,10 @@ export default function AccountPage({ defaultTab }) {
                           }
                         }}
                         placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
-                        className={`w-full pl-10 pr-10 py-3.5 rounded-xl text-xs bg-[#FCFBF9] border transition-all duration-200 ${
-                          passwordErrors.new_password
+                        className={`w-full pl-10 pr-10 py-3.5 rounded-xl text-xs bg-[#FCFBF9] border transition-all duration-200 ${passwordErrors.new_password
                             ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
                             : 'border-[#E5DFD7] focus:border-[#8C6A48] focus:ring-2 focus:ring-[#8C6A48]/15 focus:bg-white focus:outline-none'
-                        }`}
+                          }`}
                       />
                       <button
                         type="button"
@@ -1469,11 +1601,10 @@ export default function AccountPage({ defaultTab }) {
                           }
                         }}
                         placeholder="Nhập lại mật khẩu mới"
-                        className={`w-full pl-10 pr-10 py-3.5 rounded-xl text-xs bg-[#FCFBF9] border transition-all duration-200 ${
-                          passwordErrors.new_password_confirmation
+                        className={`w-full pl-10 pr-10 py-3.5 rounded-xl text-xs bg-[#FCFBF9] border transition-all duration-200 ${passwordErrors.new_password_confirmation
                             ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15'
                             : 'border-[#E5DFD7] focus:border-[#8C6A48] focus:ring-2 focus:ring-[#8C6A48]/15 focus:bg-white focus:outline-none'
-                        }`}
+                          }`}
                       />
                       <button
                         type="button"
