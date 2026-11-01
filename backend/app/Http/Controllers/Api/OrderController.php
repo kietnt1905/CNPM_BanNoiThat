@@ -303,6 +303,41 @@ class OrderController extends Controller
     }
 
     /**
+     * Thống kê số lượng đơn hàng theo từng trạng thái của user (GET /api/orders/counts)
+     */
+    public function counts(Request $request)
+    {
+        try {
+            $userId = $request->user()->id;
+
+            $counts = Order::where('user_id', $userId)
+                ->selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->all();
+
+            $allTotal = array_sum($counts);
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'all' => $allTotal,
+                    'pending' => $counts['pending'] ?? 0,
+                    'confirmed' => $counts['confirmed'] ?? 0,
+                    'shipping' => $counts['shipping'] ?? 0,
+                    'completed' => $counts['completed'] ?? 0,
+                    'cancelled' => $counts['cancelled'] ?? 0,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Lỗi khi thống kê đơn hàng: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Lấy danh sách đơn hàng đã mua của user đang đăng nhập (GET /api/orders)
      */
     public function index(Request $request)
@@ -315,8 +350,19 @@ class OrderController extends Controller
                 ->orderBy('created_at', 'desc');
 
             // Lọc theo trạng thái đơn hàng nếu có
-            if ($request->filled('status')) {
+            if ($request->filled('status') && $request->query('status') !== 'all') {
                 $query->where('status', $request->query('status'));
+            }
+
+            // Tìm kiếm theo từ khóa (Mã đơn hàng hoặc Tên sản phẩm)
+            if ($request->filled('search') || $request->filled('q')) {
+                $keyword = trim($request->query('search', $request->query('q')));
+                $query->where(function ($subQ) use ($keyword) {
+                    $subQ->where('order_code', 'like', "%{$keyword}%")
+                         ->orWhereHas('items', function ($itemQ) use ($keyword) {
+                             $itemQ->where('product_name', 'like', "%{$keyword}%");
+                         });
+                });
             }
 
             $perPage = (int) $request->query('per_page', 10);
