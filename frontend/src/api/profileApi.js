@@ -30,6 +30,20 @@ const profileApi = {
   changePassword: (data) => {
     return axiosClient.put('/profile/change-password', data);
   },
+
+  // Tải lên / Đổi avatar
+  uploadAvatar: (formData) => {
+    return axiosClient.post('/profile/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Xóa ảnh đại diện
+  deleteAvatar: () => {
+    return axiosClient.delete('/profile/avatar');
+  },
 };
 
 export default profileApi;
