@@ -7,7 +7,7 @@ import {
   ArrowUpDown,
   Eye,
   ShoppingBag,
-  Sparkles,
+  Layers,
   ShieldCheck,
   Check,
   X,
@@ -1452,7 +1452,7 @@ export default function CategoryPage({ categoryId }) {
                 {/* Thẻ lọc Bộ Sưu Tập */}
                 {activeCollection && (
                   <span className="inline-flex items-center space-x-1.5 bg-[#FAF6F0] text-[#8C6A48] border border-[#E5DACD] px-3 py-1 rounded-full text-[11px] font-semibold shadow-sm">
-                    <Sparkles className="w-3 h-3 text-[#8C6A48]" />
+                    <Layers className="w-3 h-3 text-[#8C6A48]" />
                     <span>Bộ sưu tập: {collectionMeta ? collectionMeta.name : activeCollection}</span>
                     <button
                       type="button"

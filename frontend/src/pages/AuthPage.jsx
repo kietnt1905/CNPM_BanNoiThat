@@ -13,7 +13,7 @@ import {
     ShieldCheck,
     ArrowRight,
     Lock,
-    Sparkles,
+    Compass,
     Info
 } from 'lucide-react';
 
@@ -278,7 +278,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                     {/* Architectural Top Stamp */}
                     <div className="absolute top-6 left-6 right-6 flex items-center justify-between text-white/90 z-10">
                         <span className="inline-flex items-center space-x-1.5 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded text-[9.5px] font-mono tracking-widest text-[#E6C687] uppercase border border-white/15">
-                            <Sparkles className="w-3.5 h-3.5 text-[#E6C687]" />
+                            <Compass className="w-3.5 h-3.5 text-[#E6C687]" />
                             <span>TK HOUSE ATELIER</span>
                         </span>
                         <span className="text-[10.5px] font-mono text-stone-400">EST. 2026</span>

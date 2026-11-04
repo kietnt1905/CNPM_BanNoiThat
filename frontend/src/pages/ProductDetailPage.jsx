@@ -12,7 +12,6 @@ import {
   Truck,
   RotateCcw,
   Maximize2,
-  Sparkles,
   PhoneCall,
   Check,
   ChevronRight,
@@ -21,7 +20,6 @@ import {
   Compass,
   Layers,
   Award,
-  Sparkle,
   Loader2,
   AlertCircle
 } from 'lucide-react';

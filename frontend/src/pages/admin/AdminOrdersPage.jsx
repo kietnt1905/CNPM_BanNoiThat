@@ -20,7 +20,6 @@ import {
   ChevronRight,
   ArrowUpDown,
   RefreshCw,
-  Sparkles,
   DollarSign,
   AlertCircle
 } from 'lucide-react';
@@ -292,7 +291,7 @@ export default function AdminOrdersPage() {
             {toast.type === 'error' ? (
               <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
             ) : (
-              <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             )}
             <span>{toast.message}</span>
           </motion.div>

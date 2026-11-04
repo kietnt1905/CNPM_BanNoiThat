@@ -15,7 +15,6 @@ import {
   Bell,
   ChevronDown,
   Shield,
-  Sparkles,
   ArrowLeft,
   Search,
   Armchair

@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   Truck,
   RotateCcw,
-  Sparkles,
   AlertCircle,
   Check
 } from 'lucide-react';

@@ -8,7 +8,8 @@ import {
     ShieldCheck,
     RefreshCw,
     Truck,
-    Sparkles,
+    Gift,
+    Box,
     Send,
     CheckCircle2,
     ExternalLink,
@@ -44,7 +45,7 @@ export default function Footer() {
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="text-center md:text-left space-y-1.5 max-w-xl text-[#FAF8F5]">
                             <div className="inline-flex items-center space-x-2 text-[#E6C280] text-xs font-semibold tracking-wider uppercase">
-                                <Sparkles className="w-3.5 h-3.5" />
+                                <Gift className="w-3.5 h-3.5" />
                                 <span>Đặc quyền ưu đãi TK House</span>
                             </div>
                             <h3 className="font-serif text-xl sm:text-2xl lg:text-3xl text-[#FAF8F5] font-normal tracking-wide">
@@ -124,7 +125,7 @@ export default function Footer() {
 
                         <div className="flex items-center space-x-3.5">
                             <div className="w-10 h-10 rounded-full bg-[#2E251E] shadow-sm border border-[#483B30] flex items-center justify-center text-[#E6C280] flex-shrink-0">
-                                <Sparkles className="w-5 h-5" />
+                                <Box className="w-5 h-5" />
                             </div>
                             <div>
                                 <p className="text-xs font-semibold text-[#FAF8F5] uppercase tracking-wider">Thiết kế 3D miễn phí</p>

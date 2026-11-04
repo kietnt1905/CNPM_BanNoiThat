@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   Truck,
   RotateCcw,
-  Sparkles,
+  Gift,
   Tag,
   CheckCircle2,
   AlertCircle,
@@ -405,7 +405,7 @@ export default function CheckoutPage() {
             exit={{ opacity: 0, y: -15, scale: 0.95 }}
             className="fixed top-6 right-6 z-50 bg-[#2C241E] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center space-x-2.5 text-xs font-medium border border-stone-700/50 backdrop-blur-md"
           >
-            <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             <span>{toastMessage}</span>
           </motion.div>
         )}
@@ -449,7 +449,7 @@ export default function CheckoutPage() {
         {!isAuth && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-center justify-between text-xs text-amber-900">
             <div className="flex items-center space-x-2.5">
-              <Sparkles className="w-4 h-4 text-[#8C6A48] flex-shrink-0" />
+              <Gift className="w-4 h-4 text-[#8C6A48] flex-shrink-0" />
               <span>
                 Quý khách đã có tài khoản tại TK House? Đăng nhập để nhận ưu đãi thành viên và theo dõi tiến độ đơn hàng.
               </span>

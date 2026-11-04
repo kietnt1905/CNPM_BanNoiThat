@@ -15,7 +15,7 @@ import {
   Clock,
   XCircle,
   FileText,
-  Sparkles,
+  Ticket,
   ShieldCheck,
   ChevronRight
 } from 'lucide-react';
@@ -441,7 +441,7 @@ export default function OrderDetailModal({
               {voucherDiscount > 0 && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-stone-600 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#8C6A48]" />
+                    <Ticket className="w-3.5 h-3.5 text-[#8C6A48]" />
                     <span>Voucher giảm giá</span>
                   </span>
                   <span className="font-medium text-base text-emerald-600">

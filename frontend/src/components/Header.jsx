@@ -12,7 +12,6 @@ import {
     ChevronRight,
     ArrowRight,
     LogOut,
-    Sparkles,
     LayoutDashboard,
     Loader2
 } from 'lucide-react';

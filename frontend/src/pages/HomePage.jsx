@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
-  Sparkles,
+  MousePointerClick,
+  Crown,
   Award,
   Truck,
   ShieldCheck,
@@ -1036,7 +1037,7 @@ export default function HomePage() {
                     </div>
                   ) : (
                     <div className="hidden sm:flex items-center justify-end gap-2 text-white/70 text-xs font-light">
-                      <Sparkles className="w-3.5 h-3.5 text-[#E6C280]" />
+                      <MousePointerClick className="w-3.5 h-3.5 text-[#E6C280]" />
                       <span>Chạm vào điểm tròn trên hình để xem giá và chi tiết</span>
                     </div>
                   );
@@ -1671,7 +1672,7 @@ export default function HomePage() {
               {/* Floating badge chi tiết chồng lên góc ảnh */}
               <div className="absolute -bottom-6 -left-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-[#E8E2D8] hidden sm:flex items-center space-x-3.5">
                 <div className="w-11 h-11 rounded-full bg-[#FAF7F2] border border-[#C8A97E] flex items-center justify-center text-[#8C5D3E]">
-                  <Sparkles className="w-5 h-5 text-[#C8A97E]" />
+                  <ShieldCheck className="w-5 h-5 text-[#C8A97E]" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-neutral-900 tracking-wide">
@@ -1723,7 +1724,7 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <div className="absolute inset-0 m-auto w-12 h-12 rounded-full bg-[#FAF7F2] border border-[#C8A97E] shadow-sm flex items-center justify-center text-[#8C5D3E]">
-                  <Sparkles className="w-5 h-5 text-[#C8A97E]" />
+                  <Crown className="w-5 h-5 text-[#C8A97E]" />
                 </div>
               </div>
 
