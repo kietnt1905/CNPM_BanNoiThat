@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
-  Sparkles,
+  MousePointerClick,
+  Crown,
   Award,
   Truck,
   ShieldCheck,
@@ -22,6 +23,7 @@ import {
   X
 } from 'lucide-react';
 import productApi from '../api/productApi';
+import { formatPriceVND } from './CategoryPage';
 
 export default function HomePage() {
   const location = useLocation();
@@ -589,8 +591,11 @@ export default function HomePage() {
               type: isGhe ? 'ghe' : 'ban',
               name: item.name,
               category: item.category_name || item.categoryName || 'Nội thất TK House',
-              price: item.price_display || item.priceDisplay || `${Number(item.price || 0).toLocaleString('vi-VN')}₫`,
-              oldPrice: item.old_price_display || item.oldPriceDisplay || '',
+              price: formatPriceVND(item.price, item.price_display || item.priceDisplay),
+              oldPrice:
+                item.old_price_display || item.oldPriceDisplay
+                  ? formatPriceVND(null, item.old_price_display || item.oldPriceDisplay)
+                  : '',
               image: item.image || item.thumbnail || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
               secondaryImage: item.secondary_image || item.secondaryImage || item.image || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
               tag: item.tag || (item.is_featured ? 'Nổi bật' : 'Mới ra mắt'),
@@ -1032,7 +1037,7 @@ export default function HomePage() {
                     </div>
                   ) : (
                     <div className="hidden sm:flex items-center justify-end gap-2 text-white/70 text-xs font-light">
-                      <Sparkles className="w-3.5 h-3.5 text-[#E6C280]" />
+                      <MousePointerClick className="w-3.5 h-3.5 text-[#E6C280]" />
                       <span>Chạm vào điểm tròn trên hình để xem giá và chi tiết</span>
                     </div>
                   );
@@ -1396,19 +1401,19 @@ export default function HomePage() {
                             </span>
                           )}
                         </div>
-                        <h3 className="font-serif text-[15px] sm:text-base font-normal text-neutral-900 line-clamp-1 hover:text-[#8C5D3E] transition-colors mt-1">
+                        <h3 className="font-['Montserrat'] text-[15px] sm:text-base font-medium text-neutral-800 line-clamp-1 hover:text-[#8C5D3E] transition-colors mt-1 tracking-wide">
                           <Link to={`/san-pham/${p.id}`}>{p.name}</Link>
                         </h3>
                       </div>
 
                       <div className="flex items-center justify-between pt-3 border-t border-[#F2ECE4]">
                         <div>
-                          <span className="text-[15px] sm:text-base font-semibold text-neutral-900">
-                            {p.price}
+                          <span className="font-['Montserrat'] text-[15px] sm:text-base font-normal text-neutral-800 tabular-nums tracking-wide">
+                            {formatPriceVND(null, p.price)}
                           </span>
                           {p.oldPrice && (
-                            <span className="text-xs text-neutral-400 line-through ml-2 font-light">
-                              {p.oldPrice}
+                            <span className="font-['Montserrat'] text-xs text-neutral-400 line-through ml-2 font-normal tabular-nums">
+                              {formatPriceVND(null, p.oldPrice)}
                             </span>
                           )}
                         </div>
@@ -1667,7 +1672,7 @@ export default function HomePage() {
               {/* Floating badge chi tiết chồng lên góc ảnh */}
               <div className="absolute -bottom-6 -left-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-[#E8E2D8] hidden sm:flex items-center space-x-3.5">
                 <div className="w-11 h-11 rounded-full bg-[#FAF7F2] border border-[#C8A97E] flex items-center justify-center text-[#8C5D3E]">
-                  <Sparkles className="w-5 h-5 text-[#C8A97E]" />
+                  <ShieldCheck className="w-5 h-5 text-[#C8A97E]" />
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-neutral-900 tracking-wide">
@@ -1719,7 +1724,7 @@ export default function HomePage() {
                   </svg>
                 </div>
                 <div className="absolute inset-0 m-auto w-12 h-12 rounded-full bg-[#FAF7F2] border border-[#C8A97E] shadow-sm flex items-center justify-center text-[#8C5D3E]">
-                  <Sparkles className="w-5 h-5 text-[#C8A97E]" />
+                  <Crown className="w-5 h-5 text-[#C8A97E]" />
                 </div>
               </div>
 

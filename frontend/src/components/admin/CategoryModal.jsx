@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Layers,
-  Sparkles,
+  RefreshCw,
   AlertTriangle,
   Loader2,
   Check,
@@ -266,7 +266,7 @@ export default function CategoryModal({
                 title="Tự động đồng bộ slug theo tên danh mục"
                 className="inline-flex items-center space-x-1 text-[11px] text-[#8C6A48] hover:text-[#6D4E31] font-medium transition-colors cursor-pointer"
               >
-                <Sparkles className="w-3 h-3" />
+                <RefreshCw className="w-3 h-3" />
                 <span>Tự động sinh slug</span>
               </button>
             </div>

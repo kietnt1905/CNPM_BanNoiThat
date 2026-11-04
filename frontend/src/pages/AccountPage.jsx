@@ -25,7 +25,8 @@ import {
   Copy,
   Check,
   Loader2,
-  Sparkles,
+  LayoutDashboard,
+  Crown,
   ShoppingBag,
   ArrowRight,
   Lock,
@@ -692,7 +693,7 @@ export default function AccountPage({ defaultTab }) {
                 to="/admin"
                 className="inline-flex items-center space-x-2 px-4 py-2 bg-[#FAF3E8] border border-[#E5D5BC] text-[#8C6A48] rounded-xl text-xs font-semibold hover:bg-[#F5EAD6] transition-colors self-start sm:self-auto shadow-xs"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#8C6A48]" />
+                <LayoutDashboard className="w-3.5 h-3.5 text-[#8C6A48]" />
                 <span>Trang Quản Trị Hệ Thống</span>
               </Link>
             )}
@@ -939,7 +940,7 @@ export default function AccountPage({ defaultTab }) {
                       {/* Thẻ 2: Hạng VIP */}
                       <div className="bg-[#FAF7F2] rounded-xl border border-[#ECE5DA] p-4 flex items-center space-x-3.5 shadow-xs">
                         <div className="w-10 h-10 rounded-xl bg-white border border-[#ECE5DA] flex items-center justify-center text-[#8C6A48] flex-shrink-0 shadow-xs">
-                          <Sparkles className="w-5 h-5" />
+                          <Crown className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
                           <span className="text-[11px] font-medium text-stone-500 uppercase tracking-wider block">

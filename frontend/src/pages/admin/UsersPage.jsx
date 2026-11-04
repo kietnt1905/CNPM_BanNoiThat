@@ -24,7 +24,6 @@ import {
   UserCheck,
   UserX,
   Clock,
-  Sparkles,
   ArrowUpRight,
   Filter
 } from 'lucide-react';

@@ -13,7 +13,6 @@ import {
   Check,
   Eye,
   EyeOff,
-  Sparkles,
   Link as LinkIcon,
   Star,
   Info,

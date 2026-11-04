@@ -16,7 +16,6 @@ import {
   ExternalLink,
   Package,
   Calendar,
-  Sparkles,
   ShieldAlert,
   Info
 } from 'lucide-react';

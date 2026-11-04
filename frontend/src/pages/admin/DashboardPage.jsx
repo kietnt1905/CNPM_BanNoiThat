@@ -13,7 +13,6 @@ import {
   ArrowRight,
   Package,
   Layers,
-  Sparkles,
   Clock,
   CheckCircle2,
   AlertCircle,

@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   Truck,
   RotateCcw,
-  Sparkles,
+  CheckCircle2,
   Tag,
   AlertCircle,
   Check,
@@ -149,7 +149,7 @@ export default function CartPage() {
             exit={{ opacity: 0, y: -15, scale: 0.95 }}
             className="fixed top-6 right-6 z-50 bg-[#2C241E] text-white px-5 py-3 rounded-2xl shadow-xl flex items-center space-x-2.5 text-xs font-medium border border-stone-700/50 backdrop-blur-md"
           >
-            <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
             <span>{toastMessage}</span>
           </motion.div>
         )}
