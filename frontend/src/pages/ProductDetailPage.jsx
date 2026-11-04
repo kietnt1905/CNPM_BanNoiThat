@@ -28,7 +28,7 @@ import {
 import productApi from '../api/productApi';
 import cacheHelper from '../utils/cache';
 import { useCart } from '../context/CartContext';
-import { PRODUCTS_CATALOG, COLLECTIONS_META } from './CategoryPage';
+import { PRODUCTS_CATALOG, COLLECTIONS_META, normalizeProduct, formatPriceVND } from './CategoryPage';
 
 // Helper xác định mã màu HEX theo tên chất liệu/màu sắc
 const getColorHex = (colorName) => {
@@ -348,21 +348,70 @@ export default function ProductDetailPage({ id: propId }) {
     };
   }, [targetId]);
 
-  // Tải danh sách sản phẩm liên quan từ API theo danh mục
+  // Tải danh sách sản phẩm liên quan hoàn toàn phía Frontend (cùng category_id / danh mục, loại trừ sản phẩm đang xem)
   useEffect(() => {
     if (!apiProduct) return;
     let isMounted = true;
-    const catSlug = apiProduct.category?.slug || '';
-    if (catSlug) {
-      productApi.getAll({ category: catSlug, limit: 4 })
-        .then((res) => {
-          if (isMounted && res.data?.data) {
-            const items = Array.isArray(res.data.data) ? res.data.data : res.data.data.items || [];
-            setDynamicRelated(items.filter((p) => p.id !== apiProduct.id).slice(0, 4));
-          }
-        })
-        .catch(() => { });
+
+    const currentId = Number(apiProduct.id);
+    const currentCategoryId = apiProduct.category_id ?? apiProduct.category?.id ?? null;
+    const currentCatSlug = apiProduct.category?.slug || apiProduct.category_slug || '';
+
+    const filterRelatedFromList = (rawList) => {
+      const normalized = (Array.isArray(rawList) ? rawList : [])
+        .map(normalizeProduct)
+        .filter((p) => p && Number(p.id) !== currentId);
+
+      // Ưu tiên 1: Cùng category_id hoặc categorySlug
+      const sameCategory = normalized.filter((p) => {
+        if (currentCategoryId !== null && p.category_id !== null) {
+          return Number(p.category_id) === Number(currentCategoryId);
+        }
+        if (currentCatSlug) {
+          return p.categorySlug === currentCatSlug;
+        }
+        return false;
+      });
+
+      if (sameCategory.length >= 4) {
+        return sameCategory.slice(0, 4);
+      }
+
+      // Ưu tiên 2: Bổ sung thêm các sản phẩm khác (cùng bộ sưu tập / nhóm) nếu danh mục hiện tại có ít hơn 4 sản phẩm
+      const usedIds = new Set(sameCategory.map((p) => Number(p.id)));
+      const others = normalized.filter((p) => !usedIds.has(Number(p.id)));
+      return [...sameCategory, ...others].slice(0, 4);
+    };
+
+    // Kiểm tra cache danh sách tổng trước để hiển thị tức thì
+    const cachedAll = cacheHelper.get('products_all_none_all_featured_all');
+    if (cachedAll && Array.isArray(cachedAll) && cachedAll.length > 0) {
+      const initialRel = filterRelatedFromList(cachedAll);
+      if (initialRel.length > 0) {
+        setDynamicRelated(initialRel);
+      }
+    } else if (Array.isArray(apiProduct.related_products) && apiProduct.related_products.length > 0) {
+      setDynamicRelated(
+        apiProduct.related_products
+          .map(normalizeProduct)
+          .filter((p) => p && Number(p.id) !== currentId)
+          .slice(0, 4)
+      );
     }
+
+    // Gọi productApi.getAll để lấy danh sách sản phẩm và lọc 4 sản phẩm cùng danh mục
+    productApi
+      .getAll({ per_page: 100 })
+      .then((res) => {
+        if (!isMounted) return;
+        const rawItems = res.data?.data || res.data || [];
+        const list = Array.isArray(rawItems) ? rawItems : rawItems.items || [];
+        if (list.length > 0) {
+          setDynamicRelated(filterRelatedFromList(list));
+        }
+      })
+      .catch(() => {});
+
     return () => {
       isMounted = false;
     };
@@ -375,7 +424,11 @@ export default function ProductDetailPage({ id: propId }) {
     const catObj = apiProduct.category || {};
     const minP = Number(apiProduct.min_price || apiProduct.price || 0);
     const maxP = Number(apiProduct.max_price || minP);
-    const priceDisplay = apiProduct.price_display || (minP > 0 ? `${new Intl.NumberFormat('vi-VN').format(minP)}₫` : 'Liên hệ');
+    const priceDisplay = formatPriceVND(minP, apiProduct.price_display);
+    const oldPriceDisplay =
+      apiProduct.old_price_display || apiProduct.oldPriceDisplay
+        ? formatPriceVND(null, apiProduct.old_price_display || apiProduct.oldPriceDisplay)
+        : null;
 
     return {
       id: apiProduct.id,
@@ -383,6 +436,7 @@ export default function ProductDetailPage({ id: propId }) {
       slug: apiProduct.slug || String(apiProduct.id),
       brand: apiProduct.brand || 'TK House',
       description: apiProduct.description || '',
+      category_id: apiProduct.category_id ?? catObj.id ?? null,
       categoryName: apiProduct.categoryName || catObj.name || 'Nội thất cao cấp',
       categorySlug: apiProduct.categorySlug || catObj.slug || 'san-pham',
       warranty_months: apiProduct.warranty_months || 24,
@@ -390,7 +444,7 @@ export default function ProductDetailPage({ id: propId }) {
       max_price: maxP,
       price: minP,
       priceDisplay: priceDisplay,
-      oldPriceDisplay: apiProduct.old_price_display || apiProduct.oldPriceDisplay || null,
+      oldPriceDisplay: oldPriceDisplay,
       in_stock: Boolean(apiProduct.in_stock ?? ((apiProduct.total_stock ?? 1) > 0)),
       total_stock: apiProduct.total_stock ?? 10,
       images: Array.isArray(apiProduct.images) && apiProduct.images.length > 0 ? apiProduct.images : [],
@@ -519,12 +573,14 @@ export default function ProductDetailPage({ id: propId }) {
 
   // Giá và tồn kho hiện tại theo biến thể
   const currentPriceDisplay = useMemo(() => {
-    if (selectedVariant?.price_display) return selectedVariant.price_display;
     if (selectedVariant?.price) {
-      return `${new Intl.NumberFormat('vi-VN').format(Number(selectedVariant.price))}₫`;
+      return formatPriceVND(selectedVariant.price, selectedVariant.price_display);
     }
-    return product?.priceDisplay || '28.500.000₫';
-  }, [selectedVariant, product?.priceDisplay]);
+    if (selectedVariant?.price_display) {
+      return formatPriceVND(null, selectedVariant.price_display);
+    }
+    return formatPriceVND(product?.price, product?.priceDisplay || '28.500.000 ₫');
+  }, [selectedVariant, product?.price, product?.priceDisplay]);
 
   const currentStock = useMemo(() => {
     if (selectedVariant && selectedVariant.stock_quantity !== undefined) {
@@ -900,7 +956,7 @@ export default function ProductDetailPage({ id: propId }) {
                 </span>
               </div>
 
-              <h1 className="font-serif text-2xl sm:text-3xl font-normal text-neutral-900 leading-snug">
+              <h1 className="font-['Montserrat'] text-2xl sm:text-3xl font-medium text-neutral-900 leading-snug tracking-wide">
                 {product.name}
               </h1>
 
@@ -908,19 +964,19 @@ export default function ProductDetailPage({ id: propId }) {
                 {selectedVariant?.material || product.material} • Khung gỗ sồi Bắc Mỹ tẩm sấy tiêu chuẩn FAS
               </p>
 
-              {/* Mức giá */}
-              <div className="pt-2 flex items-baseline space-x-3">
-                <span className="font-mono text-2xl sm:text-3xl font-bold text-neutral-900 tracking-tight">
+              {/* Mức giá nổi bật sang trọng */}
+              <div className="pt-2 flex items-baseline space-x-3 flex-wrap gap-y-1">
+                <span className="font-['Montserrat'] text-2xl sm:text-3xl font-medium text-neutral-800 tabular-nums tracking-wide">
                   {currentPriceDisplay}
                 </span>
                 {product.oldPriceDisplay && (
-                  <span className="font-mono text-sm text-neutral-400 line-through">
+                  <span className="font-['Montserrat'] text-sm font-normal text-neutral-400 line-through tabular-nums">
                     {product.oldPriceDisplay}
                   </span>
                 )}
                 {product.oldPriceDisplay && (
-                  <span className="bg-[#FAF6F0] text-[#8C6A48] border border-[#E5DACD] text-[10px] font-mono px-2 py-0.5 rounded-full font-bold">
-                    Tiết kiệm 4.500.000₫
+                  <span className="bg-[#FAF6F0] text-[#8C6A48] border border-[#E5DACD] text-[10px] font-['Montserrat'] px-2.5 py-0.5 rounded-full font-medium tabular-nums">
+                    Tiết kiệm 4,500,000 VND
                   </span>
                 )}
               </div>
@@ -1340,73 +1396,93 @@ export default function ProductDetailPage({ id: propId }) {
         </div>
       </div>
 
-      {/* 4. SẢN PHẨM PHỐI HỢP / CÙNG BỘ SƯU TẬP (COMPLETE THE LOOK) */}
+      {/* 4. SẢN PHẨM LIÊN QUAN / CÙNG BỘ SƯU TẬP (ĐẶT DƯỚI BẢNG THÔNG SỐ & TRÊN BANNER ĐẶC QUYỀN TK HOUSE) */}
       {relatedProducts.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20">
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#E8E2D8]">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-[#E8E2D8] gap-3">
             <div>
-              <span className="text-[11px] font-mono uppercase tracking-widest text-[#8C6A48] font-semibold block mb-1">
-                HOÀN THIỆN TỔ ẤM
+              <span className="text-[11px] font-sans uppercase tracking-[0.28em] text-[#8C6A48] font-semibold block mb-1.5">
+                GỢI Ý ĐỒNG ĐIỆU KHÔNG GIAN
               </span>
-              <h2 className="font-serif text-xl sm:text-2xl font-normal text-neutral-900">
-                Tác Phẩm Đồng Điệu Cùng Bộ Sưu Tập
+              <h2 className="font-serif text-xl sm:text-2xl font-normal text-neutral-900 tracking-[0.12em] uppercase">
+                SẢN PHẨM CÙNG BỘ SƯU TẬP
               </h2>
             </div>
             <Link
-              to="/san-pham"
-              className="text-xs font-semibold text-[#8C6A48] hover:text-neutral-900 transition-colors uppercase tracking-wider flex items-center space-x-1"
+              to={`/san-pham?category=${product.categorySlug}`}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="text-xs font-semibold text-[#8C6A48] hover:text-neutral-900 transition-colors uppercase tracking-wider inline-flex items-center space-x-1 self-start sm:self-auto"
             >
-              <span>Xem tất cả</span>
+              <span>Xem tất cả danh mục</span>
               <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((rel) => (
-              <div
-                key={rel.id}
-                className="group bg-white rounded-2xl border border-[#E8E2D8] overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
-              >
-                <div className="relative aspect-[4/3] bg-[#FAF8F5] overflow-hidden">
-                  <img
-                    src={rel.image}
-                    alt={rel.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  {rel.tag && (
-                    <span className="absolute top-2.5 left-2.5 bg-neutral-900/80 text-[#E6C280] text-[9.5px] px-2 py-0.5 rounded-full font-semibold">
-                      {rel.tag}
-                    </span>
-                  )}
-                </div>
+            {relatedProducts.map((rel) => {
+              const relPrice = formatPriceVND(rel.price, rel.priceDisplay || rel.price_display);
+              const relMaterial = rel.material || 'Vật liệu tự nhiên cao cấp FAS';
+              const relCategory = rel.categoryName || rel.category_name || product.categoryName;
 
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                  <div>
-                    <span className="text-[10px] uppercase font-mono tracking-wider text-[#8C6A48] font-semibold block mb-0.5">
-                      {rel.categoryName}
-                    </span>
-                    <h3 className="font-serif text-sm font-normal text-neutral-900 line-clamp-1 group-hover:text-[#8C6A48] transition-colors">
-                      <Link to={`/san-pham/${rel.slug || rel.id}`}>{rel.name}</Link>
-                    </h3>
+              return (
+                <div
+                  key={rel.id}
+                  onClick={() => {
+                    navigate(`/san-pham/${rel.id}`);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="group bg-white rounded-2xl border border-[#E8E2D8] overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                >
+                  <div className="relative aspect-[4/3] bg-[#FAF8F5] overflow-hidden">
+                    <img
+                      src={rel.image || rel.thumbnail || '/images/placeholder.jpg'}
+                      alt={rel.name}
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    />
+                    {rel.secondaryImage && (
+                      <img
+                        src={rel.secondaryImage}
+                        alt={`${rel.name} phối cảnh`}
+                        className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-in-out"
+                      />
+                    )}
+                    {rel.tag && (
+                      <span className="absolute top-3 left-3 bg-neutral-900/85 backdrop-blur-md text-[#E6C280] text-[10px] font-sans tracking-wider px-2.5 py-1 rounded-full uppercase shadow-sm font-semibold">
+                        {rel.tag}
+                      </span>
+                    )}
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-100">
-                    <span className="font-mono text-xs font-bold text-neutral-900">
-                      {rel.priceDisplay}
-                    </span>
-                    <Link
-                      to={`/san-pham/${rel.slug || rel.id}`}
-                      className="p-1.5 rounded-full bg-[#FAF6F0] hover:bg-[#8C6A48] text-[#8C6A48] hover:text-white transition-colors"
-                      title="Xem chi tiết"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                    </Link>
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+                    <div>
+                      <span className="text-[10px] uppercase font-sans tracking-wider text-[#8C6A48] font-semibold block mb-1">
+                        {relCategory}
+                      </span>
+                      <h3 className="font-['Montserrat'] text-[15px] sm:text-base font-medium text-neutral-800 line-clamp-2 group-hover:text-[#8C6A48] transition-colors leading-snug tracking-wide">
+                        {rel.name}
+                      </h3>
+                      <p className="text-xs text-neutral-500 mt-1 font-light line-clamp-1">
+                        {relMaterial}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+                      <span className="font-['Montserrat'] text-[15px] sm:text-base font-normal text-neutral-800 tabular-nums tracking-wide">
+                        {relPrice}
+                      </span>
+                      <span
+                        className="w-8 h-8 rounded-full bg-[#FAF6F0] group-hover:bg-[#8C6A48] text-[#8C6A48] group-hover:text-white flex items-center justify-center transition-colors shadow-xs"
+                        title="Xem chi tiết sản phẩm"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
+        </section>
       )}
 
       {/* 5. LIGHTBOX MODAL PHÓNG TO ẢNH */}
@@ -1434,8 +1510,8 @@ export default function ProductDetailPage({ id: propId }) {
       {/* 6. FLOATING BAR DÀNH CHO MOBILE (STICKY BOTTOM ACTION) */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#E8E2D8] p-3 px-4 flex items-center justify-between shadow-lg">
         <div>
-          <span className="block text-[10px] text-neutral-500 uppercase font-mono">Giá phiên bản</span>
-          <span className="font-mono text-base font-bold text-neutral-900">{currentPriceDisplay}</span>
+          <span className="block text-[10px] text-neutral-500 uppercase font-sans">Giá phiên bản</span>
+          <span className="font-['Montserrat'] text-base font-medium text-neutral-800 tabular-nums tracking-wide">{currentPriceDisplay}</span>
         </div>
         <div className="flex items-center space-x-2">
           <button

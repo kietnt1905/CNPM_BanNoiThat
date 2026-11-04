@@ -28,6 +28,24 @@ import cacheHelper from '../utils/cache';
 import { useCart } from '../context/CartContext';
 
 // ==========================================
+// HÀM ĐỊNH DẠNG GIÁ TIỀN CHUẨN SANG TRỌNG (18,990,000 VND)
+// ==========================================
+export const formatPriceVND = (amount, rawDisplay) => {
+  const num = Number(amount);
+  if (!Number.isNaN(num) && num > 0) {
+    return `${new Intl.NumberFormat('en-US').format(Math.round(num))} VND`;
+  }
+  if (typeof rawDisplay === 'string' && rawDisplay.trim()) {
+    const digits = rawDisplay.replace(/[^\d]/g, '');
+    if (digits && Number(digits) > 0) {
+      return `${new Intl.NumberFormat('en-US').format(Number(digits))} VND`;
+    }
+    return rawDisplay;
+  }
+  return 'Liên hệ';
+};
+
+// ==========================================
 // HÀM CHUẨN HÓA DỮ LIỆU SẢN PHẨM TỪ API
 // ==========================================
 export const normalizeProduct = (item) => {
@@ -41,6 +59,7 @@ export const normalizeProduct = (item) => {
 
   // Danh mục
   const catObj = typeof item.category === 'object' && item.category !== null ? item.category : null;
+  const category_id = item.category_id ?? catObj?.id ?? null;
   const categoryName =
     item.categoryName ||
     item.category_name ||
@@ -84,17 +103,14 @@ export const normalizeProduct = (item) => {
     }
   }
 
-  // Giá & hiển thị giá
+  // Giá & hiển thị giá (Chuẩn: 14.500.000 ₫)
   const price = Number(item.price ?? item.min_price ?? 0);
   const oldPrice = item.oldPrice ?? item.old_price ?? item.sale_price ?? null;
-  const priceDisplay =
-    item.priceDisplay ||
-    item.price_display ||
-    (price > 0 ? `${new Intl.NumberFormat('vi-VN').format(price)}₫` : 'Liên hệ');
+  const priceDisplay = formatPriceVND(price, item.priceDisplay || item.price_display);
   const oldPriceDisplay =
-    item.oldPriceDisplay ||
-    item.old_price_display ||
-    (oldPrice ? `${new Intl.NumberFormat('vi-VN').format(Number(oldPrice))}₫` : null);
+    oldPrice || item.oldPriceDisplay || item.old_price_display
+      ? formatPriceVND(oldPrice, item.oldPriceDisplay || item.old_price_display)
+      : null;
 
   // Hình ảnh
   let image = item.image || item.thumbnail;
@@ -145,6 +161,8 @@ export const normalizeProduct = (item) => {
     slug,
     brand,
     description,
+    category_id,
+    categoryId: category_id,
     categoryName,
     categorySlug,
     group,
@@ -1632,7 +1650,7 @@ export default function CategoryPage({ categoryId }) {
                             )}
                           </div>
 
-                          <h3 className="font-serif text-base font-semibold text-neutral-900 group-hover:text-[#8C6A48] transition-colors leading-snug line-clamp-2">
+                          <h3 className="font-['Montserrat'] text-[15px] sm:text-base font-medium text-neutral-800 group-hover:text-[#8C6A48] transition-colors leading-snug line-clamp-2 tracking-wide">
                             <Link to={`/san-pham/${prod.id}`}>{prod.name}</Link>
                           </h3>
 
@@ -1641,14 +1659,14 @@ export default function CategoryPage({ categoryId }) {
                           </p>
                         </div>
 
-                        {/* Giá tiền và Nút thêm vào giỏ (Icon giỏ hàng cũ) */}
+                        {/* Giá tiền và Nút thêm vào giỏ */}
                         <div className="mt-4 pt-3.5 border-t border-neutral-100 flex items-center justify-between">
                           <div>
-                            <span className="text-sm sm:text-base font-bold text-neutral-900 font-mono tracking-tight">
+                            <span className="font-['Montserrat'] text-[15px] sm:text-base font-normal text-neutral-800 tabular-nums tracking-wide">
                               {prod.priceDisplay}
                             </span>
                             {prod.oldPriceDisplay && (
-                              <span className="block text-[11px] text-neutral-400 line-through font-mono">
+                              <span className="block font-['Montserrat'] text-xs font-normal text-neutral-400 line-through tabular-nums mt-0.5">
                                 {prod.oldPriceDisplay}
                               </span>
                             )}
