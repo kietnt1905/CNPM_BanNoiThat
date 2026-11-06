@@ -305,7 +305,7 @@ export default function AdminOrdersPage() {
             Quản Lý Đơn Hàng
           </h1>
           <p className="text-xs text-stone-500 font-light mt-1">
-            Theo dõi tiến trình đặt hàng, điều phối vận chuyển và đối soát doanh thu TK House Atelier.
+            Theo dõi tiến trình đặt hàng, điều phối vận chuyển và đối soát doanh thu TK House.
           </p>
         </div>
 

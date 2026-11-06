@@ -211,7 +211,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E8E2D8]">
         <div>
           <span className="text-[10px] font-mono uppercase tracking-widest text-[#8C6A48] font-bold block">
-            TK HOUSE ATELIER • QUẢN TRỊ KINH DOANH
+            TK HOUSE • QUẢN TRỊ KINH DOANH
           </span>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-neutral-900 mt-0.5">
             Báo Cáo & Thống Kê Tổng Quan

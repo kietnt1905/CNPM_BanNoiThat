@@ -701,7 +701,7 @@ export default function OrderDetailDrawer({
             <div className="border-b-2 border-stone-800 pb-4 mb-6 flex justify-between items-start">
               <div>
                 <h1 className="text-2xl font-bold font-serif uppercase tracking-wider text-stone-900">
-                  TK House Atelier
+                  TK House
                 </h1>
                 <p className="text-xs text-stone-600">Nội thất cao cấp & Không gian sống thượng lưu</p>
                 <p className="text-xs text-stone-600">Hotline: 1800 6868 | Website: tkhouse.vn</p>

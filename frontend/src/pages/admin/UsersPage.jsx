@@ -134,7 +134,6 @@ export default function UsersPage() {
     locked: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('total'); // 'total' | 'admins' | 'customers' | 'active' | 'locked'
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -187,16 +186,12 @@ export default function UsersPage() {
         params.search = debouncedSearch;
       }
 
-      if (activeTab !== 'total') {
-        params.tab = activeTab;
-      }
-
       if (roleFilter !== 'all') {
         params.role = roleFilter;
       }
 
       if (statusFilter !== 'all') {
-        params.status = statusFilter;
+        params.is_active = statusFilter === 'active' ? 'true' : 'false';
       }
 
       const res = await adminUserApi.getUsers(params);
@@ -222,7 +217,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, activeTab, debouncedSearch, roleFilter, statusFilter]);
+  }, [currentPage, debouncedSearch, roleFilter, statusFilter]);
 
   // Quick Toggle Status
   const handleToggleStatus = async (user) => {
@@ -268,7 +263,7 @@ export default function UsersPage() {
       return;
     }
 
-    if (user.role === 'admin' && newRole === 'customer' && counts.admins <= 1) {
+    if (user.role === 'admin' && newRole === 'user' && counts.admins <= 1) {
       showToast('Hệ thống phải duy trì ít nhất 1 Quản trị viên!', 'error');
       return;
     }
@@ -371,44 +366,6 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Counter Tabs */}
-      <div className="flex items-center space-x-2 border-b border-stone-200 overflow-x-auto pb-px">
-        {[
-          { id: 'total', label: 'Tất cả người dùng', count: counts.total },
-          { id: 'admins', label: 'Quản trị viên', count: counts.admins },
-          { id: 'customers', label: 'Khách hàng', count: counts.customers },
-          { id: 'active', label: 'Đang hoạt động', count: counts.active },
-          { id: 'locked', label: 'Đã khóa', count: counts.locked },
-        ].map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setCurrentPage(1);
-              }}
-              className={`flex items-center space-x-2 px-4 py-3 text-xs font-medium whitespace-nowrap transition-all border-b-2 cursor-pointer ${
-                isActive
-                  ? 'border-[#8C6A48] text-[#8C6A48] font-semibold bg-stone-50/50'
-                  : 'border-transparent text-neutral-500 hover:text-neutral-900 hover:border-neutral-300'
-              }`}
-            >
-              <span>{tab.label}</span>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
-                  isActive
-                    ? 'bg-[#8C6A48] text-white'
-                    : 'bg-stone-200 text-stone-600'
-                }`}
-              >
-                {tab.count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* Toolbar: Search & Quick Filters */}
       <div className="bg-white p-4 rounded-2xl border border-stone-200/80 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         {/* Search Input */}
@@ -446,7 +403,7 @@ export default function UsersPage() {
             >
               <option value="all">Tất cả vai trò</option>
               <option value="admin">Quản trị viên</option>
-              <option value="customer">Khách hàng</option>
+              <option value="user">Khách hàng</option>
             </select>
           </div>
 
@@ -596,7 +553,7 @@ export default function UsersPage() {
                             className="bg-transparent text-[11px] text-stone-500 hover:text-stone-800 border border-transparent hover:border-stone-200 rounded px-1.5 py-0.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                           >
                             <option value="admin">Quản trị viên</option>
-                            <option value="customer">Khách hàng</option>
+                            <option value="user">Khách hàng</option>
                           </select>
                         </div>
                       </td>
@@ -866,7 +823,7 @@ function UserModal({ isOpen, user, currentUser, isOnlyAdmin, onClose, onSuccess 
     email: user?.email || '',
     phone: user?.phone || '',
     password: '',
-    role: user?.role || 'customer',
+    role: user?.role || 'user',
     is_active: user ? Boolean(user.is_active) : true,
   });
 
@@ -1088,7 +1045,7 @@ function UserModal({ isOpen, user, currentUser, isOnlyAdmin, onClose, onSuccess 
 
                 <label
                   className={`flex items-center space-x-2.5 p-2.5 rounded-xl border cursor-pointer transition-colors ${
-                    formData.role === 'customer'
+                    formData.role === 'user'
                       ? 'border-[#8C6A48] bg-amber-50/30'
                       : 'border-stone-200 hover:bg-stone-50'
                   } ${
@@ -1098,11 +1055,11 @@ function UserModal({ isOpen, user, currentUser, isOnlyAdmin, onClose, onSuccess 
                   <input
                     type="radio"
                     name="role"
-                    value="customer"
+                    value="user"
                     disabled={isSelf || isOnlyAdmin}
-                    checked={formData.role === 'customer'}
+                    checked={formData.role === 'user'}
                     onChange={() =>
-                      setFormData((p) => ({ ...p, role: 'customer' }))
+                      setFormData((p) => ({ ...p, role: 'user' }))
                     }
                     className="text-[#8C6A48] focus:ring-[#8C6A48]"
                   />
