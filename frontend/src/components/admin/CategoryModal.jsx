@@ -196,7 +196,7 @@ export default function CategoryModal({
             </div>
             <div>
               <span className="text-[10px] font-mono uppercase tracking-widest text-[#8C6A48] font-bold block">
-                ATELIER ADMIN CATEGORIES
+                ADMIN CATEGORIES
               </span>
               <h2 className="font-serif text-lg sm:text-xl font-bold text-neutral-900 mt-0.5">
                 {isEditing ? 'Chỉnh Sửa Danh Mục' : 'Thêm Danh Mục Mới'}

@@ -123,11 +123,11 @@ export default function AdminLayout() {
 
       {/* Sidebar Navigation */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 w-64 bg-[#1B1816] text-[#E8E2D8] flex flex-col z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } border-r border-[#2E2824]`}
+        className={`fixed top-0 bottom-0 left-0 w-64 bg-white text-stone-700 flex flex-col z-50 transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } border-r border-stone-200`}
       >
         {/* Brand Header */}
-        <div className="p-6 border-b border-[#2E2824] flex items-center justify-between">
+        <div className="p-6 border-b border-stone-200 flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-3 group" title="Về trang chủ TK House">
             {/* Logo chính thức TK House (đồng bộ với Header ngoài trang bán lẻ) */}
             <img
@@ -136,11 +136,11 @@ export default function AdminLayout() {
               className="h-10 sm:h-11 w-auto max-w-[46px] object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_2px_8px_rgba(201,169,130,0.25)] flex-shrink-0"
             />
             <div>
-              <span className="font-serif font-bold text-sm tracking-wider text-white block uppercase leading-tight">
+              <span className="font-serif font-bold text-sm tracking-wider text-[#2C241E] block uppercase leading-tight">
                 TK House
               </span>
-              <span className="text-[10px] text-[#C9A982] font-medium uppercase tracking-widest block mt-0.5">
-                Atelier Admin
+              <span className="text-[10px] text-[#8C6A48] font-medium uppercase tracking-widest block mt-0.5">
+                Admin
               </span>
             </div>
           </Link>
@@ -148,7 +148,7 @@ export default function AdminLayout() {
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
-            className="text-stone-400 hover:text-white p-1 rounded-lg lg:hidden"
+            className="text-stone-400 hover:text-stone-800 p-1 rounded-lg lg:hidden"
           >
             <X className="w-5 h-5" />
           </button>
@@ -156,7 +156,7 @@ export default function AdminLayout() {
 
         {/* Navigation Links */}
         <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-          <div className="text-[10px] font-semibold text-stone-500 uppercase tracking-widest px-3 mb-2">
+          <div className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest px-3 mb-2">
             Quản Trị Bán Hàng
           </div>
 
@@ -173,7 +173,7 @@ export default function AdminLayout() {
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${isMatch
                     ? 'bg-[#8C6A48] text-white shadow-sm font-semibold'
-                    : 'text-stone-300 hover:bg-[#2A2420] hover:text-white'
+                    : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
                   }`}
               >
                 <div className="flex items-center space-x-3">
@@ -181,7 +181,7 @@ export default function AdminLayout() {
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isMatch ? 'bg-white/20 text-white' : 'bg-stone-800 text-stone-300'
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isMatch ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600'
                     }`}>
                     {item.badge}
                   </span>
@@ -195,10 +195,10 @@ export default function AdminLayout() {
         </nav>
 
         {/* Sidebar Footer: User & Back to site */}
-        <div className="p-4 border-t border-[#2E2824] bg-[#161311] space-y-2.5">
+        <div className="p-4 border-t border-stone-200 bg-stone-50 space-y-2.5">
           <Link
             to="/"
-            className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-xl bg-[#26201C] hover:bg-[#332B25] text-stone-300 hover:text-white text-xs font-medium transition-all"
+            className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-xl bg-white border border-stone-200 hover:bg-stone-100 text-stone-600 hover:text-stone-900 text-xs font-medium transition-all"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Về Website Bán Hàng</span>
@@ -210,12 +210,14 @@ export default function AdminLayout() {
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
               </div>
               <div className="truncate text-left">
-                <span className="block text-xs font-medium text-white truncate">
+                <span className="block text-xs font-medium text-stone-900 truncate">
                   {user?.name || 'Quản trị viên'}
                 </span>
-                <span className="block text-[10px] text-amber-400">
-                  {user?.role === 'admin' ? 'Super Admin' : 'Admin Session'}
-                </span>
+                {user?.email && (
+                  <span className="block text-[10px] text-stone-500 truncate">
+                    {user.email}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -223,7 +225,7 @@ export default function AdminLayout() {
               type="button"
               onClick={handleLogout}
               title="Đăng xuất"
-              className="text-stone-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-[#2A2420] transition-colors"
+              className="text-stone-400 hover:text-rose-500 p-1.5 rounded-lg hover:bg-stone-100 transition-colors"
             >
               <LogOut className="w-4 h-4" />
             </button>

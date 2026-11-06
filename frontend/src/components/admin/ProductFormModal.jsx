@@ -182,7 +182,7 @@ export default function ProductFormModal({
         name: '',
         slug: '',
         category_id: '',
-        brand: 'TK House Atelier',
+        brand: 'TK House',
         warranty_months: 24,
         description: '',
         is_active: true,
@@ -486,7 +486,7 @@ export default function ProductFormModal({
             </div>
             <div>
               <span className="text-[10px] font-mono uppercase tracking-widest text-[#8C6A48] font-bold block">
-                ATELIER ADMIN PRODUCTS
+                ADMIN PRODUCTS
               </span>
               <h2 className="font-serif text-lg sm:text-xl font-bold text-neutral-900 leading-tight">
                 {isEditing ? `Chỉnh Sửa: ${product.name}` : 'Thêm Sản Phẩm Mới'}
@@ -642,7 +642,7 @@ export default function ProductFormModal({
                     type="text"
                     value={formData.brand}
                     onChange={(e) => setFormData((p) => ({ ...p, brand: e.target.value }))}
-                    placeholder="Ví dụ: Nordic Living, Atelier TK..."
+                    placeholder="Ví dụ: Nordic Living, TK House..."
                     className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/50 text-neutral-900 text-xs focus:border-[#8C6A48] focus:outline-none"
                   />
                 </div>
