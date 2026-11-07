@@ -312,8 +312,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Mặt Gỗ Sồi Khối & Khung Động Cơ Điện Kép',
                 'dimensions' => ['length' => 140, 'width' => 70, 'height' => 118, 'weight' => 45],
                 'images' => [
-                    'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&w=800&q=80',
+                    '/images/products/ban-lam-vc-nag-ha.webp',
                 ]
             ],
 
@@ -372,9 +371,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Mây Tự Nhiên & Gỗ Sồi Trắng Khối',
                 'dimensions' => ['length' => 78, 'width' => 82, 'height' => 85, 'weight' => 18],
                 'images' => [
-                    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
+                    '/images/products/ghe-dan-may.webp',
                 ]
             ],
             [
@@ -391,8 +388,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Vải Linen Thoáng Khí & Gỗ Dẻ Gai Châu Âu',
                 'dimensions' => ['length' => 95, 'width' => 72, 'height' => 88, 'weight' => 22],
                 'images' => [
-                    'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80',
+                    '/images/products/ghe-thu-gian-bap-ben.webp',
                 ]
             ],
             [
@@ -409,8 +405,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Da Bò Thật Ý & Hợp Kim Nhôm Đúc',
                 'dimensions' => ['length' => 85, 'width' => 85, 'height' => 92, 'weight' => 34],
                 'images' => [
-                    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80',
+                    '/images/products/ghe-thu-gian-bap-ben.webp',
                 ]
             ],
             [
@@ -427,8 +422,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Vải Nỉ Bouclé & Đệm Mút D40 Đúc Khối',
                 'dimensions' => ['length' => 80, 'width' => 80, 'height' => 75, 'weight' => 21],
                 'images' => [
-                    'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80',
+                    '/images/products/ghe-xoay-360.webp',
                 ]
             ],
 
@@ -447,9 +441,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Da Nappa Cao Cấp & Khung Thép Mạ PVD',
                 'dimensions' => ['length' => 52, 'width' => 55, 'height' => 84, 'weight' => 8],
                 'images' => [
-                    'https://images.unsplash.com/photo-1505797149-43b0069ec26b?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80',
+                    '/images/products/Ghe-an-boc-vai-nhung-chan-ma-vang-3.jpg',
                 ]
             ],
             [
@@ -466,8 +458,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Gỗ Óc Chó FAS & Da Công Nghiệp Microfiber',
                 'dimensions' => ['length' => 50, 'width' => 54, 'height' => 82, 'weight' => 9],
                 'images' => [
-                    'https://images.unsplash.com/photo-1505797149-43b0069ec26b?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80',
+                    '/images/products/ghe-an-go-oc-cho.jpeg',
                 ]
             ],
             [
@@ -484,8 +475,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Gỗ Sồi Trắng & Vải Bố Linen Dệt Mộc',
                 'dimensions' => ['length' => 48, 'width' => 52, 'height' => 80, 'weight' => 7],
                 'images' => [
-                    'https://images.unsplash.com/photo-1505797149-43b0069ec26b?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80',
+                    '/images/products/ghe-an-tua-cong-thai-hoc.webp',
                 ]
             ],
             [
@@ -502,8 +492,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Vải Nhung Tuyết & Inox 304 Mạ PVD',
                 'dimensions' => ['length' => 54, 'width' => 56, 'height' => 86, 'weight' => 8.5],
                 'images' => [
-                    'https://images.unsplash.com/photo-1505797149-43b0069ec26b?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=800&q=80',
+                    '/images/products/ghe-an-chan-ma-vang.webp',
                 ]
             ],
             [
@@ -520,8 +509,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Gỗ Tần Bì & Mây Đan Tự Nhiên',
                 'dimensions' => ['length' => 49, 'width' => 53, 'height' => 83, 'weight' => 7.5],
                 'images' => [
-                    'https://images.unsplash.com/photo-1505797149-43b0069ec26b?auto=format&fit=crop&w=800&q=80',
-                    'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=800&q=80',
+                    '/images/products/ghe-an-tua-may-dan.webp',
                 ]
             ],
         ];
