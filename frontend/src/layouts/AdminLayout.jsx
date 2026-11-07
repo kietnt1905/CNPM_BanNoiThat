@@ -27,9 +27,8 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
-  const [isNonAdminWarning, setIsNonAdminWarning] = useState(false);
 
-  // Kiểm tra quyền Admin khi vào Layout
+  // Lấy thông tin Admin khi vào Layout
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
@@ -38,29 +37,17 @@ export default function AdminLayout() {
       try {
         const parsed = JSON.parse(storedUser);
         setUser(parsed);
-        if (parsed.role !== 'admin') {
-          setIsNonAdminWarning(true);
-        }
       } catch {
         setUser({ name: 'Quản trị viên', role: 'admin' });
       }
     } else if (token) {
-      // Có token nhưng chưa có cache user profile -> gọi getProfile
       authApi.getProfile()
         .then((res) => {
           if (res.data?.status) {
             setUser(res.data.data);
-            if (res.data.data.role !== 'admin') {
-              setIsNonAdminWarning(true);
-            }
           }
         })
-        .catch(() => {
-          // Giao diện demo nếu server chưa sẵn sàng auth
-        });
-    } else {
-      // Không có token -> cảnh báo đăng nhập
-      setIsNonAdminWarning(true);
+        .catch(() => {});
     }
     setAuthChecked(true);
   }, []);
@@ -280,24 +267,6 @@ export default function AdminLayout() {
             </Link>
           </div>
         </header>
-
-        {/* Non-admin / Not-logged-in notice banner (vẫn cho phép demo để tiện xem & test) */}
-        {isNonAdminWarning && (
-          <div className="bg-amber-500/10 border-b border-amber-300/60 px-4 sm:px-6 py-2.5 flex items-center justify-between text-xs text-amber-900">
-            <div className="flex items-center space-x-2">
-              <Shield className="w-4 h-4 text-amber-700 flex-shrink-0" />
-              <span>
-                <strong>Lưu ý:</strong> API quản trị yêu cầu đăng nhập tài khoản có quyền Admin. Bạn có thể đăng nhập tài khoản Admin hoặc kiểm tra giao diện trực tiếp tại đây.
-              </span>
-            </div>
-            <Link
-              to="/dang-nhap"
-              className="px-3 py-1 bg-[#8C6A48] hover:bg-[#725436] text-white text-[11px] font-semibold rounded-lg shadow-2xs whitespace-nowrap transition-colors"
-            >
-              Đăng nhập Admin
-            </Link>
-          </div>
-        )}
 
         {/* Page Content View */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
