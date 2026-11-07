@@ -761,8 +761,8 @@ export default function AuthPage({ defaultMode = 'login' }) {
                             <h3 className="font-serif text-xl font-semibold text-stone-900 mb-1">
                                 Xác thực mã OTP
                             </h3>
-                            <p className="text-xs text-stone-600 mb-4">
-                                Mã OTP 6 chữ số đã được gửi tới email <strong className="text-stone-900">{otpEmail}</strong>. (Trường hợp dev local, xem mã tại <code className="bg-stone-100 px-1 py-0.5 rounded text-stone-800">backend/storage/logs/laravel.log</code>).
+                            <p className="text-xs text-stone-600 mb-4 leading-relaxed">
+                                Mã OTP 6 chữ số đã được gửi tới email <strong className="text-stone-900">{otpEmail}</strong>. Vui lòng kiểm tra hộp thư đến (hoặc thư mục Spam) để lấy mã xác thực.
                             </p>
 
                             {otpFeedback && (
