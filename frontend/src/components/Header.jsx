@@ -173,7 +173,14 @@ export default function Header() {
                     // Ngăn chặn race condition: chỉ xử lý nếu đây là request mới nhất
                     if (currentReqId !== activeSearchRequestRef.current) return;
                     const list = res.data?.data || res.data || [];
-                    const normalizedList = Array.isArray(list) ? list : [];
+                    const normalizedList = Array.isArray(list)
+                        ? list.map((item) => ({
+                            ...item,
+                            thumbnail: item.thumbnail && (item.thumbnail.startsWith('/uploads/') || item.thumbnail.startsWith('/storage/'))
+                                ? `http://127.0.0.1:8000${item.thumbnail}`
+                                : item.thumbnail,
+                        }))
+                        : [];
                     suggestionCacheRef.current.set(query, normalizedList);
                     setSuggestions(normalizedList);
                     setShowDesktopDropdown(true);

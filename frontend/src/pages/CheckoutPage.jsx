@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import orderApi from '../api/orderApi';
+import { resolveProductImageUrl } from './CategoryPage';
 
 const VIETNAM_PROVINCES = [
   'TP. Hồ Chí Minh',
@@ -797,7 +798,7 @@ export default function CheckoutPage() {
                   <div key={item.id} className="flex items-center space-x-3.5 text-xs pb-3.5 border-b border-stone-100 last:border-0 last:pb-0">
                     <div className="relative w-14 h-14 rounded-xl bg-stone-100 border border-stone-200 overflow-hidden flex-shrink-0">
                       <img
-                        src={item.thumbnail || '/images/placeholder.jpg'}
+                        src={resolveProductImageUrl(item.thumbnail, '/images/placeholder.jpg')}
                         alt={item.product_name}
                         className="w-full h-full object-cover"
                         onError={(e) => {

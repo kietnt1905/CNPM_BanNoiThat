@@ -23,7 +23,7 @@ import {
   X
 } from 'lucide-react';
 import productApi from '../api/productApi';
-import { formatPriceVND } from './CategoryPage';
+import { formatPriceVND, resolveProductImageUrl } from './CategoryPage';
 
 export default function HomePage() {
   const location = useLocation();
@@ -596,8 +596,14 @@ export default function HomePage() {
                 item.old_price_display || item.oldPriceDisplay
                   ? formatPriceVND(null, item.old_price_display || item.oldPriceDisplay)
                   : '',
-              image: item.image || item.thumbnail || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
-              secondaryImage: item.secondary_image || item.secondaryImage || item.image || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80',
+              image: resolveProductImageUrl(
+                item.image || item.thumbnail,
+                'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80'
+              ),
+              secondaryImage: resolveProductImageUrl(
+                item.secondary_image || item.secondaryImage || item.image,
+                'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80'
+              ),
               tag: item.tag || (item.is_featured ? 'Nổi bật' : 'Mới ra mắt'),
               dimensions: item.dimensions || 'Tiêu chuẩn cao cấp',
               materialHighlight: item.material || 'Vật liệu tự nhiên cao cấp',

@@ -46,6 +46,25 @@ export const formatPriceVND = (amount, rawDisplay) => {
 };
 
 // ==========================================
+// HÀM CHUẨN HÓA ĐƯỜNG DẪN ẢNH SẢN PHẨM (TƯƠNG THÍCH CẢ BACKEND /uploads & FRONTEND /images)
+// ==========================================
+export const resolveProductImageUrl = (url, fallback = '/images/placeholder.jpg') => {
+  if (!url || typeof url !== 'string') return fallback;
+  const trimmed = url.trim();
+  if (!trimmed) return fallback;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('/uploads/') || trimmed.startsWith('/storage/')) {
+    return `http://127.0.0.1:8000${trimmed}`;
+  }
+  if (trimmed.startsWith('uploads/') || trimmed.startsWith('storage/')) {
+    return `http://127.0.0.1:8000/${trimmed}`;
+  }
+  return trimmed;
+};
+
+// ==========================================
 // HÀM CHUẨN HÓA DỮ LIỆU SẢN PHẨM TỪ API
 // ==========================================
 export const normalizeProduct = (item) => {
@@ -126,9 +145,8 @@ export const normalizeProduct = (item) => {
       secondaryImage = typeof second === 'string' ? second : second.url || second.image_url;
     }
   }
-  if (!image) {
-    image = '/images/placeholder.jpg';
-  }
+  image = resolveProductImageUrl(image, '/images/placeholder.jpg');
+  secondaryImage = secondaryImage ? resolveProductImageUrl(secondaryImage, null) : null;
 
   // Vật liệu
   const material = item.material || 'Vật liệu cao cấp FAS';
