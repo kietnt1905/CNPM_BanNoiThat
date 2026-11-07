@@ -405,7 +405,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Da Bò Thật Ý & Hợp Kim Nhôm Đúc',
                 'dimensions' => ['length' => 85, 'width' => 85, 'height' => 92, 'weight' => 34],
                 'images' => [
-                    '/images/products/ghe-thu-gian-bap-ben.webp',
+                    '/images/products/ghe-thu-gian-kem-do-gac-chan.webp',
                 ]
             ],
             [
@@ -441,7 +441,7 @@ class DatabaseSeeder extends Seeder
                 'material' => 'Da Nappa Cao Cấp & Khung Thép Mạ PVD',
                 'dimensions' => ['length' => 52, 'width' => 55, 'height' => 84, 'weight' => 8],
                 'images' => [
-                    '/images/products/Ghe-an-boc-vai-nhung-chan-ma-vang-3.jpg',
+                    '/images/products/ghe-an-boc-da.jpg',
                 ]
             ],
             [
