@@ -26,7 +26,7 @@ import {
 import productApi from '../api/productApi';
 import cacheHelper from '../utils/cache';
 import { useCart } from '../context/CartContext';
-import { PRODUCTS_CATALOG, COLLECTIONS_META, normalizeProduct, formatPriceVND } from './CategoryPage';
+import { PRODUCTS_CATALOG, COLLECTIONS_META, normalizeProduct, formatPriceVND, resolveProductImageUrl } from './CategoryPage';
 
 // Helper xác định mã màu HEX theo tên chất liệu/màu sắc
 const getColorHex = (colorName) => {
@@ -454,8 +454,13 @@ export default function ProductDetailPage({ id: propId }) {
       rating: apiProduct.rating || 5.0,
       review_count: apiProduct.review_count || 16,
       tag: apiProduct.tag || (apiProduct.in_stock ? 'Sẵn hàng tại Showroom' : 'Chế tác theo yêu cầu'),
-      image: apiProduct.image || apiProduct.images?.[0]?.url || apiProduct.thumbnail || '/images/products/sofa-3-cho-victoria.jpg',
-      secondaryImage: apiProduct.secondaryImage || apiProduct.images?.[1]?.url || null,
+      image: resolveProductImageUrl(
+        apiProduct.image || apiProduct.primary_image || apiProduct.images?.[0]?.url || apiProduct.images?.[0]?.image_url || apiProduct.thumbnail,
+        '/images/products/sofa-3-cho-victoria.jpg'
+      ),
+      secondaryImage: (apiProduct.secondaryImage || apiProduct.images?.[1]?.url || apiProduct.images?.[1]?.image_url)
+        ? resolveProductImageUrl(apiProduct.secondaryImage || apiProduct.images?.[1]?.url || apiProduct.images?.[1]?.image_url, null)
+        : null,
     };
   }, [apiProduct]);
 
@@ -556,15 +561,19 @@ export default function ProductDetailPage({ id: propId }) {
     const list = [];
     if (Array.isArray(product.images) && product.images.length > 0) {
       product.images.forEach((img) => {
-        const url = typeof img === 'string' ? img : img?.url;
+        const rawUrl = typeof img === 'string' ? img : img?.url || img?.image_url;
+        const url = rawUrl ? resolveProductImageUrl(rawUrl, null) : null;
         if (url && !list.includes(url)) list.push(url);
       });
     }
     if (list.length === 0 && product.image) {
-      list.push(product.image);
+      list.push(resolveProductImageUrl(product.image, '/images/products/sofa-3-cho-victoria.jpg'));
     }
-    if (product.secondaryImage && !list.includes(product.secondaryImage)) {
-      list.push(product.secondaryImage);
+    if (product.secondaryImage) {
+      const secUrl = resolveProductImageUrl(product.secondaryImage, null);
+      if (secUrl && !list.includes(secUrl)) {
+        list.push(secUrl);
+      }
     }
     return list.length > 0 ? list : ['/images/products/sofa-3-cho-victoria.jpg'];
   }, [product]);

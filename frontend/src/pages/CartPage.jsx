@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { resolveProductImageUrl } from './CategoryPage';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -357,7 +358,7 @@ export default function CartPage() {
                             className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#FAF8F5] border border-[#E8E2D8] overflow-hidden flex-shrink-0 relative group"
                           >
                             <img
-                              src={item.thumbnail || item.image || '/images/products/sofa-3-cho-victoria.jpg'}
+                              src={resolveProductImageUrl(item.thumbnail || item.image, '/images/products/sofa-3-cho-victoria.jpg')}
                               alt={item.product_name}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
                             />
