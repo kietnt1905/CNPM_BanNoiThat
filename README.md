@@ -21,38 +21,35 @@ Website thương mại điện tử bán nội thất: xem sản phẩm theo dan
 ├── docker-compose.yml    # Chạy local: db + backend + frontend
 ```
 
-## Chạy bằng Docker (khuyến nghị)
+## Chạy bằng Docker (Khuyến nghị - 1 lệnh duy nhất)
 
-Yêu cầu: Docker Desktop (có BuildKit).
+Yêu cầu máy đã cài Docker / Docker Desktop.
 
-**1. Tạo file `backend/.env`** (file này không được commit):
-
-```bash
-cp backend/.env.example backend/.env
-```
-
-**2. Tạo `APP_KEY`** và dán vào dòng `APP_KEY=` trong `backend/.env`:
-
-```bash
-docker run --rm php:8.3-cli php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
-```
-
-**3. (Tùy chọn) Điền cấu hình dịch vụ ngoài** trong `backend/.env` nếu cần dùng:
-- Gửi OTP qua email: `MAIL_*`
-- Đăng nhập Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
-- VNPay: `VNPAY_TMN_CODE`, `VNPAY_HASH_SECRET`, `VNPAY_RETURN_URL`
-
-**4. Chạy:**
+Chỉ cần mở terminal tại thư mục gốc của dự án và chạy:
 
 ```bash
 docker compose up --build
 ```
 
+> **Hệ thống sẽ tự động:**
+> 1. Build Frontend (React Vite) và Backend (Laravel 13 PHP 8.3).
+> 2. Khởi động cơ sở dữ liệu MySQL 8.4.
+> 3. Tự động chạy Migration bảng dữ liệu và nạp toàn bộ dữ liệu mẫu (Seeder gồm 23 sản phẩm, danh mục, đơn hàng, tài khoản).
+> 4. Không cần phải tự tạo `.env` hay generate key thủ công (đã cấu hình sẵn dự phòng trong Docker Compose).
+
+Sau khi chạy xong, truy cập:
+
 | Dịch vụ | Địa chỉ |
 | --- | --- |
-| Website | http://localhost:5173 |
-| API | http://localhost:8000/api |
+| Website Frontend | http://localhost:5173 |
+| Backend RESTful API | http://localhost:8000/api |
 | Health check | http://localhost:8000/up |
+
+*(Tùy chọn)* Nếu muốn tùy chỉnh riêng cấu hình dịch vụ ngoài (Google OAuth, Mail OTP, VNPay):
+```bash
+cp backend/.env.example backend/.env
+# Chỉnh sửa MAIL_*, GOOGLE_*, VNPAY_* trong backend/.env
+```
 
 Khi khởi động, backend tự động chạy migrate và nạp dữ liệu mẫu nếu database còn trống. Docker Compose ghi đè cấu hình database trong `.env` để dùng MySQL chạy trong container (host `db`).
 

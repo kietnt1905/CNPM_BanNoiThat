@@ -18,9 +18,15 @@ services:
     build:
       context: .
       target: backend
-    env_file: backend/.env # dùng lại file .env hiện có
+    env_file:
+      - path: backend/.env
+        required: false
     environment:
-      # ghi đè các giá trị chỉ đúng khi chạy ngoài Docker
+      APP_NAME: "TK House"
+      APP_ENV: local
+      APP_KEY: "base64:YE9GFLviqp2X2axUfedfn+wP5Mz/TOK/i6Ky73UpqLI="
+      APP_DEBUG: "true"
+      APP_URL: "http://localhost:8000"
       AUTO_SEED: "true" # tự seed dữ liệu mẫu nếu DB trống
       DB_CONNECTION: mysql
       DB_HOST: db
