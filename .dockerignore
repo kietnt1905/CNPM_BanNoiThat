@@ -1,0 +1,38 @@
+.git
+.gitignore
+**/.gitattributes
+**/.editorconfig
+.idea
+.vscode
+
+# Bí mật & cấu hình local
+**/.env
+**/.env.*
+!backend/.env.example
+
+# Dependency / build (được cài lại trong image)
+**/node_modules
+**/vendor
+frontend/dist
+backend/public/build
+backend/public/hot
+
+# Runtime data backend (dùng volume, không đóng gói)
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/*.key
+backend/database/*.sqlite
+backend/database/*.sqlite-journal
+backend/bootstrap/cache/*.php
+
+# Test & tài liệu
+backend/tests
+backend/phpunit.xml
+backend/.phpunit.cache
+**/*.md
+**/*.log
+
+Dockerfile
+.dockerignore
