@@ -43,7 +43,7 @@ if [ "$count" = "0" ]; then
 fi
 SEED
 USER root
-RUN sed -i 's/$//' /etc/entrypoint.d/60-seed.sh
+RUN sed -i 's/[[:cntrl:]]$//' /etc/entrypoint.d/60-seed.sh
 USER www-data
 EXPOSE 8080
 
