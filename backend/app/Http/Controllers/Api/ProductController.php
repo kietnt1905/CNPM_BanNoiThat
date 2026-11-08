@@ -52,10 +52,16 @@ class ProductController extends Controller
             // 1.5. Lọc theo bộ sưu tập (Collection)
             if ($request->filled('collection')) {
                 $collectionParam = mb_strtolower($request->query('collection'), 'UTF-8');
-                $query->where(function ($q) use ($collectionParam) {
-                    $q->where('name', 'like', "%{$collectionParam}%")
-                      ->orWhere('slug', 'like', "%{$collectionParam}%");
-                });
+                $mapping = self::getCollectionMapping();
+                if (isset($mapping[$collectionParam])) {
+                    $ids = $mapping[$collectionParam]['product_ids'];
+                    $query->whereIn('products.id', $ids);
+                } else {
+                    $query->where(function ($q) use ($collectionParam) {
+                        $q->where('name', 'like', "%{$collectionParam}%")
+                          ->orWhere('slug', 'like', "%{$collectionParam}%");
+                    });
+                }
             }
 
             // 2. Tìm kiếm tự nhiên đa trường và sắp xếp theo độ phù hợp (Relevance Ranking)
@@ -676,22 +682,19 @@ class ProductController extends Controller
             $materialType = 'fabric';
         }
 
-        // Xác định collection từ tên hoặc slug
+        // Xác định collection từ ID hoặc từ khóa tên / slug
         $nameLower = mb_strtolower($product->name, 'UTF-8');
         $productSlugLower = mb_strtolower($product->slug, 'UTF-8');
         $collection = '';
-        if (str_contains($nameLower, 'victoria') || str_contains($productSlugLower, 'victoria') || str_contains($nameLower, 'tuscany')) {
-            $collection = 'victoria';
-        } elseif (str_contains($nameLower, 'valencia') || str_contains($productSlugLower, 'valencia') || str_contains($nameLower, 'calacatta')) {
-            $collection = 'valencia';
-        } elseif (str_contains($nameLower, 'moretti') || str_contains($productSlugLower, 'moretti') || str_contains($nameLower, 'atelier')) {
-            $collection = 'moretti';
-        } elseif (str_contains($nameLower, 'osaka') || str_contains($productSlugLower, 'osaka')) {
-            $collection = 'osaka';
-        } elseif (str_contains($nameLower, 'elegance') || str_contains($productSlugLower, 'elegance')) {
-            $collection = 'elegance';
-        } elseif (str_contains($nameLower, 'coastal') || str_contains($productSlugLower, 'coastal') || str_contains($nameLower, 'nordic')) {
-            $collection = 'coastal';
+        foreach (self::getCollectionMapping() as $slug => $data) {
+            if (in_array($product->id, $data['product_ids'], true)) {
+                $collection = $slug;
+                break;
+            }
+            if (str_contains($nameLower, $slug) || str_contains($productSlugLower, $slug)) {
+                $collection = $slug;
+                break;
+            }
         }
 
         return [
@@ -725,6 +728,45 @@ class ProductController extends Controller
             'dimensions' => $dimensions,
             'rating' => 4.9,
             'tag' => 'Mới Ra Mắt',
+        ];
+    }
+
+    /**
+     * Định nghĩa Metadata và Mapping 6 Bộ Sưu Tập Kiệt Tác
+     */
+    public static function getCollectionMapping(): array
+    {
+        return [
+            'victoria' => [
+                'name' => 'Victoria',
+                'keywords' => ['victoria', 'tuscany', 'da thật', 'thảo mộc', 'nappa'],
+                'product_ids' => [7, 10, 11, 18],
+            ],
+            'valencia' => [
+                'name' => 'Valencia',
+                'keywords' => ['valencia', 'calacatta', 'rotunda', 'kính khói'],
+                'product_ids' => [2, 3, 13, 15],
+            ],
+            'moretti' => [
+                'name' => 'Moretti',
+                'keywords' => ['moretti', 'atelier', 'pro desk', 'nâng hạ đa năng'],
+                'product_ids' => [4, 5, 6, 16, 20],
+            ],
+            'osaka' => [
+                'name' => 'Osaka',
+                'keywords' => ['osaka', 'mây đan', 'japandi', 'bập bênh'],
+                'product_ids' => [9, 17, 23],
+            ],
+            'elegance' => [
+                'name' => 'Elegance',
+                'keywords' => ['elegance', 'hoàng gia', 'chữ v', 'vải nhung'],
+                'product_ids' => [1, 12, 22],
+            ],
+            'coastal' => [
+                'name' => 'Coastal',
+                'keywords' => ['coastal', 'bouclé', 'scandinavian', 'bắc âu', 'xoay 360'],
+                'product_ids' => [8, 14, 19, 21],
+            ],
         ];
     }
 }

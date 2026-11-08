@@ -105,20 +105,37 @@ export const normalizeProduct = (item) => {
   // Bộ sưu tập
   let collection = (item.collection || '').toLowerCase().trim();
   if (!collection) {
-    const lowerName = name.toLowerCase();
-    const lowerSlug = slug.toLowerCase();
-    if (lowerName.includes('victoria') || lowerSlug.includes('victoria') || lowerName.includes('tuscany')) {
-      collection = 'victoria';
-    } else if (lowerName.includes('valencia') || lowerSlug.includes('valencia') || lowerName.includes('calacatta')) {
-      collection = 'valencia';
-    } else if (lowerName.includes('moretti') || lowerSlug.includes('moretti') || lowerName.includes('atelier')) {
-      collection = 'moretti';
-    } else if (lowerName.includes('osaka') || lowerSlug.includes('osaka')) {
-      collection = 'osaka';
-    } else if (lowerName.includes('elegance') || lowerSlug.includes('elegance')) {
-      collection = 'elegance';
-    } else if (lowerName.includes('coastal') || lowerSlug.includes('coastal') || lowerName.includes('nordic')) {
-      collection = 'coastal';
+    const pId = Number(item.id);
+    const collectionIds = {
+      victoria: [7, 10, 11, 18],
+      valencia: [2, 3, 13, 15],
+      moretti: [4, 5, 6, 16, 20],
+      osaka: [9, 17, 23],
+      elegance: [1, 12, 22],
+      coastal: [8, 14, 19, 21],
+    };
+    for (const [colSlug, ids] of Object.entries(collectionIds)) {
+      if (ids.includes(pId)) {
+        collection = colSlug;
+        break;
+      }
+    }
+    if (!collection) {
+      const lowerName = name.toLowerCase();
+      const lowerSlug = slug.toLowerCase();
+      if (lowerName.includes('victoria') || lowerSlug.includes('victoria') || lowerName.includes('tuscany')) {
+        collection = 'victoria';
+      } else if (lowerName.includes('valencia') || lowerSlug.includes('valencia') || lowerName.includes('calacatta')) {
+        collection = 'valencia';
+      } else if (lowerName.includes('moretti') || lowerSlug.includes('moretti') || lowerName.includes('atelier')) {
+        collection = 'moretti';
+      } else if (lowerName.includes('osaka') || lowerSlug.includes('osaka')) {
+        collection = 'osaka';
+      } else if (lowerName.includes('elegance') || lowerSlug.includes('elegance')) {
+        collection = 'elegance';
+      } else if (lowerName.includes('coastal') || lowerSlug.includes('coastal') || lowerName.includes('nordic') || lowerName.includes('scandinavian')) {
+        collection = 'coastal';
+      }
     }
   }
 
@@ -427,6 +444,16 @@ export const COLLECTIONS_META = {
       'Gam màu be cát dịu mắt, chất liệu gỗ sồi sáng tự nhiên và đá trắng mây mở rộng tối đa biên độ thị giác cho không gian nghỉ dưỡng tại gia.',
     image: '/images/lookbook/lookbook-living.jpg',
   },
+};
+
+// Số lượng sản phẩm định danh của từng bộ sưu tập kiệt tác
+export const COLLECTION_PRODUCT_COUNTS = {
+  victoria: 4,
+  valencia: 4,
+  moretti: 5,
+  osaka: 3,
+  elegance: 3,
+  coastal: 4,
 };
 
 // ==========================================
@@ -823,9 +850,9 @@ export default function CategoryPage({ categoryId }) {
     }
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set('collection', colSlug);
-    if (activeCategory && activeCategory !== 'all' && !nextParams.has('category') && categoryId) {
-      nextParams.set('category', activeCategory);
-    }
+    // Khi chọn BST, xóa lọc danh mục phòng lẻ để hiển thị đầy đủ tất cả các sản phẩm thuộc BST
+    nextParams.delete('category');
+    nextParams.delete('danh-muc');
     const queryString = nextParams.toString();
     navigate(queryString ? `/san-pham?${queryString}` : '/san-pham');
     setMobileFilterOpen(false);
@@ -835,9 +862,6 @@ export default function CategoryPage({ categoryId }) {
   const handleRemoveCollection = () => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('collection');
-    if (activeCategory && activeCategory !== 'all' && !nextParams.has('category') && categoryId) {
-      nextParams.set('category', activeCategory);
-    }
     const queryString = nextParams.toString();
     navigate(queryString ? `/san-pham?${queryString}` : '/san-pham');
   };
@@ -1303,7 +1327,7 @@ export default function CategoryPage({ categoryId }) {
 
                         {Object.entries(COLLECTIONS_META).map(([cSlug, cMeta]) => {
                           const isColActive = activeCollection === cSlug;
-                          const colCount = products.filter((p) => p.collection === cSlug).length;
+                          const colCount = COLLECTION_PRODUCT_COUNTS[cSlug] || products.filter((p) => p.collection === cSlug).length;
 
 
                           return (
@@ -1896,9 +1920,9 @@ export default function CategoryPage({ categoryId }) {
                         <div className="pl-2 space-y-1 mt-1">
                           {Object.entries(COLLECTIONS_META).map(([cSlug, cMeta]) => {
                             const isColActive = activeCollection === cSlug;
-                            const colCount = products.filter(
-                              (p) => p.collection === cSlug
-                            ).length;
+                            const colCount =
+                              COLLECTION_PRODUCT_COUNTS[cSlug] ||
+                              products.filter((p) => p.collection === cSlug).length;
 
 
                             return (
