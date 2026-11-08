@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -454,6 +454,7 @@ export const SORT_OPTIONS = [
 
 export default function CategoryPage({ categoryId }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { categorySlug } = useParams();
   const { addToCart } = useCart();
@@ -750,6 +751,11 @@ export default function CategoryPage({ categoryId }) {
 
   // Thêm vào giỏ hàng nhanh từ danh mục (Không mở Drawer, thêm đúng 1 sản phẩm)
   const handleAddToCart = async (product) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate(`/dang-nhap?redirect=${encodeURIComponent(location.pathname + location.search)}`);
+      return;
+    }
     if (addingProductId) return;
     try {
       setAddingProductId(product.id);

@@ -60,6 +60,11 @@ export default function CartDrawer() {
   const handleCheckout = () => {
     if (selectedItems.length === 0) return;
     handleClose();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/dang-nhap?redirect=/checkout');
+      return;
+    }
     navigate('/checkout');
   };
 

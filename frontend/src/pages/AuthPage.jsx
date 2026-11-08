@@ -21,6 +21,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const modeParam = searchParams.get('mode');
+    const redirectUrl = searchParams.get('redirect') || '/';
 
     // true: Đăng nhập, false: Đăng ký
     const [isLogin, setIsLogin] = useState(
@@ -44,11 +45,11 @@ export default function AuthPage({ defaultMode = 'login' }) {
                         localStorage.setItem('user', JSON.stringify(res.data.data));
                         window.dispatchEvent(new Event('auth-change'));
                     }
-                    navigate('/');
+                    navigate(redirectUrl);
                 })
-                .catch(() => navigate('/'));
+                .catch(() => navigate(redirectUrl));
         }
-    }, [modeParam, searchParams, navigate]);
+    }, [modeParam, searchParams, navigate, redirectUrl]);
 
     // Password visibility
     const [showPassword, setShowPassword] = useState(false);
@@ -147,7 +148,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                         type: 'success',
                         text: 'Đăng nhập thành công! Đang chuyển hướng...',
                     });
-                    setTimeout(() => navigate('/'), 800);
+                    setTimeout(() => navigate(redirectUrl), 800);
                 }
             } catch (err) {
                 setIsLoading(false);
@@ -183,7 +184,7 @@ export default function AuthPage({ defaultMode = 'login' }) {
                 setOtpFeedback({ type: 'success', text: 'Xác thực OTP thành công! Đang chuyển hướng...' });
                 setTimeout(() => {
                     setShowOtpModal(false);
-                    navigate('/');
+                    navigate(redirectUrl);
                 }, 1000);
             }
         } catch (err) {

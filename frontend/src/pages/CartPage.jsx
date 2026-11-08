@@ -621,7 +621,14 @@ export default function CartPage() {
                   <button
                     type="button"
                     disabled={selectedItems.length === 0}
-                    onClick={() => navigate('/checkout')}
+                    onClick={() => {
+                      const token = localStorage.getItem('token');
+                      if (!token) {
+                        navigate('/dang-nhap?redirect=/checkout');
+                        return;
+                      }
+                      navigate('/checkout');
+                    }}
                     className="w-full py-4 rounded-2xl bg-[#2C241E] hover:bg-[#8C6A48] disabled:bg-neutral-300 disabled:text-neutral-500 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-semibold uppercase tracking-wider transition-all flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99]"
                   >
                     <span>

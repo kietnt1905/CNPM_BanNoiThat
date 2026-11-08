@@ -90,8 +90,9 @@ export default function CheckoutPage() {
       }
     } else {
       setIsAuth(false);
+      navigate('/dang-nhap?redirect=/checkout', { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
   // Đảm bảo có sản phẩm được chọn
   useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -278,6 +278,7 @@ export default function ProductDetailPage({ id: propId }) {
   const categorySlug = params.categorySlug;
   const splat = params['*'];
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToCart, setSelectedIds } = useCart();
 
   // Nhận diện product ID hoặc slug từ prop hoặc params
@@ -621,6 +622,11 @@ export default function ProductDetailPage({ id: propId }) {
 
   // Xử lý thêm vào giỏ hàng
   const handleAddToCart = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate(`/dang-nhap?redirect=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     if (!selectedVariant?.id) {
       showToast('Vui lòng chọn biến thể sản phẩm');
       return;
@@ -657,6 +663,11 @@ export default function ProductDetailPage({ id: propId }) {
 
   // Xử lý mua ngay
   const handleBuyNow = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate(`/dang-nhap?redirect=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     if (!selectedVariant?.id) {
       showToast('Vui lòng chọn biến thể sản phẩm');
       return;
