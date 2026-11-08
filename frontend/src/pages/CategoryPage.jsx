@@ -800,7 +800,7 @@ export default function CategoryPage({ categoryId }) {
     }
   };
 
-  // Cập nhật URL khi chuyển danh mục ở Sidebar
+  // Cập nhật URL khi chuyển danh mục ở Sidebar hoặc xóa chip lọc
   const handleSelectCategory = (slug) => {
     const nextParams = new URLSearchParams(searchParams);
     if (!slug || slug === 'all') {
@@ -810,19 +810,24 @@ export default function CategoryPage({ categoryId }) {
       nextParams.set('category', slug);
       nextParams.delete('danh-muc');
     }
-    setSearchParams(nextParams);
+    const queryString = nextParams.toString();
+    navigate(queryString ? `/san-pham?${queryString}` : '/san-pham');
     setMobileFilterOpen(false);
   };
 
   // Chọn bộ sưu tập
   const handleSelectCollection = (colSlug) => {
-    const nextParams = new URLSearchParams(searchParams);
     if (!colSlug || colSlug === 'all') {
-      nextParams.delete('collection');
-    } else {
-      nextParams.set('collection', colSlug);
+      handleRemoveCollection();
+      return;
     }
-    setSearchParams(nextParams);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('collection', colSlug);
+    if (activeCategory && activeCategory !== 'all' && !nextParams.has('category') && categoryId) {
+      nextParams.set('category', activeCategory);
+    }
+    const queryString = nextParams.toString();
+    navigate(queryString ? `/san-pham?${queryString}` : '/san-pham');
     setMobileFilterOpen(false);
   };
 
@@ -830,18 +835,16 @@ export default function CategoryPage({ categoryId }) {
   const handleRemoveCollection = () => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('collection');
-    setSearchParams(nextParams);
+    if (activeCategory && activeCategory !== 'all' && !nextParams.has('category') && categoryId) {
+      nextParams.set('category', activeCategory);
+    }
+    const queryString = nextParams.toString();
+    navigate(queryString ? `/san-pham?${queryString}` : '/san-pham');
   };
 
   // Đặt lại toàn bộ bộ lọc
   const handleResetFilters = () => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.delete('category');
-    nextParams.delete('danh-muc');
-    nextParams.delete('collection');
-    nextParams.delete('q');
-    nextParams.delete('search');
-    setSearchParams(nextParams);
+    navigate('/san-pham');
     setSelectedPriceRange('all');
     setSelectedMaterial('all');
     setSortOption('featured');
@@ -853,7 +856,8 @@ export default function CategoryPage({ categoryId }) {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set('q', kw);
     nextParams.delete('search');
-    setSearchParams(nextParams);
+    const queryString = nextParams.toString();
+    navigate(queryString ? `/san-pham?${queryString}` : '/san-pham');
   };
 
   // Kiểm tra có bộ lọc đang hoạt động hay không
@@ -1106,7 +1110,8 @@ export default function CategoryPage({ categoryId }) {
                 const next = new URLSearchParams(searchParams);
                 next.delete('q');
                 next.delete('search');
-                setSearchParams(next);
+                const q = next.toString();
+                navigate(q ? `/san-pham?${q}` : '/san-pham');
               }}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-neutral-700 bg-white border border-stone-200 rounded-lg hover:bg-neutral-50 hover:text-neutral-950 transition-colors shadow-sm cursor-pointer"
             >
