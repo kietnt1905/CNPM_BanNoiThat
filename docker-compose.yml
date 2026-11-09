@@ -1,0 +1,57 @@
+# Chạy local:  docker compose up --build
+#   Frontend: http://localhost:5173     Backend API: http://localhost:8000/api
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: noithat_db
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-psecret" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      target: backend
+    env_file:
+      - path: backend/.env
+        required: false
+    environment:
+      APP_NAME: "TK House"
+      APP_ENV: local
+      APP_KEY: "base64:YE9GFLviqp2X2axUfedfn+wP5Mz/TOK/i6Ky73UpqLI="
+      APP_DEBUG: "true"
+      APP_URL: "http://localhost:8000"
+      AUTO_SEED: "true" # tự seed dữ liệu mẫu nếu DB trống
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: noithat_db
+      DB_USERNAME: root
+      DB_PASSWORD: secret
+    ports:
+      - "8000:8080"
+    volumes:
+      - ./backend/public/uploads:/var/www/html/public/uploads # giữ ảnh sản phẩm trên máy
+      - backend_storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+    ports:
+      - "5173:8080"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
+  backend_storage:
